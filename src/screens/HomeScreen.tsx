@@ -1,9 +1,11 @@
-import Input from "@/components/atoms/Input"
+
+import Layout from "./layout";
+import Content from "./content";
 
 export const HomeScreen = () => {
   return (
-    <div>
-        <Input />
-    </div>
-  )
-}
+    <Layout>
+      <Content></Content>
+    </Layout>
+  );
+};
