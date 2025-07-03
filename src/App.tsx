@@ -1,15 +1,19 @@
 import { Route } from "react-router";
 import { Routes } from "react-router";
-import { HomeScreen } from "./screens/HomeScreen";
-import LoginScreen from "@/modules/auth/screens/LoginScreen";
+import { routes } from "./navigation/Routes";
 
 const App = () => {
   return (
     <Routes>
-      <Route path="/" element={<HomeScreen />} />
-      <Route path="/login" element={<LoginScreen/>} />
+      {routes.map((route: any) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={<route.component />}
+        />
+      ))}
     </Routes>
   );
 };
-  
+
 export default App;
