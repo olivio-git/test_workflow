@@ -1,93 +1,134 @@
 @import "tailwindcss";
 
 /* Variables CSS personalizadas para tus colores */
-@theme {
-  --color-border: oklch(0.914 0.032 214.3);
-  --color-input: oklch(0.914 0.032 214.3);
-  --color-ring: oklch(0.049 0.084 222.2);
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.049 0.084 222.2);
-  --color-primary: oklch(0.112 0.474 222.2);
-  --color-primary-foreground: oklch(0.98 0.04 210);
-  --color-secondary: oklch(0.96 0.04 210);
-  --color-secondary-foreground: oklch(0.112 0.474 222.2);
-  --color-destructive: oklch(0.602 0.842 0);
-  --color-destructive-foreground: oklch(0.98 0.04 210);
-  --color-muted: oklch(0.96 0.04 210);
-  --color-muted-foreground: oklch(0.469 0.163 215.4);
-  --color-accent: oklch(0.96 0.04 210);
-  --color-accent-foreground: oklch(0.112 0.474 222.2);
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.049 0.084 222.2);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.049 0.084 222.2);
-  
-  /* Radius personalizado */
-  --radius: 0.5rem;
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+@layer base {
+  :root {
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
 }
 
-/* Modo oscuro */
-@theme dark {
-  --color-border: oklch(0.175 0.326 217.2);
-  --color-input: oklch(0.175 0.326 217.2);
-  --color-ring: oklch(0.839 0.268 212.7);
-  --color-background: oklch(0.049 0.084 222.2);
-  --color-foreground: oklch(0.98 0.04 210);
-  --color-primary: oklch(0.98 0.04 210);
-  --color-primary-foreground: oklch(0.112 0.474 222.2);
-  --color-secondary: oklch(0.175 0.326 217.2);
-  --color-secondary-foreground: oklch(0.98 0.04 210);
-  --color-destructive: oklch(0.306 0.628 0);
-  --color-destructive-foreground: oklch(0.98 0.04 210);
-  --color-muted: oklch(0.175 0.326 217.2);
-  --color-muted-foreground: oklch(0.651 0.202 215);
-  --color-accent: oklch(0.175 0.326 217.2);
-  --color-accent-foreground: oklch(0.98 0.04 210);
-  --color-popover: oklch(0.049 0.084 222.2);
-  --color-popover-foreground: oklch(0.98 0.04 210);
-  --color-card: oklch(0.049 0.084 222.2);
-  --color-card-foreground: oklch(0.98 0.04 210);
+/* Colores personalizados usando las variables */
+@layer utilities {
+  .bg-border { background-color: hsl(var(--border)); }
+  .bg-input { background-color: hsl(var(--input)); }
+  .bg-ring { background-color: hsl(var(--ring)); }
+  .bg-background { background-color: hsl(var(--background)); }
+  .bg-foreground { background-color: hsl(var(--foreground)); }
+  .bg-primary { background-color: hsl(var(--primary)); }
+  .bg-primary-foreground { background-color: hsl(var(--primary-foreground)); }
+  .bg-secondary { background-color: hsl(var(--secondary)); }
+  .bg-secondary-foreground { background-color: hsl(var(--secondary-foreground)); }
+  .bg-destructive { background-color: hsl(var(--destructive)); }
+  .bg-destructive-foreground { background-color: hsl(var(--destructive-foreground)); }
+  .bg-muted { background-color: hsl(var(--muted)); }
+  .bg-muted-foreground { background-color: hsl(var(--muted-foreground)); }
+  .bg-accent { background-color: hsl(var(--accent)); }
+  .bg-accent-foreground { background-color: hsl(var(--accent-foreground)); }
+  .bg-popover { background-color: hsl(var(--popover)); }
+  .bg-popover-foreground { background-color: hsl(var(--popover-foreground)); }
+  .bg-card { background-color: hsl(var(--card)); }
+  .bg-card-foreground { background-color: hsl(var(--card-foreground)); }
+
+  .text-border { color: hsl(var(--border)); }
+  .text-input { color: hsl(var(--input)); }
+  .text-ring { color: hsl(var(--ring)); }
+  .text-background { color: hsl(var(--background)); }
+  .text-foreground { color: hsl(var(--foreground)); }
+  .text-primary { color: hsl(var(--primary)); }
+  .text-primary-foreground { color: hsl(var(--primary-foreground)); }
+  .text-secondary { color: hsl(var(--secondary)); }
+  .text-secondary-foreground { color: hsl(var(--secondary-foreground)); }
+  .text-destructive { color: hsl(var(--destructive)); }
+  .text-destructive-foreground { color: hsl(var(--destructive-foreground)); }
+  .text-muted { color: hsl(var(--muted)); }
+  .text-muted-foreground { color: hsl(var(--muted-foreground)); }
+  .text-accent { color: hsl(var(--accent)); }
+  .text-accent-foreground { color: hsl(var(--accent-foreground)); }
+  .text-popover { color: hsl(var(--popover)); }
+  .text-popover-foreground { color: hsl(var(--popover-foreground)); }
+  .text-card { color: hsl(var(--card)); }
+  .text-card-foreground { color: hsl(var(--card-foreground)); }
+
+  .border-border { border-color: hsl(var(--border)); }
+  .border-input { border-color: hsl(var(--input)); }
+  .border-ring { border-color: hsl(var(--ring)); }
+  .border-primary { border-color: hsl(var(--primary)); }
+  .border-secondary { border-color: hsl(var(--secondary)); }
+  .border-destructive { border-color: hsl(var(--destructive)); }
+  .border-muted { border-color: hsl(var(--muted)); }
+  .border-accent { border-color: hsl(var(--accent)); }
+
+  /* Border radius personalizados */
+  .rounded-lg { border-radius: var(--radius); }
+  .rounded-md { border-radius: calc(var(--radius) - 2px); }
+  .rounded-sm { border-radius: calc(var(--radius) - 4px); }
 }
 
-/* Animaciones personalizadas */
-@keyframes fade-in {
+/* Animaciones de tailwindcss-animate implementadas manualmente */
+@keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes fade-out {
+@keyframes fadeOut {
   from { opacity: 1; }
   to { opacity: 0; }
 }
 
-@keyframes slide-in {
+@keyframes slideIn {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
 }
 
-@keyframes slide-out {
+@keyframes slideOut {
   from { transform: translateX(0); }
   to { transform: translateX(-100%); }
 }
 
-/* Utilidades personalizadas */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
 @layer utilities {
-  .animate-fade-in {
-    animation: fade-in 0.2s ease-out;
-  }
-  
-  .animate-fade-out {
-    animation: fade-out 0.2s ease-out;
-  }
-  
-  .animate-slide-in {
-    animation: slide-in 0.2s ease-out;
-  }
-  
-  .animate-slide-out {
-    animation: slide-out 0.2s ease-out;
-  }
+  .animate-fade-in { animation: fadeIn 0.2s ease-out; }
+  .animate-fade-out { animation: fadeOut 0.2s ease-out; }
+  .animate-slide-in { animation: slideIn 0.2s ease-out; }
+  .animate-slide-out { animation: slideOut 0.2s ease-out; }
+  .animate-spin { animation: spin 1s linear infinite; }
+  .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  .animate-bounce { animation: bounce 1s infinite; }
 }

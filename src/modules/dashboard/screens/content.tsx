@@ -3,7 +3,7 @@ import List01 from "./list-01"
 import List02 from "./list-02"
 import List03 from "./list-03"
 
-export default function () {
+export default function Content() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
