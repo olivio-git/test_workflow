@@ -1,5 +1,5 @@
 import LoginScreen from "@/modules/auth/screens/LoginScreen";
-import { HomeScreen } from "@/screens/HomeScreen";
+import { HomeScreen } from "@/modules/dashboard/screens/HomeScreen";
 import { Home, LogIn } from "lucide-react"
 
 export interface Route {
