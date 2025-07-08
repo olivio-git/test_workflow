@@ -24,3 +24,4 @@ export const protectedRoutes: RouteType[] = [
     icon: HomeIcon
   }
 ];
+export default protectedRoutes;
