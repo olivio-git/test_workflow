@@ -1,6 +1,6 @@
 import type React from "react";
 import { Navigate } from "react-router";
-import type RouteType from "./RouteType"; 
+import type RouteType from "./RouteType";
 import Layout from "@/modules/dashboard/screens/layout";
 
 interface RouteRendererProps {
@@ -24,11 +24,19 @@ const RouteRenderer: React.FC<RouteRendererProps> = ({
     return <Navigate to={redirectTo} replace />;
   }
 
-  return (
-    <Layout>
-      <Component />
-    </Layout>
-  );
+  if (route.type === "public" && isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (route.type === "protected") {
+    return (
+      <Layout>
+        <Component />
+      </Layout>
+    );
+  }
+
+  return <Component />;
 };
 
 export default RouteRenderer;

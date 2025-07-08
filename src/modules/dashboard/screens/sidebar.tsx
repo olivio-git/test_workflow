@@ -1,4 +1,5 @@
-import { routes, type Route } from "@/navigation/Routes"
+import { protectedRoutes } from "@/navigation/Protected.Route"
+import type RouteType from "@/navigation/RouteType"
 import {
   BarChart2,
   Receipt,
@@ -84,16 +85,14 @@ export default function Sidebar() {
                 </div>
                 <div className="space-y-1">
                   {
-                    routes.map((route:Route) => (
-                      route.type === "private" && (
-                        <NavItem
+                    protectedRoutes.map((route:RouteType) => (
+                      <NavItem
                           key={route.path}
                           href={route.path}
                           icon={route.icon}
                         >
                           {route.name}
                         </NavItem>
-                      )
                     ))
                   } 
                   <NavItem href="#" icon={BarChart2}>

@@ -49,9 +49,8 @@ const Navigation = () => {
           element={
             <RouteRenderer
               route={route}
-              // isAuthenticated={!!user}
-              isAuthenticated={true}
-              redirectTo="/login"
+              isAuthenticated={true} // Cambia esto para usar el estado real
+              redirectTo="/"
             />
           }
         />
