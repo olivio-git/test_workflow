@@ -36,7 +36,7 @@ export default function TopNav() {
           </div>
         ))}
       </div>
-
+        <div>BAR</div>
       <div className="flex items-center gap-2 sm:gap-4 ml-auto sm:ml-0">
         <button
           type="button"

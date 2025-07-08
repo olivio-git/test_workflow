@@ -2,7 +2,6 @@ import React,{ useState, useMemo } from "react"
 import {
   Search,
   Filter,
-  Plus,
   Edit,
   Trash2,
   Grid3X3,
@@ -16,218 +15,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/atoms/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
 import { Input } from "@/components/atoms/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/atoms/dialog"
-import { Label } from "@/components/atoms/label"
 import { Checkbox } from "@/components/atoms/checkbox"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/atoms/dropdown-menu" 
-import { ImageContainer, ImageContent } from "@/components/atoms/Image"
-import { useQuery } from "@tanstack/react-query"
+import {FilterActives} from "../components/FilterActives"
+import { FilterSort } from "../components/FilterSort"
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchProducts } from "../services/api"
-
-interface Product {
-  id: number
-  name: string
-  sku: string
-  price: number
-  products: number
-  views: number
-  status: "Active" | "Inactive"
-  image: string
-  category: string
-  store: string
-}
-
-const initialProducts: Product[] = [
-  {
-    id: 1,
-    name: "Gabriela Cashmere Blazer",
-    sku: "T14116",
-    price: 113.99,
-    products: 1113,
-    views: 14012,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 1",
-  },
-  {
-    id: 2,
-    name: "Loewe blend Jacket - Blue",
-    sku: "T14116",
-    price: 113.99,
-    products: 721,
-    views: 13212,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 1",
-  },
-  {
-    id: 3,
-    name: "Sandro - Jacket - Black",
-    sku: "T14116",
-    price: 113.99,
-    products: 407,
-    views: 8201,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 2",
-  },
-  {
-    id: 4,
-    name: "Adidas By Stella McCartney",
-    sku: "T14116",
-    price: 113.99,
-    products: 1203,
-    views: 1002,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 1",
-  },
-  {
-    id: 5,
-    name: "Meteo Hooded Wool Jacket",
-    sku: "T14116",
-    price: 113.99,
-    products: 306,
-    views: 807,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 2",
-  },
-  {
-    id: 6,
-    name: "Hida Down Ski Jacket - Red",
-    sku: "T14116",
-    price: 113.99,
-    products: 201,
-    views: 406,
-    status: "Inactive",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 1",
-  },
-  {
-    id: 7,
-    name: "Dolce & Gabbana",
-    sku: "T14116",
-    price: 113.99,
-    products: 108,
-    views: 204,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 2",
-  },
-  {
-    id: 8,
-    name: "Moncler - Down Jacket",
-    sku: "T14116",
-    price: 113.99,
-    products: 55,
-    views: 102,
-    status: "Inactive",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 1",
-  },
-  {
-    id: 9,
-    name: "Balenciaga - Oversized Jacket",
-    sku: "T14116",
-    price: 113.99,
-    products: 30,
-    views: 60,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 2",
-  },
-  {
-    id: 10,
-    name: "Prada - Wool Blend Jacket",
-    sku: "T14116",
-    price: 113.99,
-    products: 15,
-    views: 30,
-    status: "Inactive",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 1",
-  },
-  {
-    id: 11,
-    name: "Gucci - Leather Jacket",
-    sku: "T14116",
-    price: 113.99,
-    products: 8,
-    views: 16,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 2",
-  },
-  {
-    id: 12,
-    name: "Burberry - Trench Coat",
-    sku: "T14116",
-    price: 113.99,
-    products: 4,
-    views: 8,
-    status: "Inactive",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 1",
-  },
-  {
-    id: 13,
-    name: "Versace - Printed Jacket",
-    sku: "T14116",
-    price: 113.99,
-    products: 2,
-    views: 4,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 2",
-  },
-  {
-    id: 14,
-    name: "Fendi - Logo Jacket",
-    sku: "T14116",
-    price: 113.99,
-    products: 1,
-    views: 2,
-    status: "Inactive",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 1",
-  },
-  {
-    id: 15,
-    name: "Balmain - Military Jacket",
-    sku: "T14116",
-    price: 113.99,
-    products: 0,
-    views: 0,
-    status: "Active",
-    image: "https://images.pexels.com/photos/45982/pexels-photo-45982.jpeg",
-    category: "Jackets",
-    store: "Store 2",
-  },
-]
+import type { ProductGet } from "../types/ProductGet"
+import { Panel,PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 const ProductScreen = () => {
-  // const { data, isLoading, error } = useQuery<any>({
-  //   queryKey: ['products'],
-  //   queryFn: fetchProducts, 
+  
 
-  // });
-
-  const [products, setProducts] = useState<Product[]>(initialProducts)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [selectedProducts, setSelectedProducts] = useState<number[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -236,58 +35,57 @@ const ProductScreen = () => {
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [priceFilter, setPriceFilter] = useState("all")
-  const [storeFilter, setStoreFilter] = useState("all")
-  const [isAddProductOpen, setIsAddProductOpen] = useState(false)
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    sku: "",
-    price: "",
-    products: "",
-    category: "Jackets",
-    store: "Store 1",
-    status: "Active" as "Active" | "Inactive",
-  })
+  const [storeFilter, setStoreFilter] = useState("all");
+  
+  const queryClient = useQueryClient();
+
+   const {
+    data: products,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['products'],
+    queryFn: fetchProducts,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
-    const filtered = products.filter((product) => {
+    if(!products) return []
+    const filtered = products.filter((product:ProductGet) => {
       const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchQuery.toLowerCase())
+        product.descripcion.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.codigo_oem.toLowerCase().includes(searchQuery.toLowerCase())
 
-      const matchesCategory = categoryFilter === "all" || product.category === categoryFilter
-      const matchesStatus = statusFilter === "all" || product.status === statusFilter
-      const matchesStore = storeFilter === "all" || product.store === storeFilter
+      const matchesCategory = categoryFilter === "all" || product.categoria === categoryFilter
+      const matchesStore = storeFilter === "all" || product.sucursal === storeFilter
 
       let matchesPrice = true
       if (priceFilter === "50-100") {
-        matchesPrice = product.price >= 50 && product.price <= 100
+        matchesPrice = Number(product.precio_venta) >= 50 && Number(product.precio_venta) <= 100
       } else if (priceFilter === "100-200") {
-        matchesPrice = product.price >= 100 && product.price <= 200
+        matchesPrice = Number(product.precio_venta) >= 100 && Number(product.precio_venta) <= 200
       } else if (priceFilter === "200-500") {
-        matchesPrice = product.price >= 200 && product.price <= 500
+        matchesPrice = Number(product.precio_venta) >= 200 && Number(product.precio_venta) <= 500
       }
 
-      const matchesShow =
-        showFilter === "all-products" ||
-        (showFilter === "active" && product.status === "Active") ||
-        (showFilter === "inactive" && product.status === "Inactive")
-
-      return matchesSearch && matchesCategory && matchesStatus && matchesStore && matchesPrice && matchesShow
+      return matchesSearch && matchesCategory && matchesStore && matchesPrice
     })
 
     // Sort products - prioritize column sorting over dropdown sorting
     if (sortColumn) {
-      filtered.sort((a, b) => {
-        let aValue: any = a[sortColumn as keyof Product]
-        let bValue: any = b[sortColumn as keyof Product]
+      filtered.sort((a: ProductGet, b: ProductGet) => {
+        let aValue: any = a[sortColumn as keyof ProductGet]
+        let bValue: any = b[sortColumn as keyof ProductGet]
 
         if (sortColumn === "name") {
-          aValue = a.name.toLowerCase()
-          bValue = b.name.toLowerCase()
+          aValue = a.descripcion.toLowerCase()
+          bValue = b.descripcion.toLowerCase()
         }
 
         if (typeof aValue === "string" && typeof bValue === "string") {
@@ -302,15 +100,15 @@ const ProductScreen = () => {
       })
     } else if (sortBy !== "default") {
       // Fallback to dropdown sorting
-      if (sortBy === "name") {
-        filtered.sort((a, b) => a.name.localeCompare(b.name))
-      } else if (sortBy === "price") {
-        filtered.sort((a, b) => b.price - a.price)
-      } else if (sortBy === "views") {
-        filtered.sort((a, b) => b.views - a.views)
-      } else if (sortBy === "products") {
-        filtered.sort((a, b) => b.products - a.products)
-      }
+      // if (sortBy === "name") {
+      //   filtered.sort((a, b) => a.name.localeCompare(b.name))
+      // } else if (sortBy === "price") {
+      //   filtered.sort((a, b) => b.price - a.price)
+      // } else if (sortBy === "views") {
+      //   filtered.sort((a, b) => b.views - a.views)
+      // } else if (sortBy === "products") {
+      //   filtered.sort((a, b) => b.products - a.products)
+      // }
     }
 
     return filtered
@@ -329,7 +127,7 @@ const ProductScreen = () => {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedProducts(filteredAndSortedProducts.map((p) => p.id))
+      // setSelectedProducts(filteredAndSortedProducts.map((p) => p.id))
     } else {
       setSelectedProducts([])
     }
@@ -344,39 +142,36 @@ const ProductScreen = () => {
   }
 
   const handleStatusChange = (productId: number, newStatus: "Active" | "Inactive") => {
-    setProducts(products.map((product) => (product.id === productId ? { ...product, status: newStatus } : product)))
+    // setProducts(products.map((product:ProductGet) => (product.id === productId ? { ...product, status: newStatus } : product)))
   }
 
   const handleDeleteProduct = (productId: number) => {
-    setProducts(products.filter((product) => product.id !== productId))
-    setSelectedProducts(selectedProducts.filter((id) => id !== productId))
+    // setProducts(products.filter((product) => product.id !== productId))
+    // setSelectedProducts(selectedProducts.filter((id) => id !== productId))
   }
 
   const handleAddProduct = () => {
-    const product: Product = {
-      id: Math.max(...products.map((p) => p.id)) + 1,
-      name: newProduct.name,
-      sku: newProduct.sku,
-      price: Number.parseFloat(newProduct.price),
-      products: Number.parseInt(newProduct.products),
-      views: Math.floor(Math.random() * 10000),
-      status: newProduct.status,
-      image: "/placeholder.svg?height=40&width=40",
-      category: newProduct.category,
-      store: newProduct.store,
-    }
+    // const product: ProductGet = {
+    //   // id: Math.max(...products.map((p) => p.id)) + 1,
+    //   descripcion: newProduct.name,
+    //   codigo_oem: newProduct.sku,
+    //   codigo_upc: newProduct.price,
+    //   modelo: newProduct.products,
+    //   categoria: newProduct.category,
+    //   sucursal: newProduct.store,
+    // }
 
-    setProducts([...products, product])
-    setNewProduct({
-      name: "",
-      sku: "",
-      price: "",
-      products: "",
-      category: "Jackets",
-      store: "Store 1",
-      status: "Active",
-    })
-    setIsAddProductOpen(false)
+    // // setProducts([...products, product])
+    // setNewProductFiltered({
+    //   name: "",
+    //   sku: "",
+    //   price: "",
+    //   products: "",
+    //   categoria: "Jackets",
+    //   sucursal: "Store 1",
+    //   status: "Active",
+    // })
+    // setIsAddProductOpen(false)
   }
 
   const handleColumnSort = (column: string) => {
@@ -456,148 +251,13 @@ const ProductScreen = () => {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>Show:</span>
-                <Select value={showFilter} onValueChange={setShowFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="border border-gray-200 shadow-lg">
-                    <SelectItem className="hover:bg-gray-50" value="all-products">All Products</SelectItem>
-                    <SelectItem className="hover:bg-gray-50" value="active">Active</SelectItem>
-                    <SelectItem className="hover:bg-gray-50" value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>Sort by:</span>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-24">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="border border-gray-200 shadow-lg">
-                    <SelectItem className="hover:bg-gray-50" value="default">Default</SelectItem>
-                    <SelectItem className="hover:bg-gray-50" value="name">Name</SelectItem>
-                    <SelectItem className="hover:bg-gray-50" value="price">Price</SelectItem>
-                    <SelectItem className="hover:bg-gray-50" value="views">Views</SelectItem>
-                    <SelectItem className="hover:bg-gray-50" value="products">Stock</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
+              <FilterActives showFilter={showFilter} setShowFilter={setShowFilter} />
+              <FilterSort sortBy={sortBy} setSortBy={setSortBy} />
+              
               <Button variant="outline" className="hover:bg-gray-50" size="sm" onClick={resetFilters}>
                 <Filter className="h-4 w-4 mr-2" />
                 Reset Filters
               </Button>
-
-              <Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Product
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Add New Product</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="name" className="text-right">
-                        Name
-                      </Label>
-                      <Input
-                        id="name"
-                        value={newProduct.name}
-                        onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="sku" className="text-right">
-                        SKU
-                      </Label>
-                      <Input
-                        id="sku"
-                        value={newProduct.sku}
-                        onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="price" className="text-right">
-                        Price
-                      </Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        value={newProduct.price}
-                        onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="stock" className="text-right">
-                        Stock
-                      </Label>
-                      <Input
-                        id="stock"
-                        type="number"
-                        value={newProduct.products}
-                        onChange={(e) => setNewProduct({ ...newProduct, products: e.target.value })}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="category" className="text-right">
-                        Category
-                      </Label>
-                      <Select
-                        value={newProduct.category}
-                        onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Jackets">Jackets</SelectItem>
-                          <SelectItem value="Shirts">Shirts</SelectItem>
-                          <SelectItem value="Pants">Pants</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="store" className="text-right">
-                        Store
-                      </Label>
-                      <Select
-                        value={newProduct.store}
-                        onValueChange={(value) => setNewProduct({ ...newProduct, store: value })}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Store 1">Store 1</SelectItem>
-                          <SelectItem value="Store 2">Store 2</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsAddProductOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleAddProduct}
-                      disabled={!newProduct.name || !newProduct.sku || !newProduct.price || !newProduct.products}
-                    >
-                      Add Product
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
             </div>
           </div>
         </div>
@@ -606,59 +266,61 @@ const ProductScreen = () => {
         <div className="p-4 border-b border-gray-200">
           <div className="grid grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Ver categorias</label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="border border-gray-200 shadow-lg">
-                  <SelectItem className="hover:bg-gray-50" value="all">All Categories</SelectItem>
-                  <SelectItem className="hover:bg-gray-50" value="Jackets">
+                  <SelectItem className="hover:bg-gray-50" value="all">Todas</SelectItem>
+                  {/* <SelectItem className="hover:bg-gray-50" value="Jackets">
                     Jackets ({products.filter((p) => p.category === "Jackets").length})
-                  </SelectItem>
-                  <SelectItem className="hover:bg-gray-50" value="Shirts">Shirts</SelectItem>
-                  <SelectItem className="hover:bg-gray-50" value="Pants">Pants</SelectItem>
+                  </SelectItem> */}
+                  <SelectItem className="hover:bg-gray-50" value="AMORTIGUADOR">AMORTIGUADOR</SelectItem>
+                  {/* <SelectItem className="hover:bg-gray-50" value="Pants">Pants</SelectItem> */}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Ver modelo</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="border border-gray-200 shadow-lg">
-                  <SelectItem className="hover:bg-gray-50" value="all">All Status</SelectItem>
+                  {/* <SelectItem className="hover:bg-gray-50" value="all">Todos</SelectItem>
                   <SelectItem className="hover:bg-gray-50" value="Active">Active</SelectItem>
-                  <SelectItem className="hover:bg-gray-50" value="Inactive">Inactive</SelectItem>
+                  <SelectItem className="hover:bg-gray-50" value="Inactive">Inactive</SelectItem> */}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Precio de venta</label>
               <Select value={priceFilter} onValueChange={setPriceFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="border border-gray-200 shadow-lg">
-                  <SelectItem className="hover:bg-gray-50" value="all">All Prices</SelectItem>
-                  <SelectItem className="hover:bg-gray-50" value="50-100">$50 - $100</SelectItem>
-                  <SelectItem className="hover:bg-gray-50" value="100-200">$100 - $200</SelectItem>
-                  <SelectItem className="hover:bg-gray-50" value="200-500">$200 - $500</SelectItem>
+                  <SelectItem className="hover:bg-gray-50" value="all">Todos los precios</SelectItem>
+                  <SelectItem className="hover:bg-gray-50" value="50-100">50 - 100</SelectItem>
+                  <SelectItem className="hover:bg-gray-50" value="100-200">100 - 200</SelectItem>
+                  <SelectItem className="hover:bg-gray-50" value="200-500">200 - 500</SelectItem>
+                  <SelectItem className="hover:bg-gray-50" value="500-1000">500 - 1000</SelectItem>
+
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Store</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sucursal</label>
               <Select value={storeFilter} onValueChange={setStoreFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="border border-gray-200 shadow-lg">
-                  <SelectItem className="hover:bg-gray-50" value="all">All Store</SelectItem>
+                  <SelectItem className="hover:bg-gray-50" value="all">Ver todas</SelectItem>
                   <SelectItem className="hover:bg-gray-50" value="Store 1">Store 1</SelectItem>
                   <SelectItem className="hover:bg-gray-50" value="Store 2">Store 2</SelectItem>
                 </SelectContent>
@@ -668,14 +330,24 @@ const ProductScreen = () => {
         </div>
 
         {/* Results Info */}
-        <div className="p-4 text-sm text-gray-600 border-b border-gray-200">
+        {/* <div className="p-4 text-sm text-gray-600 border-b border-gray-200">
           Showing {filteredAndSortedProducts.length} of {products.length} products
           {selectedProducts.length > 0 && (
             <span className="ml-4 text-blue-600">{selectedProducts.length} selected</span>
           )}
-        </div>
+        </div> */}
 
         {/* Content */}
+    <PanelGroup direction="horizontal"> 
+
+        <Panel defaultSize={25} minSize={10}>
+      <div className="flex items-center justify-between p-4 bg-gray-100 border-b border-gray-200">
+        <h1 className="text-lg font-semibold text-gray-800">Formulario</h1>
+      </div>
+    </Panel>
+    <PanelResizeHandle />
+    <Panel defaultSize={75} minSize={30} className="overflow-hidden">
+
         {viewMode === "list" ? (
           <div className="overflow-x-auto">
             <Table>
@@ -699,7 +371,7 @@ const ProductScreen = () => {
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-gray-200  p-2">
-                {filteredAndSortedProducts.map((product) => (
+                {filteredAndSortedProducts.map((product:ProductGet) => (
                   <TableRow key={product.id}>
                     <TableCell className="p-1">
                       <Checkbox
@@ -711,27 +383,27 @@ const ProductScreen = () => {
                     <TableCell className="p-1">
                       <div className="flex items-center gap-1"> 
                         <div>
-                          <div className="font-medium">{product.name}</div>
-                          <div className="text-sm text-gray-500">SKU: {product.sku}</div>
+                          <div className="font-medium">{product.descripcion}</div>
+                          <div className="text-sm text-gray-500">SKU: {product.codigo_upc}</div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="p-1">${product.price}</TableCell>
-                    <TableCell className="p-1">{product.products.toLocaleString()}</TableCell>
-                    <TableCell className="p-1">{product.views.toLocaleString()}</TableCell>
+                    <TableCell className="p-1">${product.precio_venta}</TableCell>
+                    <TableCell className="p-1">{product.categoria.toLocaleString()}</TableCell>
+                    <TableCell className="p-1">{product.marca.toLocaleString()}</TableCell>
                     <TableCell className="w-32 p-1">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className={product.status === "Active" ? "text-green-600" : "text-red-600"}
+                            className={product.codigo_oem === "Active" ? "text-green-600" : "text-red-600"}
                           >
                             <div className="flex items-center gap-2">
                               <div
-                                className={`w-2 h-2 rounded-full ${product.status === "Active" ? "bg-green-500" : "bg-red-500"}`}
+                                className={`w-2 h-2 rounded-full ${product.codigo_oem === "Active" ? "bg-green-500" : "bg-red-500"}`}
                               ></div>
-                              {product.status}
+                              {product.codigo_oem}
                               <ChevronDown className="h-3 w-3" />
                             </div>
                           </Button>
@@ -821,6 +493,8 @@ const ProductScreen = () => {
             </div>
           </div>
         )}
+    </Panel>
+    </PanelGroup>
 
         {/* Pagination */}
         <div className="p-4 border-t border-gray-200">

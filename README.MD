@@ -4,6 +4,14 @@
 ## Resetear filtros :: + atajo de teclado
 ## Agregar count table items :: en la parte de abajo :: 
 ## Agregar atajo de teclado en paginacion:: = < + atajo de teclado , = + atajo de teclado :: salto de 1 en 1
+## Modulos apartes crear producto | buscar producto = + quitar agregar columnas tablas
+
+## p.por menos sin fac
+
+## Mostrar por defecto con la session sucursal + aumentar + sucursales
+
+## Vendedor, admin global, gerente
+## ventanas | ventanas    | ventanas
 ```json
 
 {

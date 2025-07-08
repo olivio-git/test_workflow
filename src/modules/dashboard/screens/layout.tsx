@@ -1,7 +1,7 @@
-import type { ReactNode } from "react"
-import Sidebar from "./sidebar"
+import type { ReactNode } from "react" 
 import TopNav from "./top-nav" 
 import { useEffect, useState } from "react"
+import Sidebar from "./sidebar"
 
 interface LayoutProps {
   children: ReactNode
