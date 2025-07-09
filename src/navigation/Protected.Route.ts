@@ -5,7 +5,7 @@ import Content from "@/modules/dashboard/screens/content"; // Necesitas crear es
 import { HomeIcon, LayoutDashboardIcon } from "lucide-react";
 import CreateProduct from "@/modules/products/screens/CreateProduct";
 
-export const protectedRoutes: RouteType[] = [
+const protectedRoutes: RouteType[] = [
   {
     path: "/dashboard",
     name: "Dashboard",
@@ -33,4 +33,6 @@ export const protectedRoutes: RouteType[] = [
     role: "admin",
     icon: HomeIcon
   },
-];
+]; 
+
+export default protectedRoutes;

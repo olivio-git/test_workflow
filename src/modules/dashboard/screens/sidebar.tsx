@@ -1,4 +1,4 @@
-import { protectedRoutes } from "@/navigation/Protected.Route"
+import protectedRoutes from "@/navigation/Protected.Route"
 import type RouteType from "@/navigation/RouteType"
 import {
   BarChart2,

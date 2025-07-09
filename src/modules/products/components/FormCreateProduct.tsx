@@ -1,20 +1,11 @@
-"use client"
-
 import { useState, useEffect } from "react" 
 import { useToast } from "@/hooks/use-toast"
-import { Package, Wand2, Save, X } from "lucide-react"
+import { Package, Wand2, Save } from "lucide-react"
 import { Label } from "@/components/atoms/label"
 import { Input } from "@/components/atoms/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
 import { Textarea } from "@/components/atoms/textarea"
 import { Button } from "@/components/atoms/button"
-
-// interface ProductFormProps {
-//   open: boolean
-//   onOpenChange: (open: boolean) => void
-//   onProductCreated: () => void
-//   editProduct?: any
-// }
 
 const categories = [
   { id: "amortiguadores", name: "Amortiguadores", singular: "Amortiguador" },
@@ -47,65 +38,39 @@ const FormCreateProduct = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const [formData, setFormData] = useState({
-    name: "",
-    category: "",
-    vehicleBrand: "",
-    engineNumber: "",
-    measurement: "",
-    model: "",
-    additionalDescription: "",
-    autoDescription: "",
-    price: "",
-    cost: "",
-    stock: "",
-    minStock: "",
-    supplier: "",
-    barcode: "",
-    location: "",
-    weight: "",
-    dimensions: "",
-    warranty: "",
-    status: "active",
-    tags: "",
-    notes: "",
+    name: "", category: "", vehicleBrand: "", engineNumber: "", measurement: "",
+    model: "", additionalDescription: "", autoDescription: "", price: "", cost: "",
+    stock: "", minStock: "", supplier: "", barcode: "", location: "", weight: "",
+    dimensions: "", warranty: "", status: "active", tags: "", notes: "",
   })
 
-  const singularizeCategory = (categoryId: string) => {
-    const category = categories.find((cat) => cat.id === categoryId)
-    return category ? category.singular : ""
+  const singularizeCategory = (categoryId:any) => {
+    return categories.find(cat => cat.id === categoryId)?.singular || ""
   }
 
   const generateAutoDescription = () => {
-    const parts = []
-    if (formData.category) parts.push(singularizeCategory(formData.category))
-    if (formData.vehicleBrand) parts.push(formData.vehicleBrand)
-    if (formData.engineNumber) parts.push(formData.engineNumber)
-    if (formData.measurement) parts.push(formData.measurement)
-    if (formData.model) parts.push(formData.model)
-    if (formData.additionalDescription) parts.push(formData.additionalDescription)
-    return parts.filter(Boolean).join(" ")
+    const parts = [
+      formData.category && singularizeCategory(formData.category),
+      formData.vehicleBrand,
+      formData.engineNumber,
+      formData.measurement,
+      formData.model,
+      formData.additionalDescription
+    ].filter(Boolean)
+    return parts.join(" ")
   }
 
   useEffect(() => {
-    const autoDesc = generateAutoDescription()
-    setFormData((prev) => ({ ...prev, autoDescription: autoDesc }))
-  }, [
-    formData.category,
-    formData.vehicleBrand,
-    formData.engineNumber,
-    formData.measurement,
-    formData.model,
-    formData.additionalDescription,
-  ])
+    setFormData(prev => ({ ...prev, autoDescription: generateAutoDescription() }))
+  }, [formData.category, formData.vehicleBrand, formData.engineNumber, formData.measurement, formData.model, formData.additionalDescription])
 
-  const handleFieldChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const handleFieldChange = (field:any, value:any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   const validateForm = () => {
     const required = ["name", "category", "price", "stock"]
-    const missing = required.filter((field) => !formData[field as keyof typeof formData])
-
+    const missing = required.filter(field => !formData[field as keyof typeof formData])
     if (missing.length > 0) {
       toast({
         title: "Campos requeridos",
@@ -119,15 +84,13 @@ const FormCreateProduct = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return
-
     setIsLoading(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await new Promise(resolve => setTimeout(resolve, 1500))
       toast({
         title: "Producto creado",
         description: `${formData.name} ha sido agregado al catálogo`,
       })
-    //   onProductCreated()
       resetForm()
     } catch (error) {
       toast({
@@ -142,61 +105,38 @@ const FormCreateProduct = () => {
 
   const resetForm = () => {
     setFormData({
-      name: "",
-      category: "",
-      vehicleBrand: "",
-      engineNumber: "",
-      measurement: "",
-      model: "",
-      additionalDescription: "",
-      autoDescription: "",
-      price: "",
-      cost: "",
-      stock: "",
-      minStock: "",
-      supplier: "",
-      barcode: "",
-      location: "",
-      weight: "",
-      dimensions: "",
-      warranty: "",
-      status: "active",
-      tags: "",
-      notes: "",
+      name: "", category: "", vehicleBrand: "", engineNumber: "", measurement: "",
+      model: "", additionalDescription: "", autoDescription: "", price: "", cost: "",
+      stock: "", minStock: "", supplier: "", barcode: "", location: "", weight: "",
+      dimensions: "", warranty: "", status: "active", tags: "", notes: "",
     })
   }
 
   return (
-    <div className="space-y-6">
-      {/* Información básica */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Package className="w-3.5 h-3.5 text-zinc-900" />
-          Información Básica
+    <div className="max-w-6xl mx-auto">
+      <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <h2 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <Package className="w-4 h-4" />
+          Información Principal
         </h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-              Nombre del Producto *
-            </Label>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Nombre *</Label>
             <Input
-              id="name"
               value={formData.name}
               onChange={(e) => handleFieldChange("name", e.target.value)}
-              placeholder="Ej: Amortiguador Delantero Premium"
-              className="border-gray-200 focus:border-gray-400"
+              placeholder="Nombre del producto"
+              className="h-8 text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="category" className="text-sm font-medium text-gray-700">
-              Categoría *
-            </Label>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Categoría *</Label>
             <Select value={formData.category} onValueChange={(value) => handleFieldChange("category", value)}>
-              <SelectTrigger className="border-gray-200 focus:border-gray-400">
-                <SelectValue placeholder="Seleccionar categoría" />
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="Seleccionar" />
               </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
+              <SelectContent className="border border-gray-200">
+                {categories.map(category => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>
@@ -204,284 +144,201 @@ const FormCreateProduct = () => {
               </SelectContent>
             </Select>
           </div>
-        </div>
-      </div>
-
-      {/* Especificaciones del vehículo */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          Especificaciones del Vehículo
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="vehicleBrand" className="text-sm font-medium text-gray-700">
-              Marca del Vehículo
-            </Label>
-            <Select
-              value={formData.vehicleBrand}
-              onValueChange={(value) => handleFieldChange("vehicleBrand", value)}
-            >
-              <SelectTrigger className="border-gray-200 focus:border-gray-400">
-                <SelectValue placeholder="Seleccionar marca" />
-              </SelectTrigger>
-              <SelectContent>
-                {vehicleBrands.map((brand) => (
-                  <SelectItem key={brand} value={brand}>
-                    {brand}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="engineNumber" className="text-sm font-medium text-gray-700">
-              Número de Motor
-            </Label>
-            <Select
-              value={formData.engineNumber}
-              onValueChange={(value) => handleFieldChange("engineNumber", value)}
-            >
-              <SelectTrigger className="border-gray-200 focus:border-gray-400">
-                <SelectValue placeholder="Seleccionar motor" />
-              </SelectTrigger>
-              <SelectContent>
-                {engines.map((engine) => (
-                  <SelectItem key={engine} value={engine}>
-                    {engine}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="measurement" className="text-sm font-medium text-gray-700">
-              Medida
-            </Label>
-            <Select
-              value={formData.measurement}
-              onValueChange={(value) => handleFieldChange("measurement", value)}
-            >
-              <SelectTrigger className="border-gray-200 focus:border-gray-400">
-                <SelectValue placeholder="Seleccionar medida" />
-              </SelectTrigger>
-              <SelectContent>
-                {measurements.map((measurement) => (
-                  <SelectItem key={measurement} value={measurement}>
-                    {measurement}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="model" className="text-sm font-medium text-gray-700">
-              Modelo
-            </Label>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Precio *</Label>
             <Input
-              id="model"
-              value={formData.model}
-              onChange={(e) => handleFieldChange("model", e.target.value)}
-              placeholder="Ej: 2020-2024, Civic, Corolla"
-              className="border-gray-200 focus:border-gray-400"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="additionalDescription" className="text-sm font-medium text-gray-700">
-              Descripción Adicional
-            </Label>
-            <Input
-              id="additionalDescription"
-              value={formData.additionalDescription}
-              onChange={(e) => handleFieldChange("additionalDescription", e.target.value)}
-              placeholder="Ej: Original, Reforzado, Premium"
-              className="border-gray-200 focus:border-gray-400"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Descripción generada */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Wand2 className="w-3.5 h-3.5 text-zinc-900" />
-          Descripción Auto-generada
-        </h2>
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">
-            Descripción Final
-          </Label>
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg min-h-[60px] flex items-center">
-            <p className="text-sm text-gray-800">
-              {formData.autoDescription || "Completa los campos anteriores para generar la descripción"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Precios e inventario */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          Precios e Inventario
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-2">
-            <Label htmlFor="price" className="text-sm font-medium text-gray-700">
-              Precio de Venta *
-            </Label>
-            <Input
-              id="price"
               type="number"
               step="0.01"
               value={formData.price}
               onChange={(e) => handleFieldChange("price", e.target.value)}
               placeholder="0.00"
-              className="border-gray-200 focus:border-gray-400"
+              className="h-8 text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="cost" className="text-sm font-medium text-gray-700">
-              Costo
-            </Label>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Stock *</Label>
             <Input
-              id="cost"
+              type="number"
+              value={formData.stock}
+              onChange={(e) => handleFieldChange("stock", e.target.value)}
+              placeholder="0"
+              className="h-8 text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Especificaciones del Vehículo */}
+      <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Especificaciones del Vehículo</h3>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Marca</Label>
+            <Select value={formData.vehicleBrand} onValueChange={(value) => handleFieldChange("vehicleBrand", value)}>
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="Marca" />
+              </SelectTrigger>
+              <SelectContent className="border border-gray-200">
+                {vehicleBrands.map(brand => (
+                  <SelectItem className="hover:bg-gray-100" key={brand} value={brand}>{brand}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Motor</Label>
+            <Select value={formData.engineNumber} onValueChange={(value) => handleFieldChange("engineNumber", value)}>
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="Motor" />
+              </SelectTrigger>
+              <SelectContent className="border border-gray-200">
+                {engines.map(engine => (
+                  <SelectItem className="hover:bg-gray-100" key={engine} value={engine}>{engine}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Medida</Label>
+            <Select value={formData.measurement} onValueChange={(value) => handleFieldChange("measurement", value)}>
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="Medida" />
+              </SelectTrigger>
+              <SelectContent className="border border-gray-200">
+                {measurements.map(measurement => (
+                  <SelectItem className="hover:bg-gray-100" key={measurement} value={measurement}>{measurement}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Modelo</Label>
+            <Input
+              value={formData.model}
+              onChange={(e) => handleFieldChange("model", e.target.value)}
+              placeholder="Ej: 2020-2024"
+              className="h-8 text-sm"
+            />
+          </div>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Descripción</Label>
+            <Input
+              value={formData.additionalDescription}
+              onChange={(e) => handleFieldChange("additionalDescription", e.target.value)}
+              placeholder="Ej: Premium"
+              className="h-8 text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Descripción Auto-generada */}
+      <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+          <Wand2 className="w-4 h-4" />
+          Descripción Auto-generada
+        </h3>
+        <div className="p-3 bg-gray-50 border border-gray-200 rounded text-sm text-gray-800">
+          {formData.autoDescription || "Completa los campos para generar la descripción"}
+        </div>
+      </div>
+
+      {/* Información Adicional */}
+      <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Información Adicional</h3>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Costo</Label>
+            <Input
               type="number"
               step="0.01"
               value={formData.cost}
               onChange={(e) => handleFieldChange("cost", e.target.value)}
               placeholder="0.00"
-              className="border-gray-200 focus:border-gray-400"
+              className="h-8 text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="stock" className="text-sm font-medium text-gray-700">
-              Stock Actual *
-            </Label>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Stock Mínimo</Label>
             <Input
-              id="stock"
-              type="number"
-              value={formData.stock}
-              onChange={(e) => handleFieldChange("stock", e.target.value)}
-              placeholder="0"
-              className="border-gray-200 focus:border-gray-400"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="minStock" className="text-sm font-medium text-gray-700">
-              Stock Mínimo
-            </Label>
-            <Input
-              id="minStock"
               type="number"
               value={formData.minStock}
               onChange={(e) => handleFieldChange("minStock", e.target.value)}
               placeholder="0"
-              className="border-gray-200 focus:border-gray-400"
+              className="h-8 text-sm"
             />
           </div>
-        </div>
-      </div>
-
-      {/* Información adicional */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          Información Adicional
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="supplier" className="text-sm font-medium text-gray-700">
-              Proveedor
-            </Label>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Proveedor</Label>
             <Input
-              id="supplier"
               value={formData.supplier}
               onChange={(e) => handleFieldChange("supplier", e.target.value)}
               placeholder="Nombre del proveedor"
-              className="border-gray-200 focus:border-gray-400"
+              className="h-8 text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="barcode" className="text-sm font-medium text-gray-700">
-              Código de Barras
-            </Label>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Código de Barras</Label>
             <Input
-              id="barcode"
               value={formData.barcode}
               onChange={(e) => handleFieldChange("barcode", e.target.value)}
               placeholder="123456789012"
-              className="border-gray-200 focus:border-gray-400"
+              className="h-8 text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="location" className="text-sm font-medium text-gray-700">
-              Ubicación
-            </Label>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Ubicación</Label>
             <Input
-              id="location"
               value={formData.location}
               onChange={(e) => handleFieldChange("location", e.target.value)}
-              placeholder="Ej: A1-B2-C3"
-              className="border-gray-200 focus:border-gray-400"
+              placeholder="A1-B2-C3"
+              className="h-8 text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="warranty" className="text-sm font-medium text-gray-700">
-              Garantía (meses)
-            </Label>
+          <div>
+            <Label className="text-xs font-medium text-gray-600">Garantía (meses)</Label>
             <Input
-              id="warranty"
               type="number"
               value={formData.warranty}
               onChange={(e) => handleFieldChange("warranty", e.target.value)}
               placeholder="12"
-              className="border-gray-200 focus:border-gray-400"
+              className="h-8 text-sm"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label className="text-xs font-medium text-gray-600">Etiquetas</Label>
+            <Input
+              value={formData.tags}
+              onChange={(e) => handleFieldChange("tags", e.target.value)}
+              placeholder="original, premium, importado"
+              className="h-8 text-sm"
             />
           </div>
         </div>
-        <div className="mt-4 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="tags" className="text-sm font-medium text-gray-700">
-              Etiquetas
-            </Label>
-            <Input
-              id="tags"
-              value={formData.tags}
-              onChange={(e) => handleFieldChange("tags", e.target.value)}
-              placeholder="original, premium, importado (separadas por comas)"
-              className="border-gray-200 focus:border-gray-400"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
-              Notas Internas
-            </Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleFieldChange("notes", e.target.value)}
-              placeholder="Notas adicionales para uso interno..."
-              rows={3}
-              className="border-gray-200 focus:border-gray-400"
-            />
-          </div>
+        <div className="mt-3">
+          <Label className="text-xs font-medium text-gray-600">Notas Internas</Label>
+          <Textarea
+            value={formData.notes}
+            onChange={(e) => handleFieldChange("notes", e.target.value)}
+            placeholder="Notas adicionales..."
+            rows={2}
+            className="text-sm"
+          />
         </div>
       </div>
 
-      {/* Botones de acción */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
+      {/* Botón de Acción */}
+      <div className="bg-white rounded-lg p-4 border border-gray-200">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500">* Campos requeridos</div>
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isLoading}
-              className="bg-gray-900 hover:bg-gray-800"
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isLoading ? "Guardando..." : "Crear Producto"}
-            </Button>
-          </div>
+          <span className="text-xs text-gray-500">* Campos requeridos</span>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isLoading}
+            className="bg-gray-900 hover:bg-gray-800 h-8 text-sm"
+          >
+            <Save className="mr-2 h-3 w-3" />
+            {isLoading ? "Guardando..." : "Crear Producto"}
+          </Button>
         </div>
       </div>
     </div>
