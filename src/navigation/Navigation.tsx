@@ -2,9 +2,9 @@ import { Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import type { AuthState, AuthUser } from "sdk-simple-auth";
 import { publicRoutes } from "./Public.Route";
-import { protectedRoutes } from "./Protected.Route";
 import RouteRenderer from "./RouteRenderer";
 import authSDK from "@/services/sdk-simple-auth";
+import protectedRoutes from "./Protected.Route";
 
 const Navigation = () => {
   const [user, setUser] = useState<AuthUser | null>(null);

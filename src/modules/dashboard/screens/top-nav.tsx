@@ -5,72 +5,70 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/atoms/dropdown-menu";
-import { Bell, ChevronRight } from "lucide-react";
+import { Bell } from "lucide-react";
 import Profile01 from "./profile-01";
-//import { Image } from "@radix-ui/react-avatar"
-import { Link } from "react-router";
 import CommandPalette from "./CommandPalette/CommandPalette";
 import SearchButton from "./CommandPalette/SearchButton";
 import { useState } from "react";
-
-interface BreadcrumbItem {
-  label: string;
-  href?: string;
-}
+import protectedRoutes from "@/navigation/Protected.Route";
+import { Link, useLocation } from "react-router";
+import { useHotkeys } from "react-hotkeys-hook";
 
 export default function TopNav() {
-  const breadcrumbs: BreadcrumbItem[] = [
-    { label: "kokonutUI", href: "#" },
-    { label: "dashboard", href: "#" },
-  ];
-    const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
+  // Podriamos filtrar aqui las rutas por rol.
+  const routes = protectedRoutes.filter((route) => route.type === "protected");
 
-
+  useHotkeys(
+    "ctrl+k",
+    (e) => {
+      e.preventDefault();
+      setOpen(!open);
+    },
+    {
+      enableOnFormTags: true,
+      enabled: true,
+    }
+  );
+  useHotkeys("esc", () => setOpen(false), {
+    enableOnFormTags: true,
+    enabled: open,
+  });
   return (
     <nav className="flex items-center justify-between h-full px-3 bg-white border-b border-gray-200 sm:px-6">
-      <div className="font-medium text-sm hidden sm:flex items-center space-x-1 truncate max-w-[300px]">
-        {breadcrumbs.map((item, index) => (
-          <div key={item.label} className="flex items-center">
-            {index > 0 && (
-              <ChevronRight className="w-4 h-4 mx-1 text-gray-500" />
-            )}
-            {item.href ? (
-              <Link
-                to={item.href}
-                className="text-gray-700 transition-colors hover:text-gray-900"
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <span className="text-gray-900">{item.label}</span>
-            )}
+      <div className="font-medium text-sm hidden sm:flex items-center space-x-1 truncate">
+        {location.pathname === "/dashboard" ? (
+          <Link to={"/dashboard"}>Dashboard/</Link>
+        ) : (
+          <div>
+            <Link
+              to={"/dashboard"}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              Dashboard/
+            </Link>
+            <Link
+              to={location.pathname}
+              className="text-gray-800 hover:text-gray-900"
+            >
+              {routes.find((route) => route.path === location.pathname)?.name ||
+                "Ruta Desconocida"}
+            </Link>
           </div>
-        ))}
+        )}
       </div>
-      <div className="flex items-center gap-4">
-        <SearchButton onClick={() => setOpen(true)} />
-        <CommandPalette open={open} setOpen={setOpen} />
-      </div>
-
-
       <div className="flex items-center gap-2 ml-auto sm:gap-4 sm:ml-0">
+        <div className="flex items-center gap-4">
+          <SearchButton onClick={() => setOpen(true)} />
+          <CommandPalette open={open} setOpen={setOpen} />
+        </div>
         <button
           type="button"
           className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
           <Bell className="w-4 h-4 text-gray-600 sm:h-5 sm:w-5" />
         </button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger className="focus:outline-none"></DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            sideOffset={8}
-            className="w-[280px] sm:w-80 bg-background border-border rounded-lg shadow-lg"
-          >
-            <Profile01 avatar="https://ferf1mheo22r9ira.public.blob.vercel-storage.com/avatar-01-n0x8HFv8EUetf9z6ht0wScJKoTHqf8.png" />
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </nav>
   );

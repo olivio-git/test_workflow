@@ -1,9 +1,18 @@
-import React, { useState } from "react";
-import { Command, CommandGroup, CommandItem } from "cmdk";
+import React from "react";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandEmpty,
+} from "cmdk";
 import { useNavigate } from "react-router-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 import protectedRoutes from "@/navigation/Protected.Route";
+import { createPortal } from "react-dom";
 
+// Se procesan las rutas una sola vez fuera del componente para mayor eficiencia
 const routes = protectedRoutes.map((route) => ({
   name: route.name,
   path: route.path,
@@ -17,67 +26,60 @@ export default function CommandPalette({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
-  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
-  useHotkeys("esc", () => setOpen(false), { enableOnFormTags: true });
+  
 
   const handleSelect = (path: string) => {
     navigate(path);
     setOpen(false);
   };
 
-  const filteredRoutes =
-    search.trim() === ""
-      ? routes
-      : routes.filter(
-          (route) =>
-            route.name.toLowerCase().includes(search.toLowerCase()) ||
-            route.path.toLowerCase().includes(search.toLowerCase())
-        );
+  if (!open) {
+    return null;
+  }
 
-  if (!open) return null;
+  const commandPalette = (
+    // Contenedor del fondo que permite cerrar al hacer clic fuera
+    <div
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 sm:pt-24 bg-black/30 backdrop-blur-sm"
+      onMouseDown={() => setOpen(false)}
+    >
+      <Command
+        // Evita que el clic dentro del menú lo cierre
+        onMouseDown={(e) => e.stopPropagation()}
+        className="w-full max-w-lg bg-white border border-gray-200 shadow-2xl rounded-xl animate-in fade-in-0 zoom-in-95 overflow-hidden"
+      >
+        <CommandInput
+          autoFocus
+          placeholder="Busca una ruta o escribe un comando..."
+          className="w-full h-12 px-4 text-sm text-gray-800 bg-transparent placeholder:text-gray-400 focus:outline-none border-b border-gray-200"
+        />
+        <CommandList className="max-h-[300px] overflow-y-auto">
+          <CommandEmpty className="py-6 text-center text-sm text-gray-500">
+            No se encontraron resultados.
+          </CommandEmpty>
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 backdrop-blur-sm">
-      <div className="w-full max-w-md mt-24 bg-white border border-gray-200 shadow-xl rounded-xl animate-in fade-in-0 zoom-in-95">
-        <Command loop>
-          {/* Input superior */}
-          <div className="px-4 py-3 border-b border-gray-200">
-            <Command.Input
-              autoFocus
-              value={search}
-              onValueChange={setSearch}
-              placeholder="Buscar rutas..."
-              className="w-full text-sm text-gray-800 bg-white placeholder:text-gray-400 focus:outline-none"
-            />
-          </div>
-
-          {/* Lista de resultados */}
-          <Command.List className="max-h-[300px] overflow-y-auto py-2">
-            {filteredRoutes.length > 0 ? (
-              <CommandGroup heading="Navegación">
-                {filteredRoutes.map((route) => (
-                  <CommandItem
-                    key={route.path}
-                    onSelect={() => handleSelect(route.path)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-                  >
-                    {route.icon && (
-                      <route.icon size={16} className="text-gray-500" />
-                    )}
-                    <span>{route.name}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ) : (
-              <div className="px-4 py-2 text-sm text-gray-400">
-                Sin resultados
-              </div>
-            )}
-          </Command.List>
-        </Command>
-      </div>
+          <CommandGroup className="px-2" heading="Navegación">
+            {routes.map((route) => (
+              <CommandItem
+                key={route.path}
+                value={`${route.name} ${route.path}`}
+                onSelect={() => handleSelect(route.path)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-100 aria-selected:bg-gray-100"
+              >
+                {route.icon && (
+                  <route.icon size={16} className="text-gray-500" />
+                )}
+                <span>{route.name}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </Command>
     </div>
   );
+
+  // Renderizar el CommandPalette usando un portal para que aparezca fuera del contenedor del layout
+  return createPortal(commandPalette, document.body);
 }
