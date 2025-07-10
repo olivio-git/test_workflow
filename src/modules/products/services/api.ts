@@ -1,10 +1,39 @@
 import axios from 'axios';
-axios.defaults.baseURL = 'http://192.168.1.14:8588/api/v1';
+axios.defaults.baseURL = environment.apiUrl;
+import authSDK from '@/services/sdk-simple-auth';
+import { environment } from '@/utils/environment';
 
-export const fetchProducts = async (page:any, pageSize:any) => {
-    const response = await axios.get(`/products?pagina=${page}&pagina_registros=${pageSize}&sucursal=1`);
-    if (response.status !== 200) {
-        throw new Error('Network response was not ok');
+interface ApiConstructor {
+    url: string;
+    method?: string;
+    data?: any;
+    params?: any;
+    headers?: any;
+}
+export const apiConstructor = async ({
+    url,
+    method = "GET",
+    data,
+    params,
+    headers
+}: ApiConstructor) => {
+    try {
+        const token = await authSDK.getAccessToken();
+        const config = {
+            url,
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                ...headers
+            },
+            ...(data && method !== "GET" && method !== "DELETE" && { data }),
+            ...(params && { params }) // Añadido manejo de params
+        };
+        const response = await axios(config);
+        return response.data.data;
+    } catch (error: any) {
+        console.error('API Error:', error);
+        throw error.response?.data || error.message || 'Unknown error';
     }
-    return response.data.data
-};
+}
