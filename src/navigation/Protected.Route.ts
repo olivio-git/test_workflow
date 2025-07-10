@@ -4,6 +4,7 @@ import ProductScreen from "@/modules/products/screens/ProductScreen";
 import Content from "@/modules/dashboard/screens/content"; // Necesitas crear este componente
 import { HomeIcon, LayoutDashboardIcon } from "lucide-react";
 import CreateProduct from "@/modules/products/screens/CreateProduct";
+import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -33,6 +34,15 @@ const protectedRoutes: RouteType[] = [
     role: "admin",
     icon: HomeIcon
   },
-]; 
+  {
+    path: "/dashboard/productos",
+    name: "Lista de Productos",
+    type: "protected",
+    element: ProductListScreen,
+    isAdmin: true,
+    role: "admin",
+    icon: HomeIcon
+  },
+];
 
 export default protectedRoutes;

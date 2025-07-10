@@ -1,4 +1,4 @@
-import React,{ useState, useMemo } from "react" 
+import React, { useState, useMemo } from "react"
 import {
   Search,
   Filter,
@@ -10,22 +10,22 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-} from "lucide-react" 
+} from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/atoms/table"
 import { Button } from "@/components/atoms/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
 import { Input } from "@/components/atoms/input"
 import { Checkbox } from "@/components/atoms/checkbox"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/atoms/dropdown-menu" 
-import {FilterActives} from "../components/FilterActives"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/atoms/dropdown-menu"
+import { FilterActives } from "../components/FilterActives"
 import { FilterSort } from "../components/FilterSort"
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchProducts } from "../services/api"
 import type { ProductGet } from "../types/ProductGet"
-import { Panel,PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 const ProductScreen = () => {
-  
+
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [selectedProducts, setSelectedProducts] = useState<number[]>([])
@@ -36,17 +36,21 @@ const ProductScreen = () => {
   const [statusFilter, setStatusFilter] = useState("all")
   const [priceFilter, setPriceFilter] = useState("all")
   const [storeFilter, setStoreFilter] = useState("all");
-  
+
   const queryClient = useQueryClient();
 
-   const {
+  const {
     data: products,
     isLoading,
     error,
     refetch
   } = useQuery({
     queryKey: ['products'],
-    queryFn: fetchProducts,
+    queryFn: () => {
+      const page = 1; // Default page or retrieve dynamically
+      const pageSize = 10; // Default page size or retrieve dynamically
+      return fetchProducts(page, pageSize);
+    },
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
@@ -56,8 +60,8 @@ const ProductScreen = () => {
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
-    if(!products) return []
-    const filtered = products.filter((product:ProductGet) => {
+    if (!products) return []
+    const filtered = products.filter((product: ProductGet) => {
       const matchesSearch =
         product.descripcion.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.codigo_oem.toLowerCase().includes(searchQuery.toLowerCase())
@@ -201,14 +205,12 @@ const ProductScreen = () => {
         {children}
         <div className="flex flex-col">
           <ChevronUp
-            className={`h-3 w-3 ${
-              sortColumn === column && sortDirection === "asc" ? "text-blue-600" : "text-gray-300"
-            }`}
+            className={`h-3 w-3 ${sortColumn === column && sortDirection === "asc" ? "text-blue-600" : "text-gray-300"
+              }`}
           />
           <ChevronDown
-            className={`h-3 w-3 -mt-1 ${
-              sortColumn === column && sortDirection === "desc" ? "text-blue-600" : "text-gray-300"
-            }`}
+            className={`h-3 w-3 -mt-1 ${sortColumn === column && sortDirection === "desc" ? "text-blue-600" : "text-gray-300"
+              }`}
           />
         </div>
       </div>
@@ -253,7 +255,7 @@ const ProductScreen = () => {
             <div className="flex items-center gap-4">
               <FilterActives showFilter={showFilter} setShowFilter={setShowFilter} />
               <FilterSort sortBy={sortBy} setSortBy={setSortBy} />
-              
+
               <Button variant="outline" className="hover:bg-gray-50" size="sm" onClick={resetFilters}>
                 <Filter className="h-4 w-4 mr-2" />
                 Reset Filters
@@ -338,90 +340,145 @@ const ProductScreen = () => {
         </div> */}
 
         {/* Content */}
-    <PanelGroup direction="horizontal"> 
+        <PanelGroup direction="horizontal">
 
-        <Panel defaultSize={25} minSize={10}>
-      <div className="flex items-center justify-between p-4 bg-gray-100 border-b border-gray-200">
-        <h1 className="text-lg font-semibold text-gray-800">Formulario</h1>
-      </div>
-    </Panel>
-    <PanelResizeHandle />
-    <Panel defaultSize={75} minSize={30} className="overflow-hidden">
+          <Panel defaultSize={25} minSize={10}>
+            <div className="flex items-center justify-between p-4 bg-gray-100 border-b border-gray-200">
+              <h1 className="text-lg font-semibold text-gray-800">Formulario</h1>
+            </div>
+          </Panel>
+          <PanelResizeHandle />
+          <Panel defaultSize={75} minSize={30} className="overflow-hidden">
 
-        {viewMode === "list" ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12 border-b border-gray-200 p-2">
-                    <Checkbox
-                      checked={
-                        selectedProducts.length === filteredAndSortedProducts.length &&
-                        filteredAndSortedProducts.length > 0
-                      }
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </TableHead>
-                  <SortableHeader column="name">Product Name</SortableHeader>
-                  <SortableHeader column="price">Purchase Unit Price</SortableHeader>
-                  <SortableHeader column="products">Products</SortableHeader>
-                  <SortableHeader column="views">Views</SortableHeader>
-                  <SortableHeader column="status">Status</SortableHeader>
-                  <TableHead className="border-b border-gray-200">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-gray-200  p-2">
-                {filteredAndSortedProducts.map((product:ProductGet) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="p-1">
-                      <Checkbox
-                        className="border border-gray-400"
-                        checked={selectedProducts.includes(product.id)}
-                        onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <div className="flex items-center gap-1"> 
-                        <div>
-                          <div className="font-medium">{product.descripcion}</div>
-                          <div className="text-sm text-gray-500">SKU: {product.codigo_upc}</div>
+            {viewMode === "list" ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12 border-b border-gray-200 p-2">
+                        <Checkbox
+                          checked={
+                            selectedProducts.length === filteredAndSortedProducts.length &&
+                            filteredAndSortedProducts.length > 0
+                          }
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
+                      <SortableHeader column="name">Product Name</SortableHeader>
+                      <SortableHeader column="price">Purchase Unit Price</SortableHeader>
+                      <SortableHeader column="products">Products</SortableHeader>
+                      <SortableHeader column="views">Views</SortableHeader>
+                      <SortableHeader column="status">Status</SortableHeader>
+                      <TableHead className="border-b border-gray-200">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-gray-200  p-2">
+                    {filteredAndSortedProducts.map((product: ProductGet) => (
+                      <TableRow key={product.id}>
+                        <TableCell className="p-1">
+                          <Checkbox
+                            className="border border-gray-400"
+                            checked={selectedProducts.includes(product.id)}
+                            onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <div className="flex items-center gap-1">
+                            <div>
+                              <div className="font-medium">{product.descripcion}</div>
+                              <div className="text-sm text-gray-500">SKU: {product.codigo_upc}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="p-1">${product.precio_venta}</TableCell>
+                        <TableCell className="p-1">{product.categoria.toLocaleString()}</TableCell>
+                        <TableCell className="p-1">{product.marca.toLocaleString()}</TableCell>
+                        <TableCell className="w-32 p-1">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={product.codigo_oem === "Active" ? "text-green-600" : "text-red-600"}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className={`w-2 h-2 rounded-full ${product.codigo_oem === "Active" ? "bg-green-500" : "bg-red-500"}`}
+                                  ></div>
+                                  {product.codigo_oem}
+                                  <ChevronDown className="h-3 w-3" />
+                                </div>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="border border-gray-200">
+                              <DropdownMenuItem onClick={() => handleStatusChange(product.id, "Active")}>
+                                Active
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange(product.id, "Inactive")}>
+                                Inactive
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 bg-transparent">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 border-red-600 bg-transparent"
+                              onClick={() => handleDeleteProduct(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredAndSortedProducts.map((product: any) => (
+                    <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-3">
+                        <Checkbox
+                          className="border border-gray-400"
+                          checked={selectedProducts.includes(product.id)}
+                          onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
+                        />
+                        <div
+                          className={`px-2 py-1 rounded-full text-xs ${product.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                        >
+                          {product.status}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="p-1">${product.precio_venta}</TableCell>
-                    <TableCell className="p-1">{product.categoria.toLocaleString()}</TableCell>
-                    <TableCell className="p-1">{product.marca.toLocaleString()}</TableCell>
-                    <TableCell className="w-32 p-1">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={product.codigo_oem === "Active" ? "text-green-600" : "text-red-600"}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-2 h-2 rounded-full ${product.codigo_oem === "Active" ? "bg-green-500" : "bg-red-500"}`}
-                              ></div>
-                              {product.codigo_oem}
-                              <ChevronDown className="h-3 w-3" />
-                            </div>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="border border-gray-200">
-                          <DropdownMenuItem onClick={() => handleStatusChange(product.id, "Active")}>
-                            Active
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleStatusChange(product.id, "Inactive")}>
-                            Inactive
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 bg-transparent">
-                          <Edit className="h-4 w-4 mr-1" />
+
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        width={200}
+                        height={150}
+                        className="w-full h-32 object-cover rounded-md mb-3"
+                      />
+
+                      <h3 className="font-medium text-sm mb-1 line-clamp-2">{product.name}</h3>
+                      <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
+                      <p className="text-lg font-bold text-blue-600 mb-2">${product.price}</p>
+
+                      <div className="flex justify-between text-xs text-gray-500 mb-3">
+                        <span>Stock: {product.products}</span>
+                        <span>Views: {product.views}</span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 text-blue-600 border-blue-600 bg-transparent">
+                          <Edit className="h-3 w-3 mr-1" />
                           Edit
                         </Button>
                         <Button
@@ -430,71 +487,16 @@ const ProductScreen = () => {
                           className="text-red-600 border-red-600 bg-transparent"
                           onClick={() => handleDeleteProduct(product.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredAndSortedProducts.map((product) => (
-                <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-3">
-                    <Checkbox
-                      className="border border-gray-400"
-                      checked={selectedProducts.includes(product.id)}
-                      onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
-                    />
-                    <div
-                      className={`px-2 py-1 rounded-full text-xs ${product.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                    >
-                      {product.status}
                     </div>
-                  </div>
-
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    width={200}
-                    height={150}
-                    className="w-full h-32 object-cover rounded-md mb-3"
-                  />
-
-                  <h3 className="font-medium text-sm mb-1 line-clamp-2">{product.name}</h3>
-                  <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
-                  <p className="text-lg font-bold text-blue-600 mb-2">${product.price}</p>
-
-                  <div className="flex justify-between text-xs text-gray-500 mb-3">
-                    <span>Stock: {product.products}</span>
-                    <span>Views: {product.views}</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 text-blue-600 border-blue-600 bg-transparent">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 border-red-600 bg-transparent"
-                      onClick={() => handleDeleteProduct(product.id)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-    </Panel>
-    </PanelGroup>
+              </div>
+            )}
+          </Panel>
+        </PanelGroup>
 
         {/* Pagination */}
         <div className="p-4 border-t border-gray-200">
