@@ -1,5 +1,5 @@
 import type RouteType from "./RouteType";
-import ProductScreen from "@/modules/products/screens/ProductScreen";
+// import ProductScreen from "@/modules/products/screens/ProductScreen";
 // Importa un componente para el dashboard principal
 import Content from "@/modules/dashboard/screens/content"; // Necesitas crear este componente
 import { BarChart3Icon, DollarSignIcon, HomeIcon, LayoutDashboardIcon, PlusIcon, StoreIcon, UserCogIcon, UsersIcon } from "lucide-react";
@@ -16,15 +16,15 @@ const protectedRoutes: RouteType[] = [
     icon: LayoutDashboardIcon
   },
   //productos
-  {
-    path: "/dashboard/producto-lista",
-    name: "Productos",
-    type: "protected",
-    element: ProductScreen,
-    isAdmin: true,
-    role: "admin",
-    icon: HomeIcon
-  },
+  // {
+  //   path: "/dashboard/producto-lista",
+  //   name: "Productos",
+  //   type: "protected",
+  //   element: ProductScreen,
+  //   isAdmin: true,
+  //   role: "admin",
+  //   icon: HomeIcon
+  // },
   {
     path: "/dashboard/create-producto",
     name: "Crear Producto",

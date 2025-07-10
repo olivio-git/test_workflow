@@ -1,39 +1,35 @@
-import protectedRoutes from "@/navigation/Protected.Route"
-import type RouteType from "@/navigation/RouteType"
-import {
-  BarChart2,
-  Receipt,
-  Building2,
-  CreditCard,
-  Folder,
-  Wallet,
-  Users2,
-  Shield,
-  MessagesSquare,
-  Video,
-  Settings,
-  HelpCircle,
-  Menu, 
-} from "lucide-react"
+import { Button } from "@/components/atoms/button";
+import protectedRoutes from "@/navigation/Protected.Route";
+import type RouteType from "@/navigation/RouteType";
+import authSDK from "@/services/sdk-simple-auth";
+import { Settings, HelpCircle, Menu, LogOut } from "lucide-react";
 
-import { useState } from "react"
-import { Link } from "react-router"
+import { useState } from "react";
+import { Link } from "react-router";
 
 export default function Sidebar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   function handleNavigation() {
-    setIsMobileMenuOpen(false)
+    setIsMobileMenuOpen(false);
   }
+
+  const handleLogout = async () => {
+    try {
+      await authSDK.logout();
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
 
   function NavItem({
     href,
     icon: Icon,
     children,
   }: {
-    href: string
-    icon: any
-    children: React.ReactNode
+    href: string;
+    icon: any;
+    children: React.ReactNode;
   }) {
     return (
       <Link
@@ -44,7 +40,7 @@ export default function Sidebar() {
         <Icon className="h-4 w-4 mr-3 flex-shrink-0" />
         {children}
       </Link>
-    )
+    );
   }
 
   return (
@@ -70,9 +66,9 @@ export default function Sidebar() {
             rel="noopener noreferrer"
             className="h-16 px-6 flex items-center border-b border-gray-200"
           >
-            <div className="flex items-center gap-3"> 
+            <div className="flex items-center gap-3">
               <span className="text-lg font-semibold hover:cursor-pointer text-gray-900">
-                KokonutUI
+                TPS_INTERMOTORS
               </span>
             </div>
           </Link>
@@ -84,63 +80,15 @@ export default function Sidebar() {
                   Overview
                 </div>
                 <div className="space-y-1">
-                  {
-                    protectedRoutes.map((route:RouteType) => (
-                      <NavItem
-                          key={route.path}
-                          href={route.path}
-                          icon={route.icon}
-                        >
-                          {route.name}
-                        </NavItem>
-                    ))
-                  } 
-                  <NavItem href="#" icon={BarChart2}>
-                    Analytics
-                  </NavItem>
-                  <NavItem href="#" icon={Building2}>
-                    Organization
-                  </NavItem>
-                  <NavItem href="#" icon={Folder}>
-                    Projects
-                  </NavItem>
-                </div>
-              </div>
-
-              <div>
-                <div className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                  Finance
-                </div>
-                <div className="space-y-1">
-                  <NavItem href="#" icon={Wallet}>
-                    Transactions
-                  </NavItem>
-                  <NavItem href="#" icon={Receipt}>
-                    Invoices
-                  </NavItem>
-                  <NavItem href="#" icon={CreditCard}>
-                    Payments
-                  </NavItem>
-                </div>
-              </div>
-
-              <div>
-                <div className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                  Team
-                </div>
-                <div className="space-y-1">
-                  <NavItem href="#" icon={Users2}>
-                    Members
-                  </NavItem>
-                  <NavItem href="#" icon={Shield}>
-                    Permissions
-                  </NavItem>
-                  <NavItem href="#" icon={MessagesSquare}>
-                    Chat
-                  </NavItem>
-                  <NavItem href="#" icon={Video}>
-                    Meetings
-                  </NavItem>
+                  {protectedRoutes.map((route: RouteType) => (
+                    <NavItem
+                      key={route.path}
+                      href={route.path}
+                      icon={route.icon}
+                    >
+                      {route.name}
+                    </NavItem>
+                  ))}
                 </div>
               </div>
             </div>
@@ -149,11 +97,19 @@ export default function Sidebar() {
           <div className="px-4 py-4 border-t border-gray-200">
             <div className="space-y-1">
               <NavItem href="#" icon={Settings}>
-                Settings
+                Configuración
               </NavItem>
               <NavItem href="#" icon={HelpCircle}>
-                Help
+                Ayuda
               </NavItem>
+              <Button
+                className="w-full"
+                variant="secondary"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>
@@ -166,5 +122,5 @@ export default function Sidebar() {
         />
       )}
     </>
-  )
+  );
 }

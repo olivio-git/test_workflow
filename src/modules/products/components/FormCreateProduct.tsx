@@ -6,51 +6,112 @@ import { Input } from "@/components/atoms/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
 import { Textarea } from "@/components/atoms/textarea"
 import { Button } from "@/components/atoms/button"
+import { useQuery } from "@tanstack/react-query";
+import { apiConstructor } from "../services/api"
 
-const categories = [
-  { id: "amortiguadores", name: "Amortiguadores", singular: "Amortiguador" },
-  { id: "frenos", name: "Frenos", singular: "Freno" },
-  { id: "filtros", name: "Filtros", singular: "Filtro" },
-  { id: "aceites", name: "Aceites", singular: "Aceite" },
-  { id: "baterias", name: "Baterías", singular: "Batería" },
-  { id: "llantas", name: "Llantas", singular: "Llanta" },
-  { id: "luces", name: "Luces", singular: "Luz" },
-  { id: "espejos", name: "Espejos", singular: "Espejo" },
-]
+interface Category {
+  id: number;
+  categoria: string;
+  subcategorias: [any]; 
+}
 
-const vehicleBrands = [
+interface FormData {
+  name: string;
+  category: string;
+  vehicleBrand: string;
+  engineNumber: string;
+  measurement: string;
+  model: string;
+  additionalDescription: string;
+  autoDescription: string;
+  price: string;
+  cost: string;
+  stock: string;
+  minStock: string;
+  supplier: string;
+  barcode: string;
+  location: string;
+  weight: string;
+  dimensions: string;
+  warranty: string;
+  status: string;
+  tags: string;
+  notes: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
+}
+
+interface FormTouched {
+  [key: string]: boolean;
+}
+
+ 
+const vehicleBrands: string[] = [
   "Toyota", "Honda", "Ford", "Chevrolet", "Nissan", "Hyundai", "Kia", "Mazda", 
   "Subaru", "Mitsubishi", "Suzuki", "Isuzu", "Volkswagen", "BMW", "Mercedes-Benz", "Audi"
 ]
 
-const engines = [
+const engines: string[] = [
   "1.0L", "1.2L", "1.4L", "1.5L", "1.6L", "1.8L", "2.0L", "2.2L", "2.4L", 
   "2.5L", "2.7L", "3.0L", "3.5L", "4.0L", "V6", "V8"
 ]
 
-const measurements = [
+const measurements: string[] = [
   "Universal", "Pequeño", "Mediano", "Grande", "XL", '14"', '15"', '16"', '17"', 
   '18"', '19"', '20"', "205/55R16", "215/60R16", "225/65R17"
 ]
 
-const FormCreateProduct = () => {
+const FormCreateProduct: React.FC = () => {
   const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState({})
-  const [touched, setTouched] = useState({})
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [touched, setTouched] = useState<FormTouched>({})
 
-  const [formData, setFormData] = useState({
-    name: "", category: "", vehicleBrand: "", engineNumber: "", measurement: "",
-    model: "", additionalDescription: "", autoDescription: "", price: "", cost: "",
-    stock: "", minStock: "", supplier: "", barcode: "", location: "", weight: "",
-    dimensions: "", warranty: "", status: "active", tags: "", notes: "",
+  const [allCategorys,setAllCategorys ] = useState<Category[] | null >(null);
+  const {
+    data:categorys, 
+  } = useQuery({
+    queryKey:['categorys'],
+    queryFn: ()=>apiConstructor({url:'/categories?pagina=1&pagina_registros=9999'}),
+    staleTime: 5 *60*1000
+  });
+
+  useEffect(()=>{
+    if(categorys){
+      setAllCategorys(categorys)
+    }
+  },[categorys])
+  const [formData, setFormData] = useState<FormData>({
+    name: "", 
+    category: "", 
+    vehicleBrand: "", 
+    engineNumber: "", 
+    measurement: "",
+    model: "", 
+    additionalDescription: "", 
+    autoDescription: "", 
+    price: "", 
+    cost: "",
+    stock: "", 
+    minStock: "", 
+    supplier: "", 
+    barcode: "", 
+    location: "", 
+    weight: "",
+    dimensions: "", 
+    warranty: "", 
+    status: "active", 
+    tags: "", 
+    notes: "",
   })
 
-  const singularizeCategory = (categoryId) => {
-    return categories.find(cat => cat.id === categoryId)?.singular || ""
+  const singularizeCategory = (categoryId: string): string => {
+    return allCategorys?.find(cat => cat.id.toString() === categoryId)?.categoria || ""
   }
 
-  const generateAutoDescription = () => {
+  const generateAutoDescription = (): string => {
     const parts = [
       formData.category && singularizeCategory(formData.category),
       formData.vehicleBrand,
@@ -62,7 +123,7 @@ const FormCreateProduct = () => {
     return parts.join(" ")
   }
 
-  const validateField = (field, value) => {
+  const validateField = (field: string, value: string): string => {
     let error = ""
     
     switch (field) {
@@ -117,9 +178,9 @@ const FormCreateProduct = () => {
     return error
   }
 
-  const validateAllFields = () => {
-    const newErrors = {}
-    const requiredFields = ["name", "category", "price", "stock"]
+  const validateAllFields = (): boolean => {
+    const newErrors: FormErrors = {}
+    const requiredFields: (keyof FormData)[] = ["name", "category", "price", "stock"]
     
     requiredFields.forEach(field => {
       const error = validateField(field, formData[field])
@@ -129,7 +190,7 @@ const FormCreateProduct = () => {
     })
     
     // Validar campos opcionales si tienen valor
-    const optionalFields = ["cost", "minStock", "warranty", "barcode"]
+    const optionalFields: (keyof FormData)[] = ["cost", "minStock", "warranty", "barcode"]
     optionalFields.forEach(field => {
       if (formData[field]) {
         const error = validateField(field, formData[field])
@@ -147,7 +208,7 @@ const FormCreateProduct = () => {
     setFormData(prev => ({ ...prev, autoDescription: generateAutoDescription() }))
   }, [formData.category, formData.vehicleBrand, formData.engineNumber, formData.measurement, formData.model, formData.additionalDescription])
 
-  const handleFieldChange = (field, value) => {
+  const handleFieldChange = (field: keyof FormData, value: string): void => {
     setFormData(prev => ({ ...prev, [field]: value }))
     
     // Validar campo en tiempo real si ya fue tocado
@@ -157,15 +218,15 @@ const FormCreateProduct = () => {
     }
   }
 
-  const handleFieldBlur = (field) => {
+  const handleFieldBlur = (field: keyof FormData): void => {
     setTouched(prev => ({ ...prev, [field]: true }))
     const error = validateField(field, formData[field])
     setErrors(prev => ({ ...prev, [field]: error }))
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     // Marcar todos los campos como tocados
-    const allTouched = {}
+    const allTouched: FormTouched = {}
     Object.keys(formData).forEach(field => {
       allTouched[field] = true
     })
@@ -199,23 +260,40 @@ const FormCreateProduct = () => {
     }
   }
 
-  const resetForm = () => {
+  const resetForm = (): void => {
     setFormData({
-      name: "", category: "", vehicleBrand: "", engineNumber: "", measurement: "",
-      model: "", additionalDescription: "", autoDescription: "", price: "", cost: "",
-      stock: "", minStock: "", supplier: "", barcode: "", location: "", weight: "",
-      dimensions: "", warranty: "", status: "active", tags: "", notes: "",
+      name: "", 
+      category: "", 
+      vehicleBrand: "", 
+      engineNumber: "", 
+      measurement: "",
+      model: "", 
+      additionalDescription: "", 
+      autoDescription: "", 
+      price: "", 
+      cost: "",
+      stock: "", 
+      minStock: "", 
+      supplier: "", 
+      barcode: "", 
+      location: "", 
+      weight: "",
+      dimensions: "", 
+      warranty: "", 
+      status: "active", 
+      tags: "", 
+      notes: "",
     })
     setErrors({})
     setTouched({})
   }
 
-  const getInputClassName = (field) => {
+  const getInputClassName = (field: string): string => {
     const baseClass = "h-8 text-sm"
     return errors[field] ? `${baseClass} border-red-500 focus:border-red-500 focus:ring-red-500` : baseClass
   }
 
-  const getSelectClassName = (field) => {
+  const getSelectClassName = (field: string): string => {
     const baseClass = "h-8 text-sm"
     return errors[field] ? `${baseClass} border-red-500 focus:border-red-500` : baseClass
   }
@@ -249,9 +327,10 @@ const FormCreateProduct = () => {
                 <SelectValue placeholder="Seleccionar" />
               </SelectTrigger>
               <SelectContent className="border border-gray-200">
-                {categories.map(category => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
+                {
+                allCategorys?.map(cat => (
+                  <SelectItem key={cat.id} value={cat.id.toString()}>
+                    {cat.categoria}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -411,7 +490,7 @@ const FormCreateProduct = () => {
             {errors.barcode && <p className="mt-1 text-xs text-red-500">{errors.barcode}</p>}
           </div>
           <div>
-            <Label className="text-xs font-medium text-gray-600">Ubicación</Label>
+            <Label className="text-xs font-medium text-gray-5008">Ubicación</Label>
             <Input
               value={formData.location}
               onChange={(e) => handleFieldChange("location", e.target.value)}

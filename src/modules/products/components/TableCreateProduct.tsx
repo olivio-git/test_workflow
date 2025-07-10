@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Edit, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Edit, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -9,12 +9,12 @@ import {
   TableRow,
 } from "@/components/atoms/table";
 import { Button } from "@/components/atoms/button";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchProducts } from "../services/api";
+import { useQuery } from "@tanstack/react-query";
+import { apiConstructor } from "../services/api";
 import type { ProductGet } from "../types/ProductGet";
 
 const TableCreateProduct = () => {
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
   const [allProducts, setAllProducts] = useState<ProductGet[]>([]);
@@ -27,7 +27,7 @@ const TableCreateProduct = () => {
     isFetching,
   } = useQuery({
     queryKey: ["products", page],
-    queryFn: () => fetchProducts(page, pageSize),
+    queryFn: () => apiConstructor({url:`/products?pagina=${page}&pagina_registros=${pageSize}&sucursal=1`,method:'GET'}),
     staleTime: 5 * 60 * 1000, 
   });
 
@@ -37,21 +37,9 @@ const TableCreateProduct = () => {
     }
   }, [products]);
 
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-
   const handleDeleteProduct = (productId: number) => {
     console.log(productId);
-  };
-
-  const handleColumnSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
-    }
-  };
+  }; 
 
   const handleScroll = useCallback(() => {
     if (

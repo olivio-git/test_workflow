@@ -8,24 +8,14 @@ import protectedRoutes from "./Protected.Route";
 
 const Navigation = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const [isLoading, setIsLoading] = useState(true); 
   useEffect(() => {
     const unsubscribe = authSDK.onAuthStateChanged((possible: AuthState) => {
+      setIsLoading(true);
       if (!possible.user) {
         setUser(null);
       } else {
-        // setUser(possible.user);
-        setUser({
-          id: "123",
-          email: "admin@gmail.com",
-          name: "Admin",
-          role: "admin",
-          isAdmin: true,
-          isAuthenticated: true,
-          token: "eyasdaw12312asd",
-          refreshToken: "ey123123",
-        });
+        setUser(possible.user);
       }
       setIsLoading(false);
     });
@@ -42,15 +32,17 @@ const Navigation = () => {
   const allRoutes = [...publicRoutes, ...protectedRoutes];
   return (
     <Routes>
-      {allRoutes.map((route, index) => (
+      { 
+        allRoutes.map((route, index) => (
         <Route
           key={`${route.type}-${index}`}
           path={route.path}
           element={
             <RouteRenderer
               route={route}
-              isAuthenticated={true} // Cambia esto para usar el estado real
+              isAuthenticated={!!user} // Cambia esto para usar el estado real
               redirectTo="/"
+              isLoading={isLoading}
             />
           }
         />
