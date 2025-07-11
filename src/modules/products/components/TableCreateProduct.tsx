@@ -64,7 +64,7 @@ const TableCreateProduct = () => {
   return (
     <div 
       ref={tableContainerRef}
-      className="h-[80vh] overflow-y-auto border border-gray-200 rounded-md"
+      className="overflow-y-auto border border-gray-200 rounded-md"
     >
       <Table className="min-w-full">
         <TableHeader className="sticky top-0 bg-white z-10">
