@@ -1,8 +1,9 @@
-import { environment } from "@/utils/environment";
+// import { environment } from "@/utils/environment";
 import { AuthSDK } from "sdk-simple-auth";
 
 const authSDK = new AuthSDK({
-    authServiceUrl: environment.apiUrl || "http://localhost:3000/",
+    authServiceUrl: "http://192.168.1.14:8588/api/v1",
+    // authServiceUrl: environment.apiUrl || "http://192.168.1.14:8588/api/v1",
     endpoints: {
         login: "/login",
         logout: "/logout"

@@ -4,7 +4,7 @@ import type { ProductFilters } from "../types/productFilters";
 export const useProductFilters = (defaultSucursal: number) => {
     const [filters, setFilters] = useState<ProductFilters>({
         pagina: 1,
-        pagina_registros: 20,
+        pagina_registros: 25,
         sucursal: defaultSucursal,
         descripcion: "",
     });
