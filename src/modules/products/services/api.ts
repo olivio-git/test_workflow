@@ -31,7 +31,7 @@ export const apiConstructor = async ({
             ...(params && { params }) // Añadido manejo de params
         };
         const response = await axios(config);
-        return response.data.data;
+        return response.data.data || response.data;
     } catch (error: any) {
         console.error('API Error:', error);
         throw error.response?.data || error.message || 'Unknown error';
