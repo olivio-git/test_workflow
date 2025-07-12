@@ -2,8 +2,10 @@ import type RouteType from "./RouteType";
 // import ProductScreen from "@/modules/products/screens/ProductScreen";
 // Importa un componente para el dashboard principal
 import Content from "@/modules/dashboard/screens/content"; // Necesitas crear este componente
-import { BarChart3Icon, DollarSignIcon, HomeIcon, LayoutDashboardIcon, PlusIcon, StoreIcon, UserCogIcon, UsersIcon } from "lucide-react";
+import { BarChart3Icon, DollarSignIcon, HomeIcon, LayoutDashboardIcon, Package, PlusIcon, StoreIcon, UserCogIcon, UsersIcon } from "lucide-react";
 import CreateProduct from "@/modules/products/screens/CreateProduct";
+import ProductListScreen from "@/modules/products/screens/ProductListScreen";
+import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -33,6 +35,24 @@ const protectedRoutes: RouteType[] = [
     isAdmin: true,
     role: "admin",
     icon: HomeIcon
+  },
+  {
+    path: "/dashboard/productos",
+    name: "Lista de Productos",
+    type: "protected",
+    element: ProductListScreen,
+    isAdmin: true,
+    role: "admin",
+    icon: Package
+  },
+  {
+    path: "/dashboard/product-detail",
+    name: "Detalle de Producto",
+    type: "protected",
+    element: ProductDetailScreen,
+    isAdmin: true,
+    role: "admin",
+    icon: Package
   },
   //compras
   {
@@ -163,6 +183,6 @@ const protectedRoutes: RouteType[] = [
     role: "admin",
     icon: BarChart3Icon
   }
-]; 
+];
 
 export default protectedRoutes;

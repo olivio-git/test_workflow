@@ -4,15 +4,12 @@ import type RouteType from "@/navigation/RouteType";
 import authSDK from "@/services/sdk-simple-auth";
 import { Settings, HelpCircle, Menu, LogOut } from "lucide-react";
 
-import { useState } from "react";
 import { Link } from "react-router";
-
-export default function Sidebar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  function handleNavigation() {
-    setIsMobileMenuOpen(false);
-  }
+interface SidebarProps {
+  isSidebarMenuOpen: boolean
+  handleNavigation: () => void
+}
+const Sidebar: React.FC<SidebarProps> = ({ isSidebarMenuOpen, handleNavigation }) => {
 
   const handleLogout = async () => {
     try {
@@ -45,30 +42,28 @@ export default function Sidebar() {
 
   return (
     <>
-      <button
+      {/* <button
         type="button"
         className="lg:hidden fixed top-4 left-4 z-[70] p-2 rounded-lg bg-white shadow-md"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        onClick={() => handleToogleSidebarMenu()}
       >
         <Menu className="h-5 w-5 text-gray-600" />
-      </button>
+      </button> */}
       <nav
         className={`
                 fixed inset-y-0 left-0 z-[70] w-64 bg-white transform transition-transform duration-200 ease-in-out
-                lg:translate-x-0 lg:static lg:w-64 border-r border-gray-200
-                ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+                 lg:w-2/12 border-r border-gray-200
+                ${isSidebarMenuOpen ? "translate-x-0 lg:static" : "-translate-x-full"}
             `}
       >
         <div className="h-full flex flex-col">
           <Link
-            to="https://kokonutui.com/"
-            target="_blank"
-            rel="noopener noreferrer"
+            to="#"
             className="h-16 px-6 flex items-center border-b border-gray-200"
           >
             <div className="flex items-center gap-3">
               <span className="text-lg font-semibold hover:cursor-pointer text-gray-900">
-                TPS_INTERMOTORS
+                INTERMOTORS
               </span>
             </div>
           </Link>
@@ -115,12 +110,13 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {isMobileMenuOpen && (
+      {isSidebarMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-[65] lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={() => handleNavigation()}
         />
       )}
     </>
   );
 }
+export default Sidebar;
