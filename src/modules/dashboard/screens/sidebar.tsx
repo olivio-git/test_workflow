@@ -1,4 +1,3 @@
-import { Button } from "@/components/atoms/button";
 import protectedRoutes from "@/navigation/Protected.Route";
 import type RouteType from "@/navigation/RouteType";
 import authSDK from "@/services/sdk-simple-auth";
@@ -6,43 +5,40 @@ import { Settings, HelpCircle, Menu, LogOut } from "lucide-react";
 
 import { useState } from "react";
 import { Link } from "react-router";
+import NavItem from "../components/NavItem";
 
 export default function Sidebar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   function handleNavigation() {
     setIsMobileMenuOpen(false);
   }
-
   const handleLogout = async () => {
     try {
       await authSDK.logout();
+      // localStorage.removeItem(environment.branch_selected_key);
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }
-  };
-
-  function NavItem({
-    href,
+  }; 
+  function ButtonItem({
+    onClick,
     icon: Icon,
     children,
   }: {
-    href: string;
+    onClick: () => void;
     icon: any;
     children: React.ReactNode;
   }) {
     return (
-      <Link
-        to={href}
-        onClick={handleNavigation}
-        className="flex items-center px-3 py-2 text-sm rounded-md transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+      <div
+        onClick={onClick}
+        className="flex items-center px-3 py-2 text-sm rounded-md transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50 cursor-pointer"
       >
         <Icon className="h-4 w-4 mr-3 flex-shrink-0" />
         {children}
-      </Link>
+      </div>
     );
   }
-
   return (
     <>
       <button
@@ -85,6 +81,7 @@ export default function Sidebar() {
                       key={route.path}
                       href={route.path}
                       icon={route.icon}
+                      handleNavigation={handleNavigation}
                     >
                       {route.name}
                     </NavItem>
@@ -95,26 +92,20 @@ export default function Sidebar() {
           </div>
 
           <div className="px-4 py-4 border-t border-gray-200">
-            <div className="space-y-1">
-              <NavItem href="#" icon={Settings}>
+            <div className="space-y-1"> 
+              <NavItem href="/dashboard" handleNavigation={handleNavigation} icon={Settings}>
                 Configuración
               </NavItem>
-              <NavItem href="#" icon={HelpCircle}>
+              <NavItem href="#" handleNavigation={handleNavigation} icon={HelpCircle}>
                 Ayuda
               </NavItem>
-              <Button
-                className="w-full"
-                variant="secondary"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
+              <ButtonItem icon={LogOut} onClick={handleLogout}>
                 Logout
-              </Button>
+              </ButtonItem>
             </div>
           </div>
         </div>
-      </nav>
-
+      </nav> 
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-[65] lg:hidden"

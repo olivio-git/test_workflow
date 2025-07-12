@@ -248,41 +248,41 @@ const FormCreateProduct: React.FC = () => {
     return error;
   };
 
-  const validateAllFields = (): boolean => {
-    const newErrors: FormErrors = {};
-    const requiredFields: (keyof FormData)[] = [
-      "descripcion",
-      "precio_venta",
-      "id_marca",
-      "modelo",
-    ];
+  // const validateAllFields = (): boolean => {
+  //   const newErrors: FormErrors = {};
+  //   const requiredFields: (keyof FormData)[] = [
+  //     "descripcion",
+  //     "precio_venta",
+  //     "id_marca",
+  //     "modelo",
+  //   ];
 
-    requiredFields.forEach((field) => {
-      const error = validateField(field, formData[field]);
-      if (error) {
-        newErrors[field] = error;
-      }
-    });
+  //   requiredFields.forEach((field) => {
+  //     const error = validateField(field, formData[field]);
+  //     if (error) {
+  //       newErrors[field] = error;
+  //     }
+  //   });
 
-    // Validar campos opcionales si tienen valor
-    const optionalFields: (keyof FormData)[] = [
-      "nro_motor",
-      "id_procedencia",
-      "id_marca_vehiculo",
-      "id_unidad",
-    ];
-    optionalFields.forEach((field) => {
-      if (formData[field]) {
-        const error = validateField(field, formData[field]);
-        if (error) {
-          newErrors[field] = error;
-        }
-      }
-    });
+  //   // Validar campos opcionales si tienen valor
+  //   const optionalFields: (keyof FormData)[] = [
+  //     "nro_motor",
+  //     "id_procedencia",
+  //     "id_marca_vehiculo",
+  //     "id_unidad",
+  //   ];
+  //   optionalFields.forEach((field) => {
+  //     if (formData[field]) {
+  //       const error = validateField(field, formData[field]);
+  //       if (error) {
+  //         newErrors[field] = error;
+  //       }
+  //     }
+  //   });
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
 
 
   // Función para singularizar la categoría
@@ -313,14 +313,14 @@ const FormCreateProduct: React.FC = () => {
 
   // Función para generar la descripción automática
   const generateAutoDescription = () => {
-    console.log("Generando descripción con:", {
-      categoria: formData.id_categoria,
-      marca_vehiculo: formData.id_marca_vehiculo,
-      nro_motor: formData.nro_motor,
-      medida: formData.medida,
-      modelo: formData.modelo,
-      descripcion_alt: formData.descripcion_alt
-    });
+    // console.log("Generando descripción con:", {
+    //   categoria: formData.id_categoria,
+    //   marca_vehiculo: formData.id_marca_vehiculo,
+    //   nro_motor: formData.nro_motor,
+    //   medida: formData.medida,
+    //   modelo: formData.modelo,
+    //   descripcion_alt: formData.descripcion_alt
+    // });
 
     const parts = [
       singularizeCategory(formData.id_categoria),
@@ -332,7 +332,7 @@ const FormCreateProduct: React.FC = () => {
     ].filter(part => part && part.toString().trim() !== "");
 
     const description = parts.join(" ");
-    console.log("Descripción generada:", description);
+    // console.log("Descripción generada:", description);
     return description;
   };
 

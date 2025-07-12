@@ -1,18 +1,11 @@
-"use client";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/atoms/dropdown-menu";
 import { Bell } from "lucide-react";
-import Profile01 from "./profile-01";
 import CommandPalette from "./CommandPalette/CommandPalette";
 import SearchButton from "./CommandPalette/SearchButton";
 import { useState } from "react";
 import protectedRoutes from "@/navigation/Protected.Route";
 import { Link, useLocation } from "react-router";
 import { useHotkeys } from "react-hotkeys-hook";
+import SelectBranch from "../components/SelectBranch";
 
 export default function TopNav() {
   const location = useLocation();
@@ -59,6 +52,9 @@ export default function TopNav() {
         )}
       </div>
       <div className="flex items-center gap-2 ml-auto sm:gap-4 sm:ml-0">
+        <div className="flex items-center gap-4 w-full">
+          <SelectBranch></SelectBranch>
+        </div>
         <div className="flex items-center gap-4">
           <SearchButton onClick={() => setOpen(true)} />
           <CommandPalette open={open} setOpen={setOpen} />
