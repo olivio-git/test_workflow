@@ -8,6 +8,7 @@ import authSDK from "@/services/sdk-simple-auth";
 import protectedRoutes from "./Protected.Route";
 import BranchSelection from "@/modules/auth/screens/BranchScreen";
 import { environment } from "@/utils/environment";
+import type RouteType from "./RouteType";
 
 const Navigation = () => {
   const [authState, setAuthState] = useState<{
@@ -26,7 +27,7 @@ const Navigation = () => {
       if (!possible.user) {
         setAuthState({ user: null, selectedBranch: null });
       } else {
-        setAuthState((_prev) => ({
+        setAuthState(() => ({
           user: possible.user,
           selectedBranch: localStorage.getItem(environment.branch_selected_key),
         }));
@@ -51,7 +52,21 @@ const Navigation = () => {
     return <div>Cargando...</div>;
   }
 
-  const allRoutes = [...publicRoutes, ...protectedRoutes];
+  const mapProtectedRoutes = protectedRoutes.flatMap((rt: RouteType) => {
+    const routes: RouteType[] = [];
+    if (rt.path) {
+      routes.push(rt);
+    }
+    if (rt.subRoutes) {
+      const subRoutes = rt.subRoutes.filter(
+        (sbrt: RouteType) => sbrt.path && !sbrt.isHeader
+      );
+      routes.push(...subRoutes);
+    }
+    return routes;
+  });
+
+  const allRoutes = [...publicRoutes, ...mapProtectedRoutes];
   return (
     <Routes>
       {allRoutes.map((route, index) => (

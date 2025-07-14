@@ -40,98 +40,9 @@ interface FormErrors {
 
 interface FormTouched {
   [key: string]: boolean;
-}
-const subcategorias = [
-  {
-    id:36,
-    subcategoria: 'Sub categoria 1'
-  },
-  {
-    id:37,
-    subcategoria: 'Subcategoria 2'
-  },
-  {
-    id:38,
-    subcategoria: 'Subcategoria 3'
-  }
-]
-const productBrands = [
-  { id: 35, marca: "Bosch" },
-  { id: 34, marca: "NGK" },
-  { id: 36, marca: "Denso" },
-  { id: 38, marca: "Valeo" },
-  { id: 33, marca: "Magneti Marelli" },
-  { id: 43, marca: "ACDelco" },
-  { id: 37, marca: "Delphi" },
-  { id: 84, marca: "Mann-Filter" },
-  { id: 66, marca: "Mahle" },
-  { id: 10, marca: "Hella" },
-  { id: 11, marca: "TRW" },
-  { id: 12, marca: "SKF" },
-  { id: 13, marca: "Gates" },
-  { id: 14, marca: "Brembo" },
-  { id: 15, marca: "Monroe" },
-  { id: 16, marca: "KYB" },
-];
-const vehicleBrands = [
-  { id: 1, marca: "Toyota" },
-  { id: 2, marca: "Honda" },
-  { id: 3, marca: "Ford" },
-  { id: 4, marca: "Chevrolet" },
-  { id: 5, marca: "Nissan" },
-  { id: 6, marca: "Hyundai" },
-  { id: 7, marca: "Kia" },
-  { id: 8, marca: "Mazda" },
-  { id: 9, marca: "Subaru" },
-  { id: 10, marca: "Mitsubishi" },
-  { id: 11, marca: "Suzuki" },
-  { id: 12, marca: "Isuzu" },
-  { id: 13, marca: "Volkswagen" },
-  { id: 14, marca: "BMW" },
-  { id: 15, marca: "Mercedes-Benz" },
-  { id: 16, marca: "Audi" },
-];
+} 
 
-const unidades = [
-  { id: 1, unidad: "Universal" },
-  { id: 2, unidad: "Pequeño" },
-  { id: 3, unidad: "Mediano" },
-  { id: 4, unidad: "Grande" },
-  { id: 5, unidad: "XL" },
-  { id: 6, unidad: '14"' },
-  { id: 7, unidad: '15"' },
-  { id: 8, unidad: '16"' },
-  { id: 9, unidad: '17"' },
-  { id: 10, unidad: '18"' },
-  { id: 11, unidad: '19"' },
-  { id: 12, unidad: '20"' },
-  { id: 13, unidad: "205/55R16" },
-  { id: 14, unidad: "215/60R16" },
-  { id: 15, unidad: "225/65R17" },
-];
 
-const procedencia: object[] = [
-  { id: 1, procedencia: "JAPAN" },
-  { id: 2, procedencia: "USA" },
-  { id: 3, procedencia: "GERMANY" },
-  { id: 4, procedencia: "KOREA" },
-  { id: 5, procedencia: "CHINA" },
-  { id: 6, procedencia: "BRAZIL" },
-  { id: 7, procedencia: "FRANCE" },
-  { id: 8, procedencia: "ITALY" },
-  { id: 9, procedencia: "SPAIN" },
-  { id: 10, procedencia: "MEXICO" },
-  { id: 11, procedencia: "INDIA" },
-  { id: 12, procedencia: "UK" },
-  { id: 13, procedencia: "CANADA" },
-  { id: 14, procedencia: "ARGENTINA" },
-  { id: 15, procedencia: "THAILAND" },
-  { id: 16, procedencia: "TURKEY" },
-  { id: 17, procedencia: "TAIWAN" },
-  { id: 18, procedencia: "POLAND" },
-  { id: 19, procedencia: "AUSTRALIA" },
-  { id: 20, procedencia: "SOUTH AFRICA" },
-];
 const FormCreateProduct: React.FC = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -139,18 +50,45 @@ const FormCreateProduct: React.FC = () => {
   const [touched, setTouched] = useState<FormTouched>({});
 
   const [allCategorys, setAllCategorys] = useState<Category[] | null>(null);
+  
   const { data: categorys } = useQuery({
     queryKey: ["categorys"],
     queryFn: () =>
       apiConstructor({ url: "/categories?pagina=1&pagina_registros=9999" }),
     staleTime: 5 * 60 * 1000,
   });
+  const { data: brands } = useQuery({
+    queryKey: ["brands"],
+    queryFn: () =>
+      apiConstructor({ url: "/products/commons/brands",method:"GET" }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: vehicleBrands } = useQuery({
+    queryKey: ["vehicleBrands"],
+    queryFn: () =>
+      apiConstructor({ url: "/products/commons/vehicle-brands",method:"GET" }),
+    staleTime: 5 * 60 * 1000,
+  });
+  
+  const { data: procedencia } = useQuery({
+    queryKey:["procedencia"],
+    queryFn:()=> apiConstructor({url:"/products/commons/origins",method:"GET"}),
+    staleTime: 5 * 60 * 1000
+  })
+
+  const { data: unidades } = useQuery({
+    queryKey:["unidades"],
+    queryFn:()=> apiConstructor({url:"/products/commons/measurements ",method:"GET"}),
+    staleTime: 5 * 60 * 1000
+  })
 
   useEffect(() => {
     if (categorys) {
       setAllCategorys(categorys);
     }
   }, [categorys]);
+
   const [formData, setFormData] = useState<any>({
       descripcion: "",
       id_categoria: 0,
@@ -193,6 +131,25 @@ const FormCreateProduct: React.FC = () => {
       tags: "",
       notes: "",
   }); 
+
+  const { data: subcategorias, refetch: fetchSubcategories } = useQuery({
+    queryKey: ["subCategorias", formData.id_categoria],
+    queryFn: () =>
+      apiConstructor({
+        url: `/products/commons/subcategories?categoria=${formData?.id_categoria}`,
+        method: "GET"
+      }),
+    enabled: false,
+    staleTime: 5 * 60 * 1000
+  });
+
+  useEffect(() => {
+    if (formData.id_categoria && formData.id_categoria !== 0) {
+      fetchSubcategories();
+      setFormData((prev:any) => ({ ...prev, id_subcategoria: "" }));
+    }
+  }, [formData.id_categoria, fetchSubcategories]);
+
   const validateField = (field: string, value: string): string => {
     let error = "";
 
@@ -307,21 +264,12 @@ const FormCreateProduct: React.FC = () => {
   // Función para obtener el nombre de la marca del vehículo
   const getVehicleBrandName = (brandId:any) => {
     if (!brandId || brandId === 0) return "";
-    const brand = vehicleBrands.find((b) => b.id === parseInt(brandId));
-    return brand ? brand.marca : "";
+    const brand = vehicleBrands.find((b:any) => b.id === parseInt(brandId));
+    return brand ? brand.marca_vehiculo : "";
   };
 
   // Función para generar la descripción automática
-  const generateAutoDescription = () => {
-    // console.log("Generando descripción con:", {
-    //   categoria: formData.id_categoria,
-    //   marca_vehiculo: formData.id_marca_vehiculo,
-    //   nro_motor: formData.nro_motor,
-    //   medida: formData.medida,
-    //   modelo: formData.modelo,
-    //   descripcion_alt: formData.descripcion_alt
-    // });
-
+  const generateAutoDescription = () => { 
     const parts = [
       singularizeCategory(formData.id_categoria),
       getVehicleBrandName(formData.id_marca_vehiculo),
@@ -555,7 +503,7 @@ const FormCreateProduct: React.FC = () => {
                 handleFieldChange("id_marca", value);
                 handleFieldBlur("marca");
               }}
-              options={productBrands || []}
+              options={brands || []}
               optionTag={"marca"}
               placeholder="Seleccionar marca"
               searchPlaceholder="Buscar marcas..."
@@ -667,10 +615,10 @@ const FormCreateProduct: React.FC = () => {
                 handleFieldBlur("id_marca_vehiculo");
               }}
               options={vehicleBrands || []}
-              optionTag={"marca"}
+              optionTag={"marca_vehiculo"}
               placeholder="Seleccionar marca vehículo"
               searchPlaceholder="Buscar marcas..."
-              className={getSelectClassName("marcaVehículo")}
+              className={getSelectClassName("marca_vehiculo")}
             />
           </div>
           <div>
@@ -688,7 +636,7 @@ const FormCreateProduct: React.FC = () => {
               placeholder="Seleccionar subcategoría"
               searchPlaceholder="Buscar subcategoría..."
               className={getSelectClassName("subcategoría")}
-            /> 
+            />
           </div>
           <div>
             <Label className="text-xs font-medium text-gray-5008">
@@ -723,13 +671,13 @@ const FormCreateProduct: React.FC = () => {
               value={formData.id_unidad}
               onChange={(value: any) => {
                 handleFieldChange("id_unidad", value);
-                handleFieldBlur("unidad");
+                handleFieldBlur("unidad_medida");
               }}
               options={unidades || []}
-              optionTag={"unidad"}
+              optionTag={"unidad_medida"}
               placeholder="Seleccionar unidad"
               searchPlaceholder="Buscar unidad..."
-              className={getSelectClassName("unidad")}
+              className={getSelectClassName("unidad_medida")}
             />
           </div>
           <div>

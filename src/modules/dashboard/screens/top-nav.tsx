@@ -1,4 +1,12 @@
-import { Bell } from "lucide-react";
+"use client";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/atoms/dropdown-menu";
+import { Bell, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import Profile01 from "./profile-01";
 import CommandPalette from "./CommandPalette/CommandPalette";
 import SearchButton from "./CommandPalette/SearchButton";
 import { useState } from "react";
@@ -6,8 +14,14 @@ import protectedRoutes from "@/navigation/Protected.Route";
 import { Link, useLocation } from "react-router";
 import { useHotkeys } from "react-hotkeys-hook";
 import SelectBranch from "../components/SelectBranch";
-
-export default function TopNav() {
+interface TopNavProps {
+  isSidebarMenuOpen: boolean
+  handleToogleSidebarMenu: () => void
+}
+const TopNav: React.FC<TopNavProps> = ({
+  isSidebarMenuOpen,
+  handleToogleSidebarMenu,
+}) => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   // Podriamos filtrar aqui las rutas por rol.
@@ -29,12 +43,23 @@ export default function TopNav() {
     enabled: open,
   });
   return (
-    <nav className="flex items-center justify-between h-full px-3 bg-white border-b border-gray-200 sm:px-6">
-      <div className="font-medium text-sm hidden sm:flex items-center space-x-1 truncate">
+    <nav className="flex items-center justify-between h-full px-2 bg-white border-b border-gray-200 sm:px-4">
+      <div className="font-medium text-sm flex items-center space-x-1 truncate w-full">
+        <button
+          onClick={() => handleToogleSidebarMenu()}
+          className="rounded p-1.5 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer">
+          {
+            isSidebarMenuOpen ? (
+              <PanelLeftClose className="size-4 text-gray-800" />
+            ) : (
+              <PanelLeftOpen className="size-4 text-gray-800" />
+            )
+          }
+        </button>
         {location.pathname === "/dashboard" ? (
-          <Link to={"/dashboard"}>Dashboard/</Link>
+          <Link className="hidden sm:flex" to={"/dashboard"}>Dashboard/</Link>
         ) : (
-          <div>
+          <div className="hidden sm:flex">
             <Link
               to={"/dashboard"}
               className="text-gray-500 hover:text-gray-700"
@@ -69,3 +94,4 @@ export default function TopNav() {
     </nav>
   );
 }
+export default TopNav;
