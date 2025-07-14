@@ -24,7 +24,7 @@ const RouteRenderer: React.FC<RouteRendererProps> = ({
   }
 
   if (!isLoading && location.pathname !== redirectTo) {
-    localStorage.setItem("lastPath", location.pathname);
+      localStorage.setItem("lastPath", location.pathname);
   } 
   if (!Component) {
     return <div>Componente no encontrado para la ruta: {route.path}</div>;

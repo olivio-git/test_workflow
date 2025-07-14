@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Command,
   CommandGroup,
@@ -8,16 +7,40 @@ import {
   CommandEmpty,
 } from "cmdk";
 import { useNavigate } from "react-router-dom";
-import { useHotkeys } from "react-hotkeys-hook";
 import protectedRoutes from "@/navigation/Protected.Route";
 import { createPortal } from "react-dom";
 
-// Se procesan las rutas una sola vez fuera del componente para mayor eficiencia
-const routes = protectedRoutes.map((route) => ({
-  name: route.name,
-  path: route.path,
-  icon: route.icon,
-}));
+const processRoutes = (routes: any[]) => {
+  const flatRoutes: any[] = [];
+
+  routes.forEach((route) => {
+    if (route.path && !route.isHeader) {
+      flatRoutes.push({
+        name: route.name,
+        path: route.path,
+        icon: route.icon,
+        parentName: null,
+      });
+    }
+
+    if (route.subRoutes) {
+      route.subRoutes.forEach((subRoute: any) => {
+        if (subRoute.path) {
+          flatRoutes.push({
+            name: subRoute.name,
+            path: subRoute.path,
+            icon: subRoute.icon,
+            parentName: route.name,
+          });
+        }
+      });
+    }
+  });
+
+  return flatRoutes;
+};
+
+const routes = processRoutes(protectedRoutes);
 
 export default function CommandPalette({
   open,
@@ -27,8 +50,6 @@ export default function CommandPalette({
   setOpen: (v: boolean) => void;
 }) {
   const navigate = useNavigate();
-
-  
 
   const handleSelect = (path: string) => {
     navigate(path);
@@ -40,13 +61,11 @@ export default function CommandPalette({
   }
 
   const commandPalette = (
-    // Contenedor del fondo que permite cerrar al hacer clic fuera
     <div
       className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 sm:pt-24 bg-black/30 backdrop-blur-sm"
       onMouseDown={() => setOpen(false)}
     >
       <Command
-        // Evita que el clic dentro del menú lo cierre
         onMouseDown={(e) => e.stopPropagation()}
         className="w-full max-w-lg bg-white border border-gray-200 shadow-2xl rounded-xl animate-in fade-in-0 zoom-in-95 overflow-hidden"
       >
@@ -64,14 +83,21 @@ export default function CommandPalette({
             {routes.map((route) => (
               <CommandItem
                 key={route.path}
-                value={`${route.name} ${route.path}`}
+                value={`${route.name} ${route.path} ${route.parentName || ''}`}
                 onSelect={() => handleSelect(route.path)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-100 aria-selected:bg-gray-100"
               >
                 {route.icon && (
                   <route.icon size={16} className="text-gray-500" />
                 )}
-                <span>{route.name}</span>
+                <div className="flex flex-col">
+                  <span>{route.name}</span>
+                  {route.parentName && (
+                    <span className="text-xs text-gray-400">
+                      {route.parentName}
+                    </span>
+                  )}
+                </div>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -80,6 +106,5 @@ export default function CommandPalette({
     </div>
   );
 
-  // Renderizar el CommandPalette usando un portal para que aparezca fuera del contenedor del layout
   return createPortal(commandPalette, document.body);
 }

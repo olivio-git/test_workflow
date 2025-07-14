@@ -10,6 +10,6 @@ export const useProductsPaginated = (filters: ProductFilters) => {
         queryFn: async () => await fetchProducts(filters),
         placeholderData: keepPreviousData,
         staleTime: 1000 * 60 * 5, // 5 minutes
-        enabled: isAuthenticated || !!filters?.sucursal,
+        // enabled: isAuthenticated || !!filters?.sucursal,
     });
 };
