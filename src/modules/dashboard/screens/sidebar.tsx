@@ -17,12 +17,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   isSidebarMenuOpen,
   handleNavigation,
 }) => {
-  // Estado para manejar qué headers están expandidos
   const [expandedHeaders, setExpandedHeaders] = useState<string[]>([]);
 
   const handleLogout = async () => {
     try {
-      // localStorage.removeItem("lastPath");
+      // localStorage.removeItem("lastPath"); ///POR SI QUEREMOS BORRAR HISTORIAL DE ULTIMA RUTA
       await authSDK.logout();
     } catch (error) {
       console.error("Error al cerrar sesión:", error);

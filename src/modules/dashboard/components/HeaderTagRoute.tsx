@@ -46,7 +46,7 @@ const HeaderTagRoute = ({
         )}
         <div className="flex items-center">
           {route.icon && <route.icon className="h-4 w-4 mr-3 flex-shrink-0" />}
-          <span className="text-xs font-semibold uppercase tracking-wider">
+          <span className="text-xs text-gray-600 font-semibold uppercase tracking-wider">
             {route.name}
           </span>
         </div>
