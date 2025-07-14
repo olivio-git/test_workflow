@@ -1,9 +1,16 @@
-import { Calendar, CreditCard, Wallet } from "lucide-react"
-import List01 from "./list-01"
-import List02 from "./list-02"
-import List03 from "./list-03"
+import { Calendar, CreditCard, Wallet } from "lucide-react";
+import List01 from "./list-01";
+import List02 from "./list-02";
+import List03 from "./list-03";
+import { useBranchStore } from "@/states/branchStore";
+import { useEffect } from "react";
 
 export default function Content() {
+  const selectedBranchId = useBranchStore((state) => state.selectedBranchId);
+
+  useEffect(() => {
+    console.log(selectedBranchId);
+  }, [selectedBranchId]);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -35,5 +42,5 @@ export default function Content() {
         <List03 />
       </div>
     </div>
-  )
+  );
 }

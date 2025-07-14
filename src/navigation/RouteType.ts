@@ -1,13 +1,16 @@
 import type React from "react";
 
 export default interface RouteType {
-    path: string;
+    path?: string;
     element?:  React.ComponentType<any>;
     name: string;
     type: "public" | "protected";
     icon?: any;
     exact?: boolean;
-    children?: RouteType[]; 
     isAdmin?: boolean;
-    role?: "admin" | "user" | "guest"; // Define roles if needed
+    role?: ["admin" | "user" | "guest"]; // Define roles if needed
+    
+    subRoutes?: RouteType[];
+    isHeader?:boolean;
+    showSidebar?:boolean
 }

@@ -1,30 +1,59 @@
-"use client";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/atoms/dropdown-menu";
 import { Bell, PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import Profile01 from "./profile-01";
 import CommandPalette from "./CommandPalette/CommandPalette";
 import SearchButton from "./CommandPalette/SearchButton";
 import { useState } from "react";
 import protectedRoutes from "@/navigation/Protected.Route";
 import { Link, useLocation } from "react-router";
 import { useHotkeys } from "react-hotkeys-hook";
+import SelectBranch from "../components/SelectBranch";
+import type RouteType from "@/navigation/RouteType";
+
 interface TopNavProps {
-  isSidebarMenuOpen: boolean
-  handleToogleSidebarMenu: () => void
+  isSidebarMenuOpen: boolean;
+  handleToogleSidebarMenu: () => void;
 }
+
+const flattenRoutes = (routes: RouteType[]): RouteType[] => {
+  const flattened: RouteType[] = [];
+  
+  routes.forEach((route) => {
+    if (route.path) {
+      flattened.push(route);
+    }
+    
+    if (route.subRoutes) {
+      flattened.push(...flattenRoutes(route.subRoutes));
+    }
+  });
+  
+  return flattened;
+};
+
+const findParentRoute = (routes: RouteType[], targetPath: string): RouteType | null => {
+  for (const route of routes) {
+    if (route.subRoutes) {
+      for (const subRoute of route.subRoutes) {
+        if (subRoute.path === targetPath) {
+          return route;
+        }
+      }
+    }
+  }
+  return null;
+};
+
 const TopNav: React.FC<TopNavProps> = ({
   isSidebarMenuOpen,
   handleToogleSidebarMenu,
 }) => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  // Podriamos filtrar aqui las rutas por rol.
+
   const routes = protectedRoutes.filter((route) => route.type === "protected");
+  const flatRoutes = flattenRoutes(routes);
+
+  const currentRoute = flatRoutes.find((route) => route.path === location.pathname);
+  const parentRoute = findParentRoute(routes, location.pathname);
 
   useHotkeys(
     "ctrl+k",
@@ -37,45 +66,74 @@ const TopNav: React.FC<TopNavProps> = ({
       enabled: true,
     }
   );
+
   useHotkeys("esc", () => setOpen(false), {
     enableOnFormTags: true,
     enabled: open,
   });
+
+  const renderBreadcrumb = () => {
+    if (location.pathname === "/dashboard") {
+      return (
+        <Link className="hidden sm:flex" to={"/dashboard"}>
+          Dashboard/
+        </Link>
+      );
+    }
+
+    const breadcrumbItems = [];
+    
+    breadcrumbItems.push(
+      <Link
+        key="dashboard"
+        to={"/dashboard"}
+        className="text-gray-500 hover:text-gray-700"
+      >
+        Dashboard/
+      </Link>
+    );
+
+    if (parentRoute) {
+      breadcrumbItems.push(
+        <span key="parent" className="text-gray-500">
+          {parentRoute.name}/
+        </span>
+      );
+    }
+
+    breadcrumbItems.push(
+      <Link
+        key="current"
+        to={location.pathname}
+        className="text-gray-800 hover:text-gray-900"
+      >
+        {currentRoute?.name || "Ruta Desconocida"}
+      </Link>
+    );
+
+    return <div className="hidden sm:flex">{breadcrumbItems}</div>;
+  };
+
   return (
     <nav className="flex items-center justify-between h-full px-2 bg-white border-b border-gray-200 sm:px-4">
       <div className="font-medium text-sm flex items-center space-x-1 truncate w-full">
         <button
           onClick={() => handleToogleSidebarMenu()}
-          className="rounded p-1.5 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer">
-          {
-            isSidebarMenuOpen ? (
-              <PanelLeftClose className="size-4 text-gray-800" />
-            ) : (
-              <PanelLeftOpen className="size-4 text-gray-800" />
-            )
-          }
+          className="rounded p-1.5 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+        >
+          {isSidebarMenuOpen ? (
+            <PanelLeftClose className="size-4 text-gray-800" />
+          ) : (
+            <PanelLeftOpen className="size-4 text-gray-800" />
+          )}
         </button>
-        {location.pathname === "/dashboard" ? (
-          <Link className="hidden sm:flex" to={"/dashboard"}>Dashboard/</Link>
-        ) : (
-          <div className="hidden sm:flex">
-            <Link
-              to={"/dashboard"}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              Dashboard/
-            </Link>
-            <Link
-              to={location.pathname}
-              className="text-gray-800 hover:text-gray-900"
-            >
-              {routes.find((route) => route.path === location.pathname)?.name ||
-                "Ruta Desconocida"}
-            </Link>
-          </div>
-        )}
+        {renderBreadcrumb()}
       </div>
+
       <div className="flex items-center gap-2 ml-auto sm:gap-4 sm:ml-0">
+        <div className="flex items-center gap-4 w-full">
+          <SelectBranch></SelectBranch>
+        </div>
         <div className="flex items-center gap-4">
           <SearchButton onClick={() => setOpen(true)} />
           <CommandPalette open={open} setOpen={setOpen} />
@@ -89,5 +147,6 @@ const TopNav: React.FC<TopNavProps> = ({
       </div>
     </nav>
   );
-}
+};
+
 export default TopNav;

@@ -21,7 +21,7 @@ export function ComboboxSelect({
   placeholder = 'Seleccionar',
   className, 
   optionTag
-}: ComboboxSelectProps) {
+}: ComboboxSelectProps) { 
   const [query, setQuery] = useState('')
   const comboboxInputRef = useRef<HTMLInputElement>(null)
 
@@ -102,7 +102,7 @@ export function ComboboxSelect({
           >
             <Combobox.Options 
               static
-              className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-popover py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
+              className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-popover py-1 text-base shadow-lg border border-gray-200 focus:outline-none sm:text-sm"
             >
 
               {filteredOptions.length === 0 ? (
@@ -116,7 +116,7 @@ export function ComboboxSelect({
                     value={option.id}
                     className={({ active }) =>
                       cn(
-                        'relative cursor-default select-none py-2 pl-10 pr-4',
+                        'relative cursor-default select-none py-2 pl-10 pr-4 hover:bg-gray-100',
                         active ? 'bg-accent text-accent-foreground' : 'text-foreground'
                       )
                     }
