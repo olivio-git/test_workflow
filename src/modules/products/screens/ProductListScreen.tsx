@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import {
     Search,
     Filter,
@@ -24,10 +24,10 @@ import Pagination from "@/components/common/pagination"
 import { Switch } from "@/components/atoms/switch"
 import { Label } from "@/components/atoms/label"
 import CustomizableTable from "@/components/common/CustomizableTable"
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
-    const tableContainerRef = useRef<HTMLDivElement>(null);
     const {
         filters,
         updateFilter,
@@ -49,6 +49,26 @@ const ProductListScreen = () => {
     };
     const { data, isLoading, error, isFetching } = useProductsPaginated(debouncedFilters);
     const { data: categoriesData } = useCategoriesWithSubcategories();
+
+    const [products, setProducts] = useState<ProductGet[]>([]);
+    useEffect(() => {
+        if (!data?.data || error || isFetching) return;
+        if (data?.data) {
+            if (isInfiniteScroll && filters.pagina && filters.pagina > 1) {
+                setProducts((prev) => [...prev, ...data.data]);
+            } else {
+                setProducts(data.data);
+            }
+        }
+    }, [data, isInfiniteScroll, filters.pagina]);
+
+    useEffect(() => {
+        if (isInfiniteScroll) {
+            setProducts([]);
+            setPage(1);
+        }
+    }, [filters.descripcion, filters.categoria, filters.subcategoria, filters.codigo_oem]);
+
     // Función para determinar el color del stock
     const getStockColor = (stock: string) => {
         const stockNum = Number.parseInt(stock)
@@ -268,7 +288,7 @@ const ProductListScreen = () => {
 
     // Filter and sort products
     const table = useReactTable<ProductGet>({
-        data: data?.data || [],
+        data: products,
         columns,
         state: {
             sorting,
@@ -316,37 +336,15 @@ const ProductListScreen = () => {
         updateFilter("pagina_registros", rows);
         updateFilter("pagina", 1);
     };
-    const handleScroll = useCallback(() => {
-        if (
-            tableContainerRef.current &&
-            !isLoading &&
-            !isFetching &&
-            tableContainerRef.current.scrollHeight - tableContainerRef.current.scrollTop <=
-            tableContainerRef.current.clientHeight + 100
-        ) {
-            setPage((filters.pagina || 1) + 1);
-        }
-    }, [isLoading, isFetching]);
 
-    useEffect(() => {
-        if (isInfiniteScroll) {
-            const tableRef = tableContainerRef.current;
-            if (tableRef) {
-                tableRef.addEventListener("scroll", handleScroll);
-                return () => tableRef.removeEventListener("scroll", handleScroll);
-            }
-        }
-        else return
-    }, [handleScroll]);
     return (
         <div
-            ref={tableContainerRef}
             className="min-h-screen max-w-full">
             <div className="bg-white rounded-lg shadow-sm">
                 {/* Header */}
                 <div className="p-2 border-b border-gray-200">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
+                        <div className="flex items-center gap-2 md:gap-4">
                             <div className="flex items-center gap-2">
                                 <Button
                                     variant={viewMode === "list" ? "default" : "outline"}
@@ -370,12 +368,12 @@ const ProductListScreen = () => {
                                     placeholder="Buscar productos..."
                                     value={filters.descripcion}
                                     onChange={(e) => updateFilter("descripcion", e.target.value)}
-                                    className="pl-10 w-64 text-gray-900"
+                                    className="pl-10 max-w-72 w-full text-gray-900 text-xs"
                                 />
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 flex-wrap md:gap-4">
                             <div className="flex items-center space-x-2">
                                 <Switch
                                     className="bg-gray-200"
@@ -425,8 +423,8 @@ const ProductListScreen = () => {
                 </div>
 
                 {/* Filters */}
-                <div className="p-4 border-b border-gray-200">
-                    <div className="grid grid-cols-4 gap-4">
+                <div className="p-2 border-b border-gray-200">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Categorias</label>
                             <Select
@@ -513,19 +511,47 @@ const ProductListScreen = () => {
                 </div>
 
                 {/* Results Info */}
-                <div className="p-4 text-sm text-gray-600 border-b border-gray-200">
-                    Showing {data?.data.length} of {data?.meta.total} products
+                <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
+                    Showing {products.length} of {data?.meta.total} products
                     {selectedProducts.length > 0 && (
                         <span className="ml-4 text-blue-600">{selectedProducts.length} selected</span>
                     )}
+                    <div className="flex items-center gap-2">
+                        <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
+                        <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
+                            <SelectTrigger className="h-8">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="border border-gray-200 shadow-lg">
+                                <SelectItem className="hover:bg-gray-50" value={"10"}>10</SelectItem>
+                                <SelectItem className="hover:bg-gray-50" value={"25"}>25</SelectItem>
+                                <SelectItem className="hover:bg-gray-50" value={"50"}>50</SelectItem>
+                                <SelectItem className="hover:bg-gray-50" value={"100"}>100</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 {viewMode === "list" ? (
                     <div
                         className="overflow-x-hidden">
-                        <CustomizableTable
-                            table={table}
-                        />
+                        {isInfiniteScroll ? (
+                            <InfiniteScroll
+                                dataLength={products.length}
+                                next={() => setPage((filters.pagina || 1) + 1)}
+                                hasMore={products.length < (data?.meta.total || 0)}
+                                loader={<div className="text-center p-4 text-sm text-gray-500">Cargando más productos...</div>}
+                                scrollableTarget="main-scroll-container"
+                            >
+                                <CustomizableTable table={table} />
+                            </InfiniteScroll>
+                        ) : (
+                            <CustomizableTable
+                                table={table}
+                                isLoading={isLoading}
+                            />
+                        )}
+
                     </div>
                 ) : (
                     <div className="p-4">

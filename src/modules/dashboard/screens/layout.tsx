@@ -64,7 +64,9 @@ export default function Layout({ children }: LayoutProps) {
             isSidebarMenuOpen={isSidebarMenuOpen}
           />
         </header>
-        <main className="flex-1 overflow-auto p-2 bg-white">{children}</main>
+        <main
+          id="main-scroll-container"
+          className="flex-1 overflow-auto p-2 bg-white">{children}</main>
       </div>
     </div>
   )

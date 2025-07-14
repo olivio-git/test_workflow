@@ -13,12 +13,11 @@ import {
     ArrowDownRight,
     Box,
     Activity,
-    Table,
 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/atoms/tabs"
 import { Button } from "@/components/atoms/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card"
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/atoms/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/atoms/table"
 import { Badge } from "@/components/atoms/badge"
 
 // Interfaces TypeScript
@@ -190,49 +189,49 @@ const ProductDetailScreen: React.FC<ProductDetailsPanelProps> = ({
     const stockTotal = comprasDisponibles.reduce((sum, compra) => sum + compra.stock, 0)
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header Simple - Solo nombre del producto */}
-                <div className="bg-white border border-gray-200 rounded-lg p-8">
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
                     <div className="flex items-center gap-6">
-                        <div className="p-4 bg-gray-900 rounded-lg">
-                            <Package className="h-10 w-10 text-white" />
+                        <div className="p-2 bg-gray-900 rounded-lg">
+                            <Package className="size-8 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">{nombreProducto}</h1>
-                            <p className="text-gray-600 text-lg mt-2">Información completa del producto</p>
+                            <h1 className="text-xl lg:text-2xl font-bold text-gray-900 leading-tight">{nombreProducto}</h1>
+                            <p className="text-gray-600 text-base">Información completa del producto</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Navigation Tabs */}
                 <Tabs defaultValue="overview" className="space-y-8">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <TabsList className="grid grid-cols-2 lg:grid-cols-4 bg-white border border-gray-200 rounded-xl p-1">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between">
+                        <TabsList className="bg-white border border-gray-200 gap-2">
                             <TabsTrigger
                                 value="overview"
-                                className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-6 py-3"
+                                className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-6 py-2 hover:bg-gray-100 transition-colors"
                             >
                                 <Activity className="h-4 w-4 mr-2" />
                                 Resumen
                             </TabsTrigger>
                             <TabsTrigger
                                 value="inventory"
-                                className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-6 py-3"
+                                className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-6 py-2 hover:bg-gray-100 transition-colors"
                             >
                                 <Box className="h-4 w-4 mr-2" />
                                 Inventario
                             </TabsTrigger>
                             <TabsTrigger
                                 value="sales"
-                                className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-6 py-3"
+                                className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-6 py-2 hover:bg-gray-100 transition-colors"
                             >
                                 <BarChart3 className="h-4 w-4 mr-2" />
                                 Ventas
                             </TabsTrigger>
                             <TabsTrigger
                                 value="logistics"
-                                className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-6 py-3"
+                                className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-6 py-2 hover:bg-gray-100 transition-colors"
                             >
                                 <Truck className="h-4 w-4 mr-2" />
                                 Logística
@@ -240,7 +239,7 @@ const ProductDetailScreen: React.FC<ProductDetailsPanelProps> = ({
                         </TabsList>
 
                         {/* Branch Selector */}
-                        <div className="flex items-center gap-3 bg-white rounded-xl p-2 border border-gray-200">
+                        <div className="flex items-center gap-2 bg-white rounded-md px-1 border border-gray-200">
                             <MapPin className="h-4 w-4 text-gray-500 ml-2" />
                             <span className="text-sm font-medium text-gray-700">Sucursal:</span>
                             {["T01", "T02", "T03"].map((sucursal) => (

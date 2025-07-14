@@ -13,9 +13,10 @@ import {
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
 interface Props<T> {
     table: Table<T>
+    isLoading?: boolean;
 }
 
-const CustomizableTable = <T,>({ table }: Props<T>) => {
+const CustomizableTable = <T,>({ table, isLoading }: Props<T>) => {
 
     return (
         <AtomTable className="w-full table-fixed text-xs">
@@ -61,15 +62,25 @@ const CustomizableTable = <T,>({ table }: Props<T>) => {
                 ))}
             </TableHeader>
             <TableBody className="divide-y divide-gray-200">
-                {table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
-                        {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id} className="p-1 truncate">
-                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </TableCell>
-                        ))}
+                {isLoading ? (
+                    <TableRow>
+                        <TableCell colSpan={table.getVisibleFlatColumns().length} className="text-center py-10">
+                            {/* <Spinner className="mx-auto mb-2" /> */}
+                            <span className="text-gray-500">Cargando datos...</span>
+                        </TableCell>
                     </TableRow>
-                ))}
+                ) : (
+                    table.getRowModel().rows.map((row) => (
+                        <TableRow key={row.id}>
+                            {row.getVisibleCells().map((cell) => (
+                                <TableCell key={cell.id} className="p-1 truncate">
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    ))
+                )}
+
             </TableBody>
         </AtomTable>
     )
