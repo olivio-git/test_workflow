@@ -6,6 +6,7 @@ import { BarChart3Icon, DollarSignIcon, HomeIcon, LayoutDashboardIcon, Package, 
 import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
+import Categoria from "@/modules/Categories/Screens/CreateCategory";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -182,7 +183,17 @@ const protectedRoutes: RouteType[] = [
     isAdmin: true,
     role: "admin",
     icon: BarChart3Icon
-  }
+  },
+  //Categorías
+{
+  path: "/dashboard/categorias",
+  name: "Categorías",
+  type: "protected",
+  element: Categoria,
+  isAdmin: true,
+  role: "admin",
+  icon: PlusIcon
+}
 ];
 
 export default protectedRoutes;
