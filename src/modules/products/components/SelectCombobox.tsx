@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 
 
 interface ComboboxSelectProps {
-  value: string | null
+  value: string | number | undefined
   onChange: (value: string) => void
   options: any
   placeholder?: string
@@ -45,8 +45,8 @@ export function ComboboxSelect({
 
   return (
     <Combobox 
-      value={value || ''} 
-      onChange={(selectedValue) => {
+      value={value} 
+      onChange={(selectedValue:any) => {
         if (selectedValue !== null) {
           onChange(selectedValue)
         }

@@ -1,5 +1,5 @@
-import { API_ENDPOINTS } from "../Services/endpoints";
 import { apiConstructor } from "@/modules/products/services/api";
+import { API_ENDPOINTS } from "./endpoints";
 
 export const getCategories = (page: number, pageSize: number) => {
   return apiConstructor({

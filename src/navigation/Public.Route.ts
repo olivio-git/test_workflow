@@ -10,7 +10,7 @@ export const publicRoutes: RouteType[] = [
     type: "public",
     element: LoginScreen,
     isAdmin: false,
-    role: "guest",
+    role: ['guest'],
     icon: LogIn
   },
 ]; 

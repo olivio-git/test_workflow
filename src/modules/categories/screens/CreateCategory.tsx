@@ -1,6 +1,6 @@
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import FormCreateCategory from "../Components/FormCreateCategory";
-import TableCreateCategory from "../Components/TableCreateCategory";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"; 
+import FormCreateCategory from "../components/FormCreateCategory";
+import TableCreateCategory from "../components/TableCreateCategory";
 
 const CreateCategory = () => {
   return (
@@ -14,7 +14,7 @@ const CreateCategory = () => {
             defaultSize={55}
           >
             <div className="p-4">
-              <h2 className="mb-4 text-lg font-semibold">Crear Categoría</h2>
+              <h2 className="mb-4 text-lg font-semibold">Crear</h2>
               <FormCreateCategory />
             </div>
           </Panel>
