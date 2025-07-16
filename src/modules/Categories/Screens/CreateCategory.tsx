@@ -14,7 +14,7 @@ const CreateCategory = () => {
             defaultSize={55}
           >
             <div className="p-4">
-              <h2 className="mb-4 text-lg font-semibold">Crear Categoría</h2>
+              <h2 className="mb-4 text-lg font-semibold">Crear</h2>
               <FormCreateCategory />
             </div>
           </Panel>
