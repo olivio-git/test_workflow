@@ -1,13 +1,14 @@
 import { useState } from "react"
 import { Button } from "@/components/atoms/button"
-import { Input } from "@/components/atoms/input"
-import { Label } from "@/components/atoms/label"
 import { Separator } from "@/components/atoms/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/atoms/sheet"
-import { Textarea } from "@/components/atoms/textarea"
 import { cn } from "@/lib/utils"
-import { CreditCard, Edit3, Maximize2, Minus, Plus, Receipt, ShoppingCart, Trash2 } from "lucide-react"
+import { CreditCard, Maximize2, Receipt, ShoppingCart } from "lucide-react"
 import { useCartStore } from "../store/cartStore"
+import CartItemComponent from "./cartItemComponent"
+import { Label } from "@/components/atoms/label"
+import { Input } from "@/components/atoms/input"
+import { useNavigate } from "react-router"
 
 const CartSidebar = ({
     open,
@@ -16,33 +17,39 @@ const CartSidebar = ({
     open: boolean
     onOpenChange: (open: boolean) => void
 }) => {
-    const [editingPrice, setEditingPrice] = useState<number | null>(null)
-    const [editingDiscount, setEditingDiscount] = useState<number | null>(null)
     const [expandedView, setExpandedView] = useState(false)
+    const navigate = useNavigate()
 
     const {
         items: cart,
+        getCartSubtotal,
+        getCartTotal,
+        discountAmount,
+        discountPercent,
         updateQuantity,
-        updatePrice,
-        updateDiscount,
-        updateNotes,
         removeItem,
-        clear
-    } = useCartStore()
+        updateCustomPrice,
+        updateCustomSubtotal,
+        setDiscountAmount,
+        setDiscountPercent,
+    } = useCartStore();
 
-    const subtotal = cart.reduce((sum, item) => {
-        const price = item.customPrice ?? Number(item.product.precio_venta)
-        return sum + price * item.quantity
-    }, 0)
+    const subtotal = getCartSubtotal();
+    const total = getCartTotal();
+    const [editingGlobalAmount, setEditingGlobalAmount] = useState(false);
+    const [editingGlobalPercent, setEditingGlobalPercent] = useState(false);
 
-    const totalDiscount = cart.reduce((sum, item) => {
-        const price = item.customPrice ?? Number(item.product.precio_venta)
-        const discount = item.discount ?? 0
-        return sum + (price * item.quantity * discount) / 100
-    }, 0)
+    const handleGlobalAmountSubmit = (value: string) => {
+        const amount = parseFloat(value);
+        setDiscountAmount(isNaN(amount) ? 0 : amount);
+        setEditingGlobalAmount(false);
+    };
 
-    const total = subtotal - totalDiscount
-
+    const handleGlobalPercentSubmit = (value: string) => {
+        const percent = parseFloat(value);
+        setDiscountPercent(isNaN(percent) ? 0 : percent);
+        setEditingGlobalPercent(false);
+    };
     return (
         <Sheet open={open} onOpenChange={onOpenChange} >
             <SheetContent className={cn("w-[400px] sm:w-[600px] sm:max-w-7xl", expandedView && "sm:w-[800px] lg:w-[1000px]")}>
@@ -52,198 +59,130 @@ const CartSidebar = ({
                             <ShoppingCart className="w-5 h-5" />
                             Carrito de Compras
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => setExpandedView(!expandedView)}>
-                            <Maximize2 className="w-4 h-4" />
-                        </Button>
+                        {
+                            cart.length > 0 && (
+                                <Button className="size-8 mr-4 cursor-pointer" variant="outline" size="sm" onClick={() => setExpandedView(!expandedView)}>
+                                    <Maximize2 className="w-4 h-4" />
+                                </Button>
+                            )
+                        }
                     </SheetTitle>
-                    <SheetDescription>{cart.length} productos en el carrito</SheetDescription>
                 </SheetHeader>
 
-                <div className="mt-6 space-y-4">
+                <div className="mt-2 max-h-[90vh] h-full">
                     {cart.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                             <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-50" />
                             <p>El carrito está vacío</p>
                         </div>
                     ) : (
-                        <>
-                            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                                {cart.map((item) => {
-                                    const basePrice = item.customPrice ?? Number(item.product.precio_venta)
-                                    const discountAmount = (basePrice * item.quantity * (item.discount ?? 0)) / 100
-                                    const itemTotal = basePrice * item.quantity - discountAmount
+                        <div className="flex flex-col gap-2 justify-between h-full">
+                            <div className="space-y-4 grow overflow-y-auto">
+                                {cart.map((item) => (
+                                    <CartItemComponent
+                                        key={item.product.id}
+                                        item={item}
+                                        removeItem={removeItem}
+                                        updateQuantity={updateQuantity}
+                                        updateCustomPrice={updateCustomPrice}
+                                        updateCustomSubtotal={updateCustomSubtotal}
+                                    />
+                                ))}
+                            </div>
 
-                                    return (
-                                        <div key={item.product.id} className="border rounded-lg p-4 space-y-4">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex-1">
-                                                    <h4 className="font-medium text-sm leading-tight">{item.product.descripcion}</h4>
-                                                    <p className="text-xs text-gray-500 mt-1">
-                                                        {item.product.marca} • {item.product.codigo_oem}
-                                                    </p>
-                                                    {item.notes && (
-                                                        <p className="text-xs text-blue-600 mt-1 italic">
-                                                            Nota: {item.notes}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => removeItem(item.product.id)}
-                                                    className="text-red-500 hover:text-red-700"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            </div>
+                            <div className="h-max">
+                                <Separator />
 
-                                            {/* Cantidad */}
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
-                                                        disabled={item.quantity <= 1}
-                                                    >
-                                                        <Minus className="w-3 h-3" />
-                                                    </Button>
-                                                    <span className="w-8 text-center font-medium">{item.quantity}</span>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                                                    >
-                                                        <Plus className="w-3 h-3" />
-                                                    </Button>
-                                                </div>
+                                <div className="pt-2 space-y-2">
+                                    <div className="space-y-2">
 
-                                                <div className="text-right">
-                                                    <div className="font-bold text-green-600">${itemTotal.toFixed(2)}</div>
-                                                    <div className="text-xs text-gray-500">${basePrice.toFixed(2)} c/u</div>
-                                                    {discountAmount > 0 && (
-                                                        <div className="text-xs text-red-500">-${discountAmount.toFixed(2)} desc.</div>
-                                                    )}
-                                                </div>
-                                            </div>
+                                        <div className="space-y-3">
+                                            <Label className="text-sm font-medium text-text-primary">Descuentos Globales</Label>
 
-                                            {/* Precio y descuento */}
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1">
-                                                    <Label className="text-xs text-gray-500">Precio Unitario</Label>
-                                                    {editingPrice === item.product.id ? (
+                                                    <Label className="text-xs text-gray-500">Desc. Porcentaje (%)</Label>
+                                                    {editingGlobalPercent ? (
                                                         <Input
-                                                            type="number"
-                                                            step="0.01"
-                                                            defaultValue={basePrice}
+                                                            value={discountPercent?.toString()}
+                                                            onChange={(e) => setDiscountPercent(parseFloat(e.target.value) || 0)}
+                                                            onBlur={(e) => handleGlobalPercentSubmit(e.target.value)}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleGlobalPercentSubmit(e.currentTarget.value)}
                                                             className="h-8 text-sm"
-                                                            onBlur={(e) => {
-                                                                updatePrice(item.product.id, parseFloat(e.target.value) || basePrice)
-                                                                setEditingPrice(null)
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === "Enter") {
-                                                                    updatePrice(item.product.id, parseFloat((e.target as HTMLInputElement).value) || basePrice)
-                                                                    setEditingPrice(null)
-                                                                }
-                                                            }}
-                                                            autoFocus
-                                                        />
-                                                    ) : (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8 w-full justify-start text-sm bg-transparent"
-                                                            onClick={() => setEditingPrice(item.product.id)}
-                                                        >
-                                                            <Edit3 className="w-3 h-3 mr-1" />${basePrice.toFixed(2)}
-                                                        </Button>
-                                                    )}
-                                                </div>
-
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs text-gray-500">Descuento (%)</Label>
-                                                    {editingDiscount === item.product.id ? (
-                                                        <Input
                                                             type="number"
-                                                            step="0.1"
                                                             min="0"
                                                             max="100"
-                                                            defaultValue={item.discount || 0}
-                                                            className="h-8 text-sm"
-                                                            onBlur={(e) => {
-                                                                updateDiscount(item.product.id, parseFloat(e.target.value) || 0)
-                                                                setEditingDiscount(null)
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === "Enter") {
-                                                                    updateDiscount(item.product.id, parseFloat((e.target as HTMLInputElement).value) || 0)
-                                                                    setEditingDiscount(null)
-                                                                }
-                                                            }}
+                                                            step="0.1"
                                                             autoFocus
                                                         />
                                                     ) : (
                                                         <Button
+                                                            onClick={() => setEditingGlobalPercent(true)}
                                                             variant="outline"
                                                             size="sm"
-                                                            className="h-8 w-full justify-start text-sm bg-transparent"
-                                                            onClick={() => setEditingDiscount(item.product.id)}
+                                                            className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
                                                         >
-                                                            <Edit3 className="w-3 h-3 mr-1" />
-                                                            {item.discount ?? 0}%
+                                                            {discountPercent ?? 0}%
+                                                        </Button>
+                                                    )}
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs text-gray-500">Desc. Monto ($)</Label>
+                                                    {editingGlobalAmount ? (
+                                                        <Input
+                                                            value={discountAmount?.toString()}
+                                                            onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                                                            onBlur={(e) => handleGlobalAmountSubmit(e.target.value)}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleGlobalAmountSubmit(e.currentTarget.value)}
+                                                            className="h-8 text-sm"
+                                                            type="number"
+                                                            min="0"
+                                                            step="0.01"
+                                                            autoFocus
+                                                        />
+                                                    ) : (
+                                                        <Button
+                                                            onClick={() => setEditingGlobalAmount(true)}
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
+                                                        >
+                                                            ${discountAmount?.toFixed(2) ?? 0.00}
                                                         </Button>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            {/* Notas */}
-                                            <div className="space-y-1">
-                                                <Label className="text-xs text-gray-500">Notas</Label>
-                                                <Textarea
-                                                    placeholder="Agregar notas del producto..."
-                                                    value={item.notes || ""}
-                                                    onChange={(e) => updateNotes(item.product.id, e.target.value)}
-                                                    className="h-16 text-sm resize-none"
-                                                />
-                                            </div>
                                         </div>
-                                    )
-                                })}
-                            </div>
 
-                            <Separator />
-
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-600">Subtotal:</span>
-                                        <span className="font-medium">${subtotal.toFixed(2)}</span>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500 font-medium">Subtotal:</span>
+                                            <span className="">${subtotal.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between font-medium text-lg">
+                                            <span>Total:</span>
+                                            <span>${total.toFixed(2)}</span>
+                                        </div>
                                     </div>
-                                    {totalDiscount > 0 && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-sm text-gray-600">Descuentos:</span>
-                                            <span className="font-medium text-red-600">-${totalDiscount.toFixed(2)}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
-                                        <span>Total:</span>
-                                        <span className="text-green-600">${total.toFixed(2)}</span>
+                                    <Separator />
+
+                                    <div className="grid sm:grid-cols-2 gap-2">
+                                        <Button className="w-full cursor-pointer" size="lg" onClick={() => {
+                                            navigate('/dashboard/create-sale')
+                                            onOpenChange(false)
+                                        }}>
+                                            <CreditCard className="w-4 h-4 mr-2" />
+                                            Proceder a la Venta
+                                        </Button>
+                                        <Button variant="outline" className="w-full bg-transparent cursor-pointer">
+                                            <Receipt className="w-4 h-4 mr-2" />
+                                            Guardar Cotización
+                                        </Button>
                                     </div>
                                 </div>
-
-                                <div className="space-y-2">
-                                    <Button className="w-full" size="lg" onClick={() => {/* checkout */ }}>
-                                        <CreditCard className="w-4 h-4 mr-2" />
-                                        Proceder a la Venta
-                                    </Button>
-                                    <Button variant="outline" className="w-full bg-transparent">
-                                        <Receipt className="w-4 h-4 mr-2" />
-                                        Guardar Cotización
-                                    </Button>
-                                </div>
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
             </SheetContent>

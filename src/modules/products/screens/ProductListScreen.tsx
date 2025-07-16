@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
     Search,
     Filter,
@@ -16,19 +16,18 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import type { ProductGet } from "../types/ProductGet"
 import { useProductFilters } from "../hooks/useProductFilters"
 import { useProductsPaginated } from "../hooks/useProductsPaginated"
-import { getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, type ColumnDef, type ColumnResizeMode, type RowSelectionState, type SortingState } from "@tanstack/react-table"
+import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type RowSelectionState, type SortingState } from "@tanstack/react-table"
 import { Badge } from "@/components/atoms/badge"
-import { useDebounce } from "use-debounce";
-import { useCategoriesWithSubcategories } from "@/modules/catalog/hooks/useCategories"
 import Pagination from "@/components/common/pagination"
 import { Switch } from "@/components/atoms/switch"
 import { Label } from "@/components/atoms/label"
 import CustomizableTable from "@/components/common/CustomizableTable"
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useBranchStore } from "@/states/branchStore"
-import { useCommonBrands } from "@/modules/catalog/hooks/useCommonBrands"
 import authSDK from "@/services/sdk-simple-auth"
 import { useNavigate } from "react-router"
+import ProductFilters from "../components/productList/productFilters"
+import { useCartStore } from "@/modules/shoppingCart/store/cartStore"
 
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
@@ -41,25 +40,10 @@ const ProductListScreen = () => {
         setPage,
         resetFilters,
     } = useProductFilters(Number(selectedBranchId) || 1); // suponiendo sucursal 1 por sesión
-    // Aplicar debounce solo a los campos de texto
-    const [debouncedDescripcion] = useDebounce(filters.descripcion, 1000);
-    const [debouncedCodigoOEM] = useDebounce(filters.codigo_oem || '', 1000);
-    const [debouncedCodigoUPC] = useDebounce(filters.codigo_upc || '', 1000);
-    const [debouncedNroMotor] = useDebounce(filters.nro_motor || '', 1000);
-    const [debouncedModelo] = useDebounce(filters.modelo || '', 1000);
 
-    const debouncedFilters = {
-        ...filters,
-        descripcion: debouncedDescripcion,
-        codigo_oem: debouncedCodigoOEM,
-        codigo_upc: debouncedCodigoUPC,
-        nro_motor: debouncedNroMotor,
-        modelo: debouncedModelo,
-    };
-    const { data: productData, isLoading, error, isFetching } = useProductsPaginated(debouncedFilters);
-    const { data: categoriesData } = useCategoriesWithSubcategories();
-    const { data: brandsData } = useCommonBrands()
+    const { data: productData, isLoading, error, isFetching } = useProductsPaginated(filters);
 
+    const { addItem } = useCartStore()
     const [sorting, setSorting] = useState<SortingState>([])
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
@@ -115,7 +99,7 @@ const ProductListScreen = () => {
         navigate(`/dashboard/productos/${productId}`);
     }
 
-    const columns: ColumnDef<ProductGet>[] = [
+    const columns = useMemo<ColumnDef<ProductGet>[]>(() => [
         {
             id: "Select",
             header: ({ table }) => (
@@ -331,7 +315,7 @@ const ProductListScreen = () => {
                     <Button
                         variant="default"
                         size="icon"
-                        onClick={() => console.log("Add product", row.original.id)}
+                        onClick={() => addItem({ product: row.original, quantity: 1 })}
                         aria-label="Añadir Producto al Carrito"
                         className="size-8 cursor-pointer"
                     >
@@ -344,7 +328,7 @@ const ProductListScreen = () => {
             size: 100,
             minSize: 100,
         },
-    ];
+    ], [])
     // Filter and sort products
     const table = useReactTable<ProductGet>({
         data: products,
@@ -352,21 +336,14 @@ const ProductListScreen = () => {
         state: {
             sorting,
             columnVisibility,
-            // globalFilter,
-            // columnFilters,
             rowSelection,
-            // pagination,
         },
         onSortingChange: setSorting,
         onColumnVisibilityChange: setColumnVisibility,
-        // onGlobalFilterChange: setGlobalFilter,
-        // onColumnFiltersChange: setColumnFilters,
         onRowSelectionChange: setRowSelection,
-        // onPaginationChange: setPagination,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        // getPaginationRowModel: getPaginationRowModel(),
         columnResizeMode: "onChange",
         enableColumnResizing: true,
         enableRowSelection: true,
@@ -488,141 +465,10 @@ const ProductListScreen = () => {
                     </div>
                 </div>
                 {/* Búsquedas individuales */}
-                <div className="space-y-4 p-2">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                            <Label className="text-gray-700 text-sm font-medium">Buscar Código OEM</Label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                <Input
-                                    placeholder="11122-10040-D..."
-                                    value={filters.codigo_oem ?? ""}
-                                    onChange={(e) => updateFilter("codigo_oem", e.target.value)}
-                                    className="pl-10 font-mono text-xs"
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-gray-700 text-sm font-medium">Buscar Código UPC</Label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                <Input
-                                    placeholder="11122-10040..."
-                                    value={filters.codigo_upc ?? ""}
-                                    onChange={(e) => updateFilter("codigo_upc", e.target.value)}
-                                    className="pl-10 font-mono text-xs"
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-gray-700 text-sm font-medium">Buscar Número de Motor</Label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                <Input
-                                    placeholder="1ZZ-FE..."
-                                    value={filters.nro_motor ?? ""}
-                                    onChange={(e) => updateFilter("nro_motor", e.target.value)}
-                                    className="pl-10 font-mono text-xs"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Filters */}
-                <div className="p-2 border-b border-gray-200">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Categorias</label>
-                            <Select
-                                value={filters.categoria !== undefined ? String(filters.categoria) : "all"}
-                                onValueChange={(value) => {
-                                    const parsedValue = value === "all" ? undefined : Number(value);
-                                    updateFilter("subcategoria", undefined);
-                                    updateFilter("categoria", parsedValue);
-                                }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="TODAS" />
-                                </SelectTrigger>
-                                <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50 capitalize" value="all">TODAS</SelectItem>
-                                    {categoriesData?.map((category) => (
-                                        <SelectItem key={category.id} className="hover:bg-gray-50 capitalize" value={String(category.id)}>
-                                            {category.categoria}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Subcategorias</label>
-                            <Select
-                                disabled={filters.categoria === undefined}
-                                value={filters.subcategoria !== undefined ? String(filters.subcategoria) : "all"}
-                                onValueChange={(value) => {
-                                    const parsedValue = value === "all" ? undefined : Number(value);
-                                    updateFilter("subcategoria", parsedValue);
-                                }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="TODAS" />
-                                </SelectTrigger>
-                                <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50" value="all">TODAS</SelectItem>
-                                    {categoriesData
-                                        ?.find((cat) => cat.id === filters.categoria)
-                                        ?.subcategorias?.map((sub) => (
-                                            <SelectItem
-                                                key={sub.id}
-                                                value={String(sub.id)}
-                                                className="hover:bg-gray-50"
-                                            >
-                                                {sub.subcategoria}
-                                            </SelectItem>
-                                        ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Marca</label>
-                            <Select value={filters.marca ?? "all"}
-                                onValueChange={(value) => {
-                                    updateFilter("marca", value === "all" ? "" : value);
-                                }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder='TODAS' />
-                                </SelectTrigger>
-                                <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50" value="all">TODAS</SelectItem>
-                                    {brandsData?.map((brand) => (
-                                        <SelectItem
-                                            key={brand.id}
-                                            value={brand.marca}
-                                            className="hover:bg-gray-50"
-                                        >
-                                            {brand.marca}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-gray-700 text-sm font-medium">Buscar Medida</Label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                <Input
-                                    placeholder="11X6X40.6..."
-                                    value={filters.medida ?? ""}
-                                    onChange={(e) => updateFilter("medida", e.target.value)}
-                                    className="pl-10 font-mono text-xs"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                <ProductFilters
+                    filters={filters}
+                    updateFilter={updateFilter}
+                />
                 {/* Results Info */}
                 <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
                     Showing {products.length} of {productData?.meta.total} products

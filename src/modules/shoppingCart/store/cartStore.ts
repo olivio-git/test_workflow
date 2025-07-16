@@ -1,68 +1,112 @@
 // src/modules/cart/store/cartStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CartState } from "../types/cart.types";
+import type { CartItem, CartState } from "../types/cart.types";
 
 export const useCartStore = create<CartState>()(
     persist(
         (set, get) => ({
             items: [],
+            discountAmount: 0,
+            discountPercent: 0,
+
             addItem: (item) => {
-                const existing = get().items.find(i => i.product.id === item.product.id);
+                const existing = get().items.find(i => i.product.id === item.product.id)
                 if (existing) {
                     set({
                         items: get().items.map(i =>
                             i.product.id === item.product.id
                                 ? { ...i, quantity: i.quantity + item.quantity }
                                 : i
-                        ),
-                    });
+                        )
+                    })
                 } else {
-                    set({ items: [...get().items, item] });
+                    set({ items: [...get().items, item] })
                 }
             },
+
             removeItem: (productId) => {
-                set({ items: get().items.filter(i => i.product.id !== productId) });
+                set({ items: get().items.filter(i => i.product.id !== productId) })
             },
-            updateItem: (productId, updates) => {
+
+            updateQuantity: (productId, quantity) => {
+                if (quantity < 1) return;
                 set({
                     items: get().items.map(i =>
-                        i.product.id === productId ? { ...i, ...updates } : i
-                    ),
-                });
+                        i.product.id === productId ? { ...i, quantity } : i
+                    )
+                })
             },
-            clearCart: () => set({ items: [] }),
 
+            updateCustomPrice: (productId, price) => {
+                set({
+                    items: get().items.map(i =>
+                        i.product.id === productId ? { ...i, customPrice: price, customSubtotal: undefined } : i
+                    )
+                })
+            },
 
-            
-            updateQuantity: (id, quantity) =>
+            updateCustomSubtotal: (productId, subtotal) => {
+                const item = get().items.find(i => i.product.id === productId)
+                if (!item || item.quantity < 1) return
+
+                const newPrice = item.quantity > 0 ? subtotal / item.quantity : 0
+
                 set({
-                    items: get().items.map((item) =>
-                        item.product.id === id ? { ...item, quantity } : item
-                    ),
-                }),
-            updatePrice: (id, price) =>
-                set({
-                    items: get().items.map((item) =>
-                        item.product.id === id ? { ...item, customPrice: price } : item
-                    ),
-                }),
-            updateDiscount: (id, discount) =>
-                set({
-                    items: get().items.map((item) =>
-                        item.product.id === id ? { ...item, discount } : item
-                    ),
-                }),
-            updateNotes: (id, notes) =>
-                set({
-                    items: get().items.map((item) =>
-                        item.product.id === id ? { ...item, notes } : item
-                    ),
-                }),
-            clear: () => set({ items: [] }),
+                    items: get().items.map(i =>
+                        i.product.id === productId
+                            ? { ...i, customSubtotal: subtotal, customPrice: newPrice }
+                            : i
+                    )
+                })
+            },
+
+            clearCart: () => set({ items: [], discountAmount: undefined, discountPercent: undefined }),
+
+            setDiscountAmount: (amount) => {
+                const subtotal = get().getCartSubtotal()
+                const validAmount = Math.max(0, amount)
+                const percent = subtotal > 0 ? (validAmount / subtotal) * 100 : 0
+                set({ discountAmount: validAmount, discountPercent: percent })
+            },
+
+            setDiscountPercent: (percent) => {
+                const subtotal = get().getCartSubtotal()
+                const validPercent = Math.min(Math.max(0, percent), 100)
+                const amount = (validPercent / 100) * subtotal
+                set({ discountPercent: validPercent, discountAmount: amount })
+            },
+
+            getItemSubtotal: (productId) => {
+                const item = get().items.find(i => i.product.id === productId)
+                if (!item) return 0
+
+                return item.customSubtotal ?? (item.customPrice ?? parseFloat(item.product.precio_venta)) * item.quantity
+            },
+
+            getCartSubtotal: () => {
+                return calculateSubtotal(get().items)
+            },
+
+            getCartTotal: () => {
+                const subtotal = get().getCartSubtotal()
+                const { discountAmount, discountPercent } = get()
+
+                if (discountAmount !== undefined) return subtotal - discountAmount
+                if (discountPercent !== undefined) return subtotal * (1 - discountPercent / 100)
+
+                return subtotal
+            }
         }),
         {
-            name: "cart-storage", // Nombre para localStorage
+            name: "cart-storage"
         }
     )
 );
+
+const calculateSubtotal = (items: CartItem[]) => {
+    return items.reduce((sum, item) => {
+        const subtotal = item.customSubtotal ?? (item.customPrice ?? parseFloat(item.product.precio_venta)) * item.quantity
+        return sum + subtotal
+    }, 0)
+}
