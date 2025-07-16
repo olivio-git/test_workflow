@@ -47,8 +47,7 @@ const TopNav: React.FC<TopNavProps> = ({
   handleToogleSidebarMenu,
 }) => {
   const location = useLocation();
-  const [open, setOpen] = useState(false);
-
+  const [open, setOpen] = useState(false); 
   const routes = protectedRoutes.filter((route) => route.type === "protected");
   const flatRoutes = flattenRoutes(routes);
 

@@ -1,12 +1,13 @@
 // import { environment } from "@/utils/environment";
+import { environment } from "@/utils/environment";
 import { AuthSDK } from "sdk-simple-auth";
 
 const authSDK = new AuthSDK({
-    authServiceUrl: "http://192.168.1.14:8588/api/v1",
-    // authServiceUrl: environment.apiUrl || "http://192.168.1.14:8588/api/v1",
+    authServiceUrl: environment.apiUrl, 
     endpoints: {
         login: "/login",
-        logout: "/logout"
+        logout: "/logout",
+        refresh: "/refresh"
     },
     storage: {
         type: "indexedDB",
@@ -18,7 +19,8 @@ const authSDK = new AuthSDK({
         refreshTokenKey: "tps-intermotors_auth_refresh_token",
     },
     tokenRefresh: {
-        enabled: false,
+        enabled: true,
+        bufferTime: 1800
     }
 })
 

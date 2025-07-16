@@ -1,10 +1,11 @@
 import type RouteType from "./RouteType";
 import Content from "@/modules/dashboard/screens/content";
-import { BoxIcon, Layers, LayoutDashboardIcon, Package, PlusIcon, Table2Icon } from "lucide-react";
+import { BoxIcon, Layers, LayoutDashboardIcon, Package, ShoppingBag, Table2Icon } from "lucide-react";
 import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
-import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
-import Categoria from "@/modules/Categories/Screens/CreateCategory";
+import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen"; 
+import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
+import CreateCategory from "@/modules/categories/screens/CreateCategory";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -60,32 +61,6 @@ const protectedRoutes: RouteType[] = [
       },
     ]
   },
-  // compras
-  {
-    name: "Compras",
-    type: "protected",
-    //element: Content,
-    isAdmin: false,
-    role: ["user"],
-    // icon: HomeIcon,
-
-    isHeader: true,
-    showSidebar: true,
-    subRoutes: [
-      {
-        path: "/dashboard/compras/crear",
-        name: "Registrar Compra",
-        type: "protected",
-        element: CreateProduct,
-        isAdmin: true,
-        role: ["admin"],
-        icon: PlusIcon,
-
-        isHeader: false,
-        showSidebar: true
-      },
-    ]
-  },
   {
     name: "Categorias",
     type: "protected",
@@ -101,7 +76,7 @@ const protectedRoutes: RouteType[] = [
         path: "/dashboard/create-categoria",
         name: "Registrar Categoria",
         type: "protected",
-        element: Categoria,
+        element: CreateCategory,
         isAdmin: true,
         role: ["admin"],
         icon: Layers,
@@ -109,6 +84,28 @@ const protectedRoutes: RouteType[] = [
         isHeader: false,
         showSidebar: true
       },
+    ]
+  },
+  {
+    name:"Compras",
+    type: "protected",
+    isAdmin:false,
+    role: ["user"],
+    isHeader:true,
+    showSidebar:true,
+    subRoutes:[
+      {
+        path:"/dashboard/create-purchase",
+        name:"Registrar compra",
+        type:"protected",
+        element:CreatePurchase,
+        isAdmin:true,
+        role:["admin"],
+        icon:ShoppingBag,
+
+        isHeader:false,
+        showSidebar:true
+      }
     ]
   }
 ];
