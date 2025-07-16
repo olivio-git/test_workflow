@@ -76,9 +76,9 @@ const Pagination: React.FC<PaginationProps> = ({
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-1 items-center justify-between px-2 sm:px-4 py-3 border-t border-gray-200">
             {/* Left side - Show rows selector */}
             <div className="flex items-center gap-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mostrar:</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-0">Mostrar:</label>
                 <Select value={showRows.toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border border-gray-200 shadow-lg">

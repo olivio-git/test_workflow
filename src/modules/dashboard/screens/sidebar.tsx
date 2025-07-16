@@ -29,23 +29,22 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const toggleHeader = (headerName: string) => {
-    setExpandedHeaders(prev => 
-      prev.includes(headerName) 
+    setExpandedHeaders(prev =>
+      prev.includes(headerName)
         ? prev.filter(name => name !== headerName)
         : [...prev, headerName]
     );
   };
- 
+
   return (
     <>
       <nav
         className={`
-          fixed inset-y-0 left-0 z-[70] w-64 bg-white transform transition-transform duration-200 ease-in-out
+          fixed inset-y-0 left-0 z-40 w-64 bg-white transform transition-transform duration-200 ease-in-out
           lg:w-2/12 border-r border-gray-200
-          ${
-            isSidebarMenuOpen
-              ? "translate-x-0 lg:static"
-              : "-translate-x-full"
+          ${isSidebarMenuOpen
+            ? "translate-x-0 lg:static"
+            : "-translate-x-full"
           }
         `}
       >
@@ -91,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               >
                 Ayuda
               </NavItem>
-              <ButtonItem icon={LogOut} onClick={handleLogout}> 
+              <ButtonItem icon={LogOut} onClick={handleLogout}>
                 Logout
               </ButtonItem>
             </div>
@@ -101,7 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {isSidebarMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-[65] lg:hidden"
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
           onClick={() => handleNavigation()}
         />
       )}

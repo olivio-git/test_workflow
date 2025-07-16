@@ -3,9 +3,10 @@ import Content from "@/modules/dashboard/screens/content";
 import { BoxIcon, Layers, LayoutDashboardIcon, Package, ShoppingBag, Table2Icon } from "lucide-react";
 import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
-import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen"; 
+import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
 import CreateCategory from "@/modules/categories/screens/CreateCategory";
+import CreateSale from "@/modules/sales/screens/createSale";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -49,7 +50,7 @@ const protectedRoutes: RouteType[] = [
         showSidebar: true
       },
       {
-        path: "/dashboard/product-detail",
+        path: "/dashboard/productos/:id",
         name: "Detalle de Producto",
         type: "protected",
         element: ProductDetailScreen,
@@ -87,24 +88,46 @@ const protectedRoutes: RouteType[] = [
     ]
   },
   {
-    name:"Compras",
+    name: "Compras",
     type: "protected",
-    isAdmin:false,
+    isAdmin: false,
     role: ["user"],
-    isHeader:true,
-    showSidebar:true,
-    subRoutes:[
+    isHeader: true,
+    showSidebar: true,
+    subRoutes: [
       {
-        path:"/dashboard/create-purchase",
-        name:"Registrar compra",
-        type:"protected",
-        element:CreatePurchase,
-        isAdmin:true,
-        role:["admin"],
-        icon:ShoppingBag,
+        path: "/dashboard/create-purchase",
+        name: "Registrar compra",
+        type: "protected",
+        element: CreatePurchase,
+        isAdmin: true,
+        role: ["admin"],
+        icon: ShoppingBag,
 
-        isHeader:false,
-        showSidebar:true
+        isHeader: false,
+        showSidebar: true
+      }
+    ]
+  },
+  {
+    name: "Ventas",
+    type: "protected",
+    isAdmin: false,
+    role: ["user"],
+    isHeader: true,
+    showSidebar: true,
+    subRoutes: [
+      {
+        path: "/dashboard/create-sale",
+        name: "Registrar venta",
+        type: "protected",
+        element: CreateSale,
+        isAdmin: true,
+        role: ["admin"],
+        icon: ShoppingBag,
+
+        isHeader: false,
+        showSidebar: true
       }
     ]
   }
