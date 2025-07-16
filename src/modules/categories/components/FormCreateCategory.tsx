@@ -4,7 +4,7 @@ import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";
 import { Button } from "@/components/atoms/button";
 import { useToast } from "@/hooks/use-toast";
-import { createCategory, getCategories } from "../Services/categories";
+import { createCategory, getCategories } from "../services/categories";
 import { Select } from "@/components/atoms/select";
 
 interface FormErrors {

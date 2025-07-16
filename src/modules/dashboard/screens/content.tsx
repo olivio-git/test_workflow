@@ -8,8 +8,7 @@ import { useEffect } from "react";
 export default function Content() {
   const selectedBranchId = useBranchStore((state) => state.selectedBranchId);
 
-  useEffect(() => {
-    console.log(selectedBranchId);
+  useEffect(() => { 
   }, [selectedBranchId]);
   return (
     <div className="space-y-4">

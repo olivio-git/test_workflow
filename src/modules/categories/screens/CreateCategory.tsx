@@ -1,6 +1,6 @@
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import FormCreateCategory from "../Components/FormCreateCategory";
-import TableCreateCategory from "../Components/TableCreateCategory";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"; 
+import FormCreateCategory from "../components/FormCreateCategory";
+import TableCreateCategory from "../components/TableCreateCategory";
 
 const CreateCategory = () => {
   return (

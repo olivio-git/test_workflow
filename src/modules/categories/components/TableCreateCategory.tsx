@@ -11,10 +11,9 @@ import {
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import type { Category } from "../Types/CateforiaGet";
-import { getCategories } from "../Services/categories";
-
+import { useToast } from "@/hooks/use-toast"; 
+import { getCategories } from "../services/categories";
+import type { Category } from "../types/Category";
 const TableCreateCategory = () => {
   const [page, setPage] = useState(1);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
