@@ -1,4 +1,4 @@
-import { Bell, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Bell, PanelLeftClose, PanelLeftOpen, ShoppingCart } from "lucide-react";
 import CommandPalette from "./CommandPalette/CommandPalette";
 import SearchButton from "./CommandPalette/SearchButton";
 import { useState } from "react";
@@ -7,25 +7,29 @@ import { Link, useLocation } from "react-router";
 import { useHotkeys } from "react-hotkeys-hook";
 import SelectBranch from "../components/SelectBranch";
 import type RouteType from "@/navigation/RouteType";
+import { Button } from "@/components/atoms/button";
+import { Badge } from "@/components/atoms/badge";
+import { useCartStore } from "@/modules/shoppingCart/store/cartStore";
 
 interface TopNavProps {
   isSidebarMenuOpen: boolean;
   handleToogleSidebarMenu: () => void;
+  onOpenCartChange: () => void
 }
 
 const flattenRoutes = (routes: RouteType[]): RouteType[] => {
   const flattened: RouteType[] = [];
-  
+
   routes.forEach((route) => {
     if (route.path) {
       flattened.push(route);
     }
-    
+
     if (route.subRoutes) {
       flattened.push(...flattenRoutes(route.subRoutes));
     }
   });
-  
+
   return flattened;
 };
 
@@ -45,6 +49,7 @@ const findParentRoute = (routes: RouteType[], targetPath: string): RouteType | n
 const TopNav: React.FC<TopNavProps> = ({
   isSidebarMenuOpen,
   handleToogleSidebarMenu,
+  onOpenCartChange
 }) => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -54,7 +59,7 @@ const TopNav: React.FC<TopNavProps> = ({
 
   const currentRoute = flatRoutes.find((route) => route.path === location.pathname);
   const parentRoute = findParentRoute(routes, location.pathname);
-
+  const cartLength = useCartStore((state) => state.items.length)
   useHotkeys(
     "ctrl+k",
     (e) => {
@@ -82,7 +87,7 @@ const TopNav: React.FC<TopNavProps> = ({
     }
 
     const breadcrumbItems = [];
-    
+
     breadcrumbItems.push(
       <Link
         key="dashboard"
@@ -138,6 +143,14 @@ const TopNav: React.FC<TopNavProps> = ({
           <SearchButton onClick={() => setOpen(true)} />
           <CommandPalette open={open} setOpen={setOpen} />
         </div>
+        <Button variant="outline" className="relative" onClick={onOpenCartChange}>
+          <ShoppingCart className="h-4 w-4" />
+          {cartLength > 0 && (
+            <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+              {cartLength}
+            </Badge>
+          )}
+        </Button>
         <button
           type="button"
           className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors"

@@ -48,7 +48,7 @@ const protectedRoutes: RouteType[] = [
         showSidebar: true
       },
       {
-        path: "/dashboard/product-detail",
+        path: "/dashboard/productos/:id",
         name: "Detalle de Producto",
         type: "protected",
         element: ProductDetailScreen,

@@ -2,11 +2,14 @@ import type { ReactNode } from "react"
 import TopNav from "./top-nav"
 import { useEffect, useState } from "react"
 import Sidebar from "./sidebar"
+import CartSidebar from "@/modules/shoppingCart/components/CartSidebar"
+import { useCartUiStore } from "@/modules/shoppingCart/store/cartUiStore"
 interface LayoutProps {
   children: ReactNode
 }
 
 export default function Layout({ children }: LayoutProps) {
+  const { isOpen, close, toggle } = useCartUiStore()
   const [mounted, setMounted] = useState(false)
   const [isSidebarMenuOpen, setIsSidebarMenuOpen] = useState(() => {
     if (typeof window !== "undefined") {
@@ -62,12 +65,17 @@ export default function Layout({ children }: LayoutProps) {
           <TopNav
             handleToogleSidebarMenu={handleToogleSidebarMenu}
             isSidebarMenuOpen={isSidebarMenuOpen}
+            onOpenCartChange={toggle}
           />
         </header>
         <main
           id="main-scroll-container"
           className="flex-1 overflow-auto p-2 bg-white">{children}</main>
       </div>
+      <CartSidebar
+        open={isOpen}
+        onOpenChange={close}
+      />
     </div>
   )
 }

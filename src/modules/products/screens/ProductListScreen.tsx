@@ -4,9 +4,9 @@ import {
     Filter,
     Edit,
     Trash2,
-    Grid3X3,
-    List,
     Settings,
+    Eye,
+    ShoppingCart,
 } from "lucide-react"
 import { Button } from "@/components/atoms/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
@@ -25,42 +25,77 @@ import { Switch } from "@/components/atoms/switch"
 import { Label } from "@/components/atoms/label"
 import CustomizableTable from "@/components/common/CustomizableTable"
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { useBranchStore } from "@/states/branchStore"
+import { useCommonBrands } from "@/modules/catalog/hooks/useCommonBrands"
+import authSDK from "@/services/sdk-simple-auth"
+import { useNavigate } from "react-router"
 
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
+    const { selectedBranchId } = useBranchStore()
+    const navigate = useNavigate()
+    const user = authSDK.getCurrentUser()
     const {
         filters,
         updateFilter,
         setPage,
         resetFilters,
-    } = useProductFilters(1); // suponiendo sucursal 1 por sesión
+    } = useProductFilters(Number(selectedBranchId) || 1); // suponiendo sucursal 1 por sesión
     // Aplicar debounce solo a los campos de texto
     const [debouncedDescripcion] = useDebounce(filters.descripcion, 1000);
     const [debouncedCodigoOEM] = useDebounce(filters.codigo_oem || '', 1000);
     const [debouncedCodigoUPC] = useDebounce(filters.codigo_upc || '', 1000);
     const [debouncedNroMotor] = useDebounce(filters.nro_motor || '', 1000);
+    const [debouncedModelo] = useDebounce(filters.modelo || '', 1000);
 
     const debouncedFilters = {
         ...filters,
         descripcion: debouncedDescripcion,
         codigo_oem: debouncedCodigoOEM,
         codigo_upc: debouncedCodigoUPC,
-        nro_motor: debouncedNroMotor
+        nro_motor: debouncedNroMotor,
+        modelo: debouncedModelo,
     };
-    const { data, isLoading, error, isFetching } = useProductsPaginated(debouncedFilters);
+    const { data: productData, isLoading, error, isFetching } = useProductsPaginated(debouncedFilters);
     const { data: categoriesData } = useCategoriesWithSubcategories();
+    const { data: brandsData } = useCommonBrands()
 
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
+    const [columnVisibility, setColumnVisibility] = useState({})
+
+    const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+    const [selectedProducts, setSelectedProducts] = useState<number[]>([])
+
+    const COLUMN_VISIBILITY_KEY = `product-columns-${user?.name}`;
+
     useEffect(() => {
-        if (!data?.data || error || isFetching) return;
-        if (data?.data) {
-            if (isInfiniteScroll && filters.pagina && filters.pagina > 1) {
-                setProducts((prev) => [...prev, ...data.data]);
-            } else {
-                setProducts(data.data);
+        const savedVisibility = sessionStorage.getItem(COLUMN_VISIBILITY_KEY);
+        if (savedVisibility) {
+            try {
+                setColumnVisibility(JSON.parse(savedVisibility));
+            } catch {
+                sessionStorage.removeItem(COLUMN_VISIBILITY_KEY);
             }
         }
-    }, [data, isInfiniteScroll, filters.pagina]);
+    }, [user]);
+
+    useEffect(() => {
+        sessionStorage.setItem(COLUMN_VISIBILITY_KEY, JSON.stringify(columnVisibility));
+    }, [columnVisibility, user]);
+
+
+    useEffect(() => {
+        if (!productData?.data || error || isFetching) return;
+        if (productData?.data) {
+            if (isInfiniteScroll && filters.pagina && filters.pagina > 1) {
+                setProducts((prev) => [...prev, ...productData.data]);
+            } else {
+                setProducts(productData.data);
+            }
+        }
+    }, [productData, isInfiniteScroll, filters.pagina]);
 
     useEffect(() => {
         if (isInfiniteScroll) {
@@ -76,9 +111,9 @@ const ProductListScreen = () => {
         if (stockNum <= 50) return "text-yellow-600 bg-yellow-50"
         return "text-green-600 bg-green-50"
     }
-
-    const [sorting, setSorting] = useState<SortingState>([])
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+    const handleProductDetail = (productId: number) => {
+        navigate(`/dashboard/productos/${productId}`);
+    }
 
     const columns: ColumnDef<ProductGet>[] = [
         {
@@ -116,8 +151,10 @@ const ProductListScreen = () => {
             minSize: 250,
             enableHiding: false,
             cell: ({ row, getValue }) => (
-                <div className="space-y-1">
-                    <div className="font-medium text-gray-900 leading-tight">{getValue<string>()}</div>
+                <div
+                    onClick={() => handleProductDetail(row.original.id)}
+                    className="space-y-1 cursor-pointer group hover:bg-blue-50 p-1 rounded">
+                    <div className="font-medium text-gray-900 leading-tight group-hover:underline">{getValue<string>()}</div>
                     <div className=" text-gray-500 font-mono">
                         UPC: {row.original.codigo_upc}
                     </div>
@@ -277,15 +314,37 @@ const ProductListScreen = () => {
                 </div>
             ),
         },
+        {
+            id: "Actions",
+            header: "Acciones",
+            cell: ({ row }) => (
+                <div className="flex items-center justify-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleProductDetail(row.original.id)}
+                        aria-label="Ver Detalle"
+                        className="size-8 cursor-pointer"
+                    >
+                        <Eye className="size-4" />
+                    </Button>
+                    <Button
+                        variant="default"
+                        size="icon"
+                        onClick={() => console.log("Add product", row.original.id)}
+                        aria-label="Añadir Producto al Carrito"
+                        className="size-8 cursor-pointer"
+                    >
+                        <ShoppingCart className="size-4" />
+                    </Button>
+                </div>
+            ),
+            enableSorting: false,
+            enableHiding: true,
+            size: 100,
+            minSize: 100,
+        },
     ];
-
-    const [columnVisibility, setColumnVisibility] = useState({})
-
-    const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-    const [selectedProducts, setSelectedProducts] = useState<number[]>([])
-    const [priceFilter, setPriceFilter] = useState("all")
-    const [storeFilter, setStoreFilter] = useState("all");
-
     // Filter and sort products
     const table = useReactTable<ProductGet>({
         data: products,
@@ -343,9 +402,10 @@ const ProductListScreen = () => {
             <div className="bg-white rounded-lg shadow-sm">
                 {/* Header */}
                 <div className="p-2 border-b border-gray-200">
+                    {/* <h1 className="text-2xl font-bold">Productos</h1> */}
                     <div className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
-                        <div className="flex items-center gap-2 md:gap-4">
-                            <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 md:gap-4 grow">
+                            {/* <div className="flex items-center gap-2">
                                 <Button
                                     variant={viewMode === "list" ? "default" : "outline"}
                                     size="sm"
@@ -360,15 +420,15 @@ const ProductListScreen = () => {
                                 >
                                     <Grid3X3 className="h-4 w-4" />
                                 </Button>
-                            </div>
+                            </div> */}
 
-                            <div className="relative">
+                            <div className="relative w-full">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                 <Input
                                     placeholder="Buscar productos..."
-                                    value={filters.descripcion}
+                                    value={filters.descripcion ?? ""}
                                     onChange={(e) => updateFilter("descripcion", e.target.value)}
-                                    className="pl-10 max-w-72 w-full text-gray-900 text-xs"
+                                    className="pl-10 w-full text-gray-900 text-xs"
                                 />
                             </div>
                         </div>
@@ -377,8 +437,16 @@ const ProductListScreen = () => {
                             <div className="flex items-center space-x-2">
                                 <Switch
                                     className="bg-gray-200"
-                                    id="infinite-scroll" checked={isInfiniteScroll} onCheckedChange={setIsInfiniteScroll} />
-                                <Label htmlFor="infinite-scroll text-gray-700" className="text-sm">
+                                    id="infinite-scroll"
+                                    checked={isInfiniteScroll}
+                                    onCheckedChange={(checked) => {
+                                        setIsInfiniteScroll(checked);
+                                        if (!checked) {
+                                            setPage(1);
+                                        }
+                                    }}
+                                />
+                                <Label htmlFor="infinite-scroll" className="text-sm text-gray-700">
                                     Scroll Infinito
                                 </Label>
                             </div>
@@ -411,13 +479,52 @@ const ProductListScreen = () => {
                                         ))}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            {/* <FilterActives showFilter={showFilter} setShowFilter={setShowFilter} />
-                            <FilterSort sortBy={sortBy} setSortBy={setSortBy} /> */}
 
                             <Button variant="outline" className="hover:bg-gray-50" size="sm" onClick={resetFilters}>
                                 <Filter className="h-4 w-4 mr-2" />
                                 Reset Filters
                             </Button>
+                        </div>
+                    </div>
+                </div>
+                {/* Búsquedas individuales */}
+                <div className="space-y-4 p-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label className="text-gray-700 text-sm font-medium">Buscar Código OEM</Label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <Input
+                                    placeholder="11122-10040-D..."
+                                    value={filters.codigo_oem ?? ""}
+                                    onChange={(e) => updateFilter("codigo_oem", e.target.value)}
+                                    className="pl-10 font-mono text-xs"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-gray-700 text-sm font-medium">Buscar Código UPC</Label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <Input
+                                    placeholder="11122-10040..."
+                                    value={filters.codigo_upc ?? ""}
+                                    onChange={(e) => updateFilter("codigo_upc", e.target.value)}
+                                    className="pl-10 font-mono text-xs"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-gray-700 text-sm font-medium">Buscar Número de Motor</Label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <Input
+                                    placeholder="1ZZ-FE..."
+                                    value={filters.nro_motor ?? ""}
+                                    onChange={(e) => updateFilter("nro_motor", e.target.value)}
+                                    className="pl-10 font-mono text-xs"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -438,9 +545,9 @@ const ProductListScreen = () => {
                                     <SelectValue placeholder="TODAS" />
                                 </SelectTrigger>
                                 <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50" value="all">TODAS</SelectItem>
+                                    <SelectItem className="hover:bg-gray-50 capitalize" value="all">TODAS</SelectItem>
                                     {categoriesData?.map((category) => (
-                                        <SelectItem key={category.id} className="hover:bg-gray-50" value={String(category.id)}>
+                                        <SelectItem key={category.id} className="hover:bg-gray-50 capitalize" value={String(category.id)}>
                                             {category.categoria}
                                         </SelectItem>
                                     ))}
@@ -478,41 +585,47 @@ const ProductListScreen = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Precio de venta</label>
-                            <Select value={priceFilter} onValueChange={setPriceFilter}>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Marca</label>
+                            <Select value={filters.marca ?? "all"}
+                                onValueChange={(value) => {
+                                    updateFilter("marca", value === "all" ? "" : value);
+                                }}>
                                 <SelectTrigger>
-                                    <SelectValue />
+                                    <SelectValue placeholder='TODAS' />
                                 </SelectTrigger>
                                 <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50" value="all">Todos los precios</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="50-100">50 - 100</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="100-200">100 - 200</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="200-500">200 - 500</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="500-1000">500 - 1000</SelectItem>
-
+                                    <SelectItem className="hover:bg-gray-50" value="all">TODAS</SelectItem>
+                                    {brandsData?.map((brand) => (
+                                        <SelectItem
+                                            key={brand.id}
+                                            value={brand.marca}
+                                            className="hover:bg-gray-50"
+                                        >
+                                            {brand.marca}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Sucursal</label>
-                            <Select value={storeFilter} onValueChange={setStoreFilter}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50" value="all">Ver todas</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="Store 1">Store 1</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="Store 2">Store 2</SelectItem>
-                                </SelectContent>
-                            </Select>
+                        <div className="space-y-2">
+                            <Label className="text-gray-700 text-sm font-medium">Buscar Medida</Label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <Input
+                                    placeholder="11X6X40.6..."
+                                    value={filters.medida ?? ""}
+                                    onChange={(e) => updateFilter("medida", e.target.value)}
+                                    className="pl-10 font-mono text-xs"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Results Info */}
                 <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
-                    Showing {products.length} of {data?.meta.total} products
+                    Showing {products.length} of {productData?.meta.total} products
                     {selectedProducts.length > 0 && (
                         <span className="ml-4 text-blue-600">{selectedProducts.length} selected</span>
                     )}
@@ -539,7 +652,7 @@ const ProductListScreen = () => {
                             <InfiniteScroll
                                 dataLength={products.length}
                                 next={() => setPage((filters.pagina || 1) + 1)}
-                                hasMore={products.length < (data?.meta.total || 0)}
+                                hasMore={products.length < (productData?.meta.total || 0)}
                                 loader={<div className="text-center p-4 text-sm text-gray-500">Cargando más productos...</div>}
                                 scrollableTarget="main-scroll-container"
                             >
@@ -556,7 +669,7 @@ const ProductListScreen = () => {
                 ) : (
                     <div className="p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {data?.data.map((product: any) => (
+                            {productData?.data.map((product: any) => (
                                 <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                     <div className="flex items-start justify-between mb-3">
                                         <Checkbox
@@ -608,11 +721,11 @@ const ProductListScreen = () => {
                 )}
                 {/* Pagination */}
                 {
-                    !isInfiniteScroll && (
+                    !isInfiniteScroll && (productData?.data?.length ?? 0) > 0 && (
                         <Pagination
                             currentPage={filters.pagina || 1}
                             onPageChange={onPageChange}
-                            totalData={data?.meta.total || 1}
+                            totalData={productData?.meta.total || 1}
                             onShowRowsChange={onShowRowsChange}
                             showRows={filters.pagina_registros}
                         />

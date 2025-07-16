@@ -13,10 +13,11 @@ import {
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
 interface Props<T> {
     table: Table<T>
+    renderBottomRow?: () => React.ReactNode;
     isLoading?: boolean;
 }
 
-const CustomizableTable = <T,>({ table, isLoading }: Props<T>) => {
+const CustomizableTable = <T,>({ table, renderBottomRow, isLoading }: Props<T>) => {
 
     return (
         <AtomTable className="w-full table-fixed text-xs">
@@ -70,15 +71,21 @@ const CustomizableTable = <T,>({ table, isLoading }: Props<T>) => {
                         </TableCell>
                     </TableRow>
                 ) : (
-                    table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id}>
-                            {row.getVisibleCells().map((cell) => (
-                                <TableCell key={cell.id} className="p-1 truncate">
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    ))
+                    <>
+                        {
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow key={row.id}>
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell key={cell.id} className="p-1 truncate">
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        }
+                        {/* Renderizar fila personalizada si se provee */}
+                        {renderBottomRow && renderBottomRow()}
+                    </>
                 )}
 
             </TableBody>
