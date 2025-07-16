@@ -57,7 +57,7 @@ const CartSidebar = ({
                     <SheetTitle className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <ShoppingCart className="w-5 h-5" />
-                            Carrito de Compras
+                            Carrito de ventas
                         </div>
                         {
                             cart.length > 0 && (
