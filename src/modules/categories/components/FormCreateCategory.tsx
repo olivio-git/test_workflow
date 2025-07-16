@@ -100,12 +100,9 @@ const FormCreateCategory: React.FC = () => {
 
     try {
       setIsLoading(true);
-      await createCategory({ categoria: formData.categoria });
-      toast({
-        title: "Categoría creada",
-        description: `La categoría "${formData.categoria}" fue registrada exitosamente.`,
-      });
-
+      const response = await createCategory(formData.categoria);
+      console.log(response)
+      alert("Categoria creada exitosamente")
       setFormData((prev) => ({ ...prev, categoria: "" }));
       setErrors((prev) => ({ ...prev, categoria: "" }));
       setTouched((prev) => ({ ...prev, categoria: false }));
@@ -277,11 +274,12 @@ const FormCreateCategory: React.FC = () => {
             <span className="text-xs text-gray-500">* Campo requerido</span>
             <Button
               onClick={handleSubmitSubcategoria}
-              disabled={isLoading}
+              // disabled={isLoading}
               className="h-8 text-sm bg-gray-900 hover:bg-gray-800"
             >
               <Save className="w-4 h-4 mr-2" />
-              {isLoading ? "Guardando..." : "Guardar Subcategoría"}
+              Guardar Subcategoria
+              {/* {isLoading ? "Guardando..." : "Guardar Subcategoría"} */}
             </Button>
           </div>
         </div>

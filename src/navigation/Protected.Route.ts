@@ -1,11 +1,12 @@
 import type RouteType from "./RouteType";
 import Content from "@/modules/dashboard/screens/content";
-import { BoxIcon, Layers, LayoutDashboardIcon, Package, ShoppingBag, Table2Icon } from "lucide-react";
+import { BoxIcon, Layers, LayoutDashboardIcon, Package, ShoppingBag, Table2Icon, TableCellsMerge } from "lucide-react";
 import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen"; 
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
 import CreateCategory from "@/modules/categories/screens/CreateCategory";
+import TableCreateCategory from "@/modules/categories/components/TableCreateCategory";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -84,6 +85,18 @@ const protectedRoutes: RouteType[] = [
         isHeader: false,
         showSidebar: true
       },
+      {
+        path:"/dashboard/list-categoria",
+        name:"Lista de categorias",
+        type:"protected",
+        element:TableCreateCategory,
+        isAdmin:true,
+        role:["admin"],
+        icon:TableCellsMerge,
+
+        isHeader:false,
+        showSidebar:true
+      }
     ]
   },
   {
