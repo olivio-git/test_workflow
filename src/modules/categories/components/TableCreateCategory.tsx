@@ -11,9 +11,11 @@ import {
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast"; 
+import { useToast } from "@/hooks/use-toast";
 import { getCategories } from "../services/categories";
 import type { Category } from "../types/Category";
+import { SubcategoryInput } from "./SubCategoryInput";
+
 const TableCreateCategory = () => {
   const [page, setPage] = useState(1);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
@@ -21,11 +23,17 @@ const TableCreateCategory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
-  
+
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const pageSize = 20;
+  const [addingSubId, setAddingSubId] = useState<number | null>(null);
+  const [newSubName, setNewSubName] = useState("");
+
+  interface TableCreateCategoryProps {
+    onEdit: (category: Category) => void;
+  }
 
   const {
     data: response,
@@ -44,8 +52,8 @@ const TableCreateCategory = () => {
   useEffect(() => {
     if (response) {
       // Ajusta según la estructura de tu respuesta API
-      const newCategories = Array.isArray(response) 
-        ? response 
+      const newCategories = Array.isArray(response)
+        ? response
         : response.data || response.categories || [response];
 
       if (newCategories.length === 0) {
@@ -81,11 +89,12 @@ const TableCreateCategory = () => {
       return;
     }
 
-    const filtered = allCategories.filter((category) =>
-      category.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.subcategorias.some((sub) =>
-        sub.subcategoria.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    const filtered = allCategories.filter(
+      (category) =>
+        category.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        category.subcategorias.some((sub) =>
+          sub.subcategoria.toLowerCase().includes(searchTerm.toLowerCase())
+        )
     );
     setFilteredCategories(filtered);
   }, [searchTerm, allCategories]);
@@ -119,7 +128,8 @@ const TableCreateCategory = () => {
     if (error) {
       toast({
         title: "Error al cargar categorías",
-        description: "Hubo un problema al obtener los datos. Intenta nuevamente.",
+        description:
+          "Hubo un problema al obtener los datos. Intenta nuevamente.",
         variant: "destructive",
       });
     }
@@ -130,16 +140,16 @@ const TableCreateCategory = () => {
 
     try {
       setIsDeleting(id);
-      
+
       // Aquí implementa tu función de eliminación
       // await deleteCategory(id);
-      
+
       // Actualizar estado local optimisticamente
       setAllCategories((prev) => prev.filter((cat) => cat.id !== id));
-      
+
       // Invalidar y refetch las categorías
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      
+
       toast({
         title: "Categoría eliminada",
         description: "La categoría ha sido eliminada exitosamente.",
@@ -147,7 +157,7 @@ const TableCreateCategory = () => {
     } catch (error) {
       // Revertir el cambio optimista en caso de error
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      
+
       toast({
         title: "Error al eliminar",
         description: "No se pudo eliminar la categoría. Intenta nuevamente.",
@@ -159,8 +169,8 @@ const TableCreateCategory = () => {
   };
 
   const handleAddSubcategory = (categoryId: number) => {
-    console.log("➕ Agregar subcategoría a:", categoryId);
-    // Aquí puedes abrir un modal para agregar subcategoría
+    setAddingSubId(categoryId);
+    setNewSubName("");
   };
 
   // Función para refrescar datos
@@ -182,7 +192,18 @@ const TableCreateCategory = () => {
   };
 
   const getTotalSubcategories = () => {
-    return allCategories.reduce((total, cat) => total + cat.subcategorias.length, 0);
+    return allCategories.reduce(
+      (total, cat) => total + cat.subcategorias.length,
+      0
+    );
+  };
+
+  const handleSubmitSubcategory = async () => {
+    if (!newSubName.trim() || addingSubId === null) return;
+
+    await handleCreateSubcategory(addingSubId, newSubName.trim());
+    setAddingSubId(null); // ocultar input
+    setNewSubName("");
   };
 
   const displayCategories = searchTerm ? filteredCategories : allCategories;
@@ -193,13 +214,19 @@ const TableCreateCategory = () => {
       <div className="flex flex-col gap-4 p-4 bg-white border border-gray-200 rounded-lg sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-6">
           <div className="text-sm text-gray-600">
-            <span className="font-medium text-gray-900">{allCategories.length}</span> categorías
+            <span className="font-medium text-gray-900">
+              {allCategories.length}
+            </span>{" "}
+            categorías
           </div>
           <div className="text-sm text-gray-600">
-            <span className="font-medium text-gray-900">{getTotalSubcategories()}</span> subcategorías
+            <span className="font-medium text-gray-900">
+              {getTotalSubcategories()}
+            </span>{" "}
+            subcategorías
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
@@ -218,14 +245,16 @@ const TableCreateCategory = () => {
         <div
           ref={tableContainerRef}
           className="overflow-y-auto max-h-[600px]"
-          style={{ scrollBehavior: 'smooth' }}
+          style={{ scrollBehavior: "smooth" }}
         >
           <Table className="min-w-full">
             <TableHeader className="sticky top-0 z-10 shadow-sm bg-gray-50">
               <TableRow className="text-sm text-gray-700">
                 <TableHead className="font-semibold">Categoría</TableHead>
                 <TableHead className="font-semibold">Subcategorías</TableHead>
-                <TableHead className="w-32 font-semibold text-center">Acciones</TableHead>
+                <TableHead className="w-32 font-semibold text-center">
+                  Acciones
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-gray-100">
@@ -237,7 +266,9 @@ const TableCreateCategory = () => {
                       {searchTerm ? (
                         <>
                           <Search className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                          <p>No se encontraron resultados para "{searchTerm}"</p>
+                          <p>
+                            No se encontraron resultados para "{searchTerm}"
+                          </p>
                         </>
                       ) : (
                         <>
@@ -254,8 +285,8 @@ const TableCreateCategory = () => {
 
               {/* Contenido de la tabla */}
               {displayCategories.map((category) => (
-                <TableRow 
-                  key={category.id} 
+                <TableRow
+                  key={category.id}
                   className="transition-colors hover:bg-gray-50"
                 >
                   <TableCell className="py-4 font-medium text-gray-900">
@@ -277,7 +308,7 @@ const TableCreateCategory = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleAddSubcategory(category.id)}
+                          onClick={() => handleDelete(category.id)}
                           className="h-6 mt-2 text-xs text-gray-600 hover:text-gray-900"
                         >
                           <Plus className="w-3 h-3 mr-1" />
@@ -289,15 +320,41 @@ const TableCreateCategory = () => {
                         <span className="text-sm italic text-gray-400">
                           Sin subcategorías
                         </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleAddSubcategory(category.id)}
-                          className="block h-6 text-xs text-gray-600 hover:text-gray-900"
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          Agregar subcategoría
-                        </Button>
+                        {addingSubId === category.id ? (
+                          <div className="flex items-center gap-2 mt-2">
+                            <Input
+                              value={newSubName}
+                              onChange={(e) => setNewSubName(e.target.value)}
+                              placeholder="Nombre subcategoría"
+                              className="text-sm h-7"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={handleSubmitSubcategory}
+                              className="px-3 text-xs h-7"
+                            >
+                              Guardar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setAddingSubId(null)}
+                              className="px-2 text-xs text-gray-400 h-7 hover:text-gray-600"
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleAddSubcategory(category.id)}
+                            className="h-6 mt-2 text-xs text-gray-600 hover:text-gray-900"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Agregar subcategoría
+                          </Button>
+                        )}
                       </div>
                     )}
                   </TableCell>
@@ -346,7 +403,10 @@ const TableCreateCategory = () => {
               {/* Fin de resultados */}
               {!hasMore && allCategories.length > 0 && !searchTerm && (
                 <TableRow>
-                  <TableCell colSpan={3} className="py-6 text-sm text-center text-gray-400">
+                  <TableCell
+                    colSpan={3}
+                    className="py-6 text-sm text-center text-gray-400"
+                  >
                     <div className="pt-4 border-t border-gray-100">
                       Has visto todas las categorías disponibles
                     </div>
@@ -361,7 +421,8 @@ const TableCreateCategory = () => {
       {/* Footer con información de resultados */}
       {searchTerm && (
         <div className="py-2 text-sm text-center text-gray-600">
-          Mostrando {filteredCategories.length} de {allCategories.length} categorías
+          Mostrando {filteredCategories.length} de {allCategories.length}{" "}
+          categorías
         </div>
       )}
     </div>

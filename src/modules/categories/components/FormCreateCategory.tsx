@@ -5,7 +5,7 @@ import { Input } from "@/components/atoms/input";
 import { Button } from "@/components/atoms/button";
 import { useToast } from "@/hooks/use-toast";
 import { createCategory, getCategories } from "../services/categories";
-import { Select } from "@/components/atoms/select";
+import { SearchCategories } from "./SearchCategories";
 
 interface FormErrors {
   [key: string]: string;
@@ -36,17 +36,17 @@ const FormCreateCategory: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
-  // Cargar categorías al montar el componente
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoadingCategories(true);
-        const response = await getCategories(); // Ajusta el page y pageSize según tu API
+        const response = await getCategories(1, 100);
         setCategories(response);
       } catch (error) {
         toast({
           title: "Error al cargar categorías",
-          description: "No se pudieron cargar las categorías disponibles",
+          description:
+            "No se pudieron cargar las categorías disponibles" + error,
           variant: "destructive",
         });
       } finally {
@@ -58,7 +58,7 @@ const FormCreateCategory: React.FC = () => {
   }, [toast]);
 
   const validateField = (field: string, value: string): string => {
-    if (!value.trim()) return "Este campo es requerido";
+    if (!value.trim()) return "Este campo es requerido" + field;
     if (value.length < 3) return "Debe tener al menos 3 caracteres";
     return "";
   };
@@ -106,13 +106,13 @@ const FormCreateCategory: React.FC = () => {
         description: `La categoría "${formData.categoria}" fue registrada exitosamente.`,
       });
 
-      setFormData(prev => ({ ...prev, categoria: "" }));
-      setErrors(prev => ({ ...prev, categoria: "" }));
-      setTouched(prev => ({ ...prev, categoria: false }));
-      
+      setFormData((prev) => ({ ...prev, categoria: "" }));
+      setErrors((prev) => ({ ...prev, categoria: "" }));
+      setTouched((prev) => ({ ...prev, categoria: false }));
+
       // Recargar categorías después de crear una nueva
       try {
-        const response = await getCategories();
+        const response = await getCategories(1, 100);
         setCategories(response);
       } catch (error) {
         console.error("Error al recargar categorías:", error);
@@ -120,7 +120,7 @@ const FormCreateCategory: React.FC = () => {
     } catch (error) {
       toast({
         title: "Error al guardar",
-        description: "No se pudo crear la categoría",
+        description: "No se pudo crear la categoría" + error,
         variant: "destructive",
       });
     } finally {
@@ -130,18 +130,25 @@ const FormCreateCategory: React.FC = () => {
 
   const handleSubmitSubcategoria = async () => {
     const newErrors: FormErrors = {};
-    
+
     // Validar subcategoría
-    const subcategoriaError = validateField("subcategoria", formData.subcategoria);
+    const subcategoriaError = validateField(
+      "subcategoria",
+      formData.subcategoria
+    );
     if (subcategoriaError) newErrors["subcategoria"] = subcategoriaError;
-    
+
     // Validar que se haya seleccionado una categoría
     if (!formData.categoriaSeleccionada) {
       newErrors["categoriaSeleccionada"] = "Debe seleccionar una categoría";
     }
 
-    setErrors(prev => ({ ...prev, ...newErrors }));
-    setTouched(prev => ({ ...prev, subcategoria: true, categoriaSeleccionada: true }));
+    setErrors((prev) => ({ ...prev, ...newErrors }));
+    setTouched((prev) => ({
+      ...prev,
+      subcategoria: true,
+      categoriaSeleccionada: true,
+    }));
 
     if (Object.keys(newErrors).length > 0) {
       toast({
@@ -155,23 +162,35 @@ const FormCreateCategory: React.FC = () => {
     try {
       setIsLoading(true);
       // Aquí implementa tu función para crear subcategoría
-      // await createSubcategory({ 
+      // await createSubcategory({
       //   subcategoria: formData.subcategoria,
       //   categoriaId: formData.categoriaSeleccionada
       // });
-      
+
       toast({
         title: "Subcategoría creada",
         description: `La subcategoría "${formData.subcategoria}" fue registrada exitosamente.`,
       });
 
-      setFormData(prev => ({ ...prev, subcategoria: "", categoriaSeleccionada: "" }));
-      setErrors(prev => ({ ...prev, subcategoria: "", categoriaSeleccionada: "" }));
-      setTouched(prev => ({ ...prev, subcategoria: false, categoriaSeleccionada: false }));
+      setFormData((prev) => ({
+        ...prev,
+        subcategoria: "",
+        categoriaSeleccionada: "",
+      }));
+      setErrors((prev) => ({
+        ...prev,
+        subcategoria: "",
+        categoriaSeleccionada: "",
+      }));
+      setTouched((prev) => ({
+        ...prev,
+        subcategoria: false,
+        categoriaSeleccionada: false,
+      }));
     } catch (error) {
       toast({
         title: "Error al guardar",
-        description: "No se pudo crear la subcategoría",
+        description: "No se pudo crear la subcategoría" + error,
         variant: "destructive",
       });
     } finally {
@@ -224,25 +243,16 @@ const FormCreateCategory: React.FC = () => {
           <h2 className="mb-4 text-lg font-semibold">Subcategoría</h2>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-xs text-gray-600">Subcategaria</Label>
-              <Select
-                value={formData.categoriaSeleccionada}
-                onChange={(e) => handleChange("categoriaSeleccionada", e.target.value)}
-                onBlur={() => handleBlur("categoriaSeleccionada")}
-                className={getInputClassName("categoriaSeleccionada")}
+              <Label className="text-xs text-gray-600">Categoría</Label>
+              <SearchCategories
+                categories={categories}
+                onSelect={(category) => handleChange("categoriaSeleccionada", category.id)}
                 disabled={loadingCategories}
-              >
-                <option value="">
-                  {loadingCategories ? "Cargando categorías..." : "Seleccione una categoría"}
-                </option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.categoria}
-                  </option>
-                ))}
-              </Select>
+              />
               {errors.categoriaSeleccionada && (
-                <p className="mt-1 text-xs text-red-500">{errors.categoriaSeleccionada}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.categoriaSeleccionada}
+                </p>
               )}
             </div>
 
@@ -256,7 +266,9 @@ const FormCreateCategory: React.FC = () => {
                 className={getInputClassName("subcategoria")}
               />
               {errors.subcategoria && (
-                <p className="mt-1 text-xs text-red-500">{errors.subcategoria}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.subcategoria}
+                </p>
               )}
             </div>
           </div>
