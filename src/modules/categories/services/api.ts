@@ -17,8 +17,9 @@ export const apiConstructor = async ({
     params,
     headers
 }: ApiConstructor) => {
-    try {
+    try { 
         const token = await authSDK.getAccessToken();
+        console.log(token)
         const config = {
             url,
             method,
@@ -30,8 +31,8 @@ export const apiConstructor = async ({
             ...(data && method !== "GET" && method !== "DELETE" && { data }),
             ...(params && { params }) // Añadido manejo de params
         };
-        const response = await axios(config);
-        return response.data.data || response.data;
+        const response = await axios(config); 
+        return response.data
     } catch (error: any) {
         console.error('API Error:', error);
         throw error.response?.data || error.message || 'Unknown error';

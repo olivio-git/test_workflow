@@ -12,6 +12,7 @@ export interface FormData {
   usuario: number | null;
   sucursal: number | null;
   detalles: any[];
+  id_responsable?: number;
 }
 
 interface FormErrors { [key: string]: string; }
@@ -30,6 +31,7 @@ export function usePurchaseForm(initialBranch: number) {
     usuario: 1,
     sucursal: initialBranch,
     detalles: [],
+    id_responsable: 1
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<FormTouched>({});
@@ -76,6 +78,7 @@ export function usePurchaseForm(initialBranch: number) {
       usuario: 1,
       sucursal: initialBranch,
       detalles: [],
+      id_responsable: 1,
     });
     setErrors({});
     setTouched({});

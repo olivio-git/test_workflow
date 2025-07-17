@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
     Search,
     Filter,
     Edit,
     Trash2,
-    Grid3X3,
-    List,
     Settings,
+    Eye,
+    ShoppingCart,
 } from "lucide-react"
 import { Button } from "@/components/atoms/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
@@ -16,39 +16,78 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import type { ProductGet } from "../types/ProductGet"
 import { useProductFilters } from "../hooks/useProductFilters"
 import { useProductsPaginated } from "../hooks/useProductsPaginated"
-import { getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, type ColumnDef, type ColumnResizeMode, type RowSelectionState, type SortingState } from "@tanstack/react-table"
+import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type RowSelectionState, type SortingState } from "@tanstack/react-table"
 import { Badge } from "@/components/atoms/badge"
-import { useDebounce } from "use-debounce";
-import { useCategoriesWithSubcategories } from "@/modules/catalog/hooks/useCategories"
 import Pagination from "@/components/common/pagination"
 import { Switch } from "@/components/atoms/switch"
 import { Label } from "@/components/atoms/label"
 import CustomizableTable from "@/components/common/CustomizableTable"
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { useBranchStore } from "@/states/branchStore"
+import authSDK from "@/services/sdk-simple-auth"
+import { useNavigate } from "react-router"
+import ProductFilters from "../components/productList/productFilters"
+import { useCartStore } from "@/modules/shoppingCart/store/cartStore"
 
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
-    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const { selectedBranchId } = useBranchStore()
+    const navigate = useNavigate()
+    const user = authSDK.getCurrentUser()
     const {
         filters,
         updateFilter,
         setPage,
         resetFilters,
-    } = useProductFilters(1); // suponiendo sucursal 1 por sesión
-    // Aplicar debounce solo a los campos de texto
-    const [debouncedDescripcion] = useDebounce(filters.descripcion, 1000);
-    const [debouncedCodigoOEM] = useDebounce(filters.codigo_oem || '', 1000);
-    const [debouncedCodigoUPC] = useDebounce(filters.codigo_upc || '', 1000);
-    const [debouncedNroMotor] = useDebounce(filters.nro_motor || '', 1000);
+    } = useProductFilters(Number(selectedBranchId) || 1); // suponiendo sucursal 1 por sesión
 
-    const debouncedFilters = {
-        ...filters,
-        descripcion: debouncedDescripcion,
-        codigo_oem: debouncedCodigoOEM,
-        codigo_upc: debouncedCodigoUPC,
-        nro_motor: debouncedNroMotor
-    };
-    const { data, isLoading, error, isFetching } = useProductsPaginated(debouncedFilters);
-    const { data: categoriesData } = useCategoriesWithSubcategories();
+    const { data: productData, isLoading, error, isFetching } = useProductsPaginated(filters);
+
+    const { addItem } = useCartStore()
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+    const [products, setProducts] = useState<ProductGet[]>([]);
+    const [columnVisibility, setColumnVisibility] = useState({})
+
+    const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+    const [selectedProducts, setSelectedProducts] = useState<number[]>([])
+
+    const COLUMN_VISIBILITY_KEY = `product-columns-${user?.name}`;
+
+    useEffect(() => {
+        const savedVisibility = sessionStorage.getItem(COLUMN_VISIBILITY_KEY);
+        if (savedVisibility) {
+            try {
+                setColumnVisibility(JSON.parse(savedVisibility));
+            } catch {
+                sessionStorage.removeItem(COLUMN_VISIBILITY_KEY);
+            }
+        }
+    }, [user]);
+
+    useEffect(() => {
+        sessionStorage.setItem(COLUMN_VISIBILITY_KEY, JSON.stringify(columnVisibility));
+    }, [columnVisibility, user]);
+
+
+    useEffect(() => {
+        if (!productData?.data || error || isFetching) return;
+        if (productData?.data) {
+            if (isInfiniteScroll && filters.pagina && filters.pagina > 1) {
+                setProducts((prev) => [...prev, ...productData.data]);
+            } else {
+                setProducts(productData.data);
+            }
+        }
+    }, [productData, isInfiniteScroll, filters.pagina]);
+
+    useEffect(() => {
+        if (isInfiniteScroll) {
+            setProducts([]);
+            setPage(1);
+        }
+    }, [filters.descripcion, filters.categoria, filters.subcategoria, filters.codigo_oem]);
+
     // Función para determinar el color del stock
     const getStockColor = (stock: string) => {
         const stockNum = Number.parseInt(stock)
@@ -56,11 +95,11 @@ const ProductListScreen = () => {
         if (stockNum <= 50) return "text-yellow-600 bg-yellow-50"
         return "text-green-600 bg-green-50"
     }
+    const handleProductDetail = (productId: number) => {
+        navigate(`/dashboard/productos/${productId}`);
+    }
 
-    const [sorting, setSorting] = useState<SortingState>([])
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-
-    const columns: ColumnDef<ProductGet>[] = [
+    const columns = useMemo<ColumnDef<ProductGet>[]>(() => [
         {
             id: "Select",
             header: ({ table }) => (
@@ -96,8 +135,10 @@ const ProductListScreen = () => {
             minSize: 250,
             enableHiding: false,
             cell: ({ row, getValue }) => (
-                <div className="space-y-1">
-                    <div className="font-medium text-gray-900 leading-tight">{getValue<string>()}</div>
+                <div
+                    onClick={() => handleProductDetail(row.original.id)}
+                    className="space-y-1 cursor-pointer group hover:bg-blue-50 p-1 rounded">
+                    <div className="font-medium text-gray-900 leading-tight group-hover:underline">{getValue<string>()}</div>
                     <div className=" text-gray-500 font-mono">
                         UPC: {row.original.codigo_upc}
                     </div>
@@ -257,37 +298,52 @@ const ProductListScreen = () => {
                 </div>
             ),
         },
-    ];
-
-    const [columnVisibility, setColumnVisibility] = useState({})
-
-    const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-    const [selectedProducts, setSelectedProducts] = useState<number[]>([])
-    const [priceFilter, setPriceFilter] = useState("all")
-    const [storeFilter, setStoreFilter] = useState("all");
-
+        {
+            id: "Actions",
+            header: "Acciones",
+            cell: ({ row }) => (
+                <div className="flex items-center justify-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleProductDetail(row.original.id)}
+                        aria-label="Ver Detalle"
+                        className="size-8 cursor-pointer"
+                    >
+                        <Eye className="size-4" />
+                    </Button>
+                    <Button
+                        variant="default"
+                        size="icon"
+                        onClick={() => addItem({ product: row.original, quantity: 1 })}
+                        aria-label="Añadir Producto al Carrito"
+                        className="size-8 cursor-pointer"
+                    >
+                        <ShoppingCart className="size-4" />
+                    </Button>
+                </div>
+            ),
+            enableSorting: false,
+            enableHiding: true,
+            size: 100,
+            minSize: 100,
+        },
+    ], [])
     // Filter and sort products
     const table = useReactTable<ProductGet>({
-        data: data?.data || [],
+        data: products,
         columns,
         state: {
             sorting,
             columnVisibility,
-            // globalFilter,
-            // columnFilters,
             rowSelection,
-            // pagination,
         },
         onSortingChange: setSorting,
         onColumnVisibilityChange: setColumnVisibility,
-        // onGlobalFilterChange: setGlobalFilter,
-        // onColumnFiltersChange: setColumnFilters,
         onRowSelectionChange: setRowSelection,
-        // onPaginationChange: setPagination,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        // getPaginationRowModel: getPaginationRowModel(),
         columnResizeMode: "onChange",
         enableColumnResizing: true,
         enableRowSelection: true,
@@ -316,38 +372,17 @@ const ProductListScreen = () => {
         updateFilter("pagina_registros", rows);
         updateFilter("pagina", 1);
     };
-    const handleScroll = useCallback(() => {
-        if (
-            tableContainerRef.current &&
-            !isLoading &&
-            !isFetching &&
-            tableContainerRef.current.scrollHeight - tableContainerRef.current.scrollTop <=
-            tableContainerRef.current.clientHeight + 100
-        ) {
-            setPage((filters.pagina || 1) + 1);
-        }
-    }, [isLoading, isFetching]);
 
-    useEffect(() => {
-        if (isInfiniteScroll) {
-            const tableRef = tableContainerRef.current;
-            if (tableRef) {
-                tableRef.addEventListener("scroll", handleScroll);
-                return () => tableRef.removeEventListener("scroll", handleScroll);
-            }
-        }
-        else return
-    }, [handleScroll]);
     return (
         <div
-            ref={tableContainerRef}
             className="min-h-screen max-w-full">
             <div className="bg-white rounded-lg shadow-sm">
                 {/* Header */}
                 <div className="p-2 border-b border-gray-200">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
+                    {/* <h1 className="text-2xl font-bold">Productos</h1> */}
+                    <div className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
+                        <div className="flex items-center gap-2 md:gap-4 grow">
+                            {/* <div className="flex items-center gap-2">
                                 <Button
                                     variant={viewMode === "list" ? "default" : "outline"}
                                     size="sm"
@@ -362,25 +397,33 @@ const ProductListScreen = () => {
                                 >
                                     <Grid3X3 className="h-4 w-4" />
                                 </Button>
-                            </div>
+                            </div> */}
 
-                            <div className="relative">
+                            <div className="relative w-full">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                 <Input
                                     placeholder="Buscar productos..."
-                                    value={filters.descripcion}
+                                    value={filters.descripcion ?? ""}
                                     onChange={(e) => updateFilter("descripcion", e.target.value)}
-                                    className="pl-10 w-64 text-gray-900"
+                                    className="pl-10 w-full text-gray-900 text-xs"
                                 />
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 flex-wrap md:gap-4">
                             <div className="flex items-center space-x-2">
                                 <Switch
                                     className="bg-gray-200"
-                                    id="infinite-scroll" checked={isInfiniteScroll} onCheckedChange={setIsInfiniteScroll} />
-                                <Label htmlFor="infinite-scroll text-gray-700" className="text-sm">
+                                    id="infinite-scroll"
+                                    checked={isInfiniteScroll}
+                                    onCheckedChange={(checked) => {
+                                        setIsInfiniteScroll(checked);
+                                        if (!checked) {
+                                            setPage(1);
+                                        }
+                                    }}
+                                />
+                                <Label htmlFor="infinite-scroll" className="text-sm text-gray-700">
                                     Scroll Infinito
                                 </Label>
                             </div>
@@ -413,8 +456,6 @@ const ProductListScreen = () => {
                                         ))}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            {/* <FilterActives showFilter={showFilter} setShowFilter={setShowFilter} />
-                            <FilterSort sortBy={sortBy} setSortBy={setSortBy} /> */}
 
                             <Button variant="outline" className="hover:bg-gray-50" size="sm" onClick={resetFilters}>
                                 <Filter className="h-4 w-4 mr-2" />
@@ -423,114 +464,58 @@ const ProductListScreen = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Filters */}
-                <div className="p-4 border-b border-gray-200">
-                    <div className="grid grid-cols-4 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Categorias</label>
-                            <Select
-                                value={filters.categoria !== undefined ? String(filters.categoria) : "all"}
-                                onValueChange={(value) => {
-                                    const parsedValue = value === "all" ? undefined : Number(value);
-                                    updateFilter("subcategoria", undefined);
-                                    updateFilter("categoria", parsedValue);
-                                }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="TODAS" />
-                                </SelectTrigger>
-                                <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50" value="all">TODAS</SelectItem>
-                                    {categoriesData?.map((category) => (
-                                        <SelectItem key={category.id} className="hover:bg-gray-50" value={String(category.id)}>
-                                            {category.categoria}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Subcategorias</label>
-                            <Select
-                                disabled={filters.categoria === undefined}
-                                value={filters.subcategoria !== undefined ? String(filters.subcategoria) : "all"}
-                                onValueChange={(value) => {
-                                    const parsedValue = value === "all" ? undefined : Number(value);
-                                    updateFilter("subcategoria", parsedValue);
-                                }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="TODAS" />
-                                </SelectTrigger>
-                                <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50" value="all">TODAS</SelectItem>
-                                    {categoriesData
-                                        ?.find((cat) => cat.id === filters.categoria)
-                                        ?.subcategorias?.map((sub) => (
-                                            <SelectItem
-                                                key={sub.id}
-                                                value={String(sub.id)}
-                                                className="hover:bg-gray-50"
-                                            >
-                                                {sub.subcategoria}
-                                            </SelectItem>
-                                        ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Precio de venta</label>
-                            <Select value={priceFilter} onValueChange={setPriceFilter}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50" value="all">Todos los precios</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="50-100">50 - 100</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="100-200">100 - 200</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="200-500">200 - 500</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="500-1000">500 - 1000</SelectItem>
-
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Sucursal</label>
-                            <Select value={storeFilter} onValueChange={setStoreFilter}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="border border-gray-200 shadow-lg">
-                                    <SelectItem className="hover:bg-gray-50" value="all">Ver todas</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="Store 1">Store 1</SelectItem>
-                                    <SelectItem className="hover:bg-gray-50" value="Store 2">Store 2</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
-
+                {/* Búsquedas individuales */}
+                <ProductFilters
+                    filters={filters}
+                    updateFilter={updateFilter}
+                />
                 {/* Results Info */}
-                <div className="p-4 text-sm text-gray-600 border-b border-gray-200">
-                    Showing {data?.data.length} of {data?.meta.total} products
+                <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
+                    Showing {products.length} of {productData?.meta.total} products
                     {selectedProducts.length > 0 && (
                         <span className="ml-4 text-blue-600">{selectedProducts.length} selected</span>
                     )}
+                    <div className="flex items-center gap-2">
+                        <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
+                        <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
+                            <SelectTrigger className="h-8">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="border border-gray-200 shadow-lg">
+                                <SelectItem className="hover:bg-gray-50" value={"10"}>10</SelectItem>
+                                <SelectItem className="hover:bg-gray-50" value={"25"}>25</SelectItem>
+                                <SelectItem className="hover:bg-gray-50" value={"50"}>50</SelectItem>
+                                <SelectItem className="hover:bg-gray-50" value={"100"}>100</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 {viewMode === "list" ? (
                     <div
                         className="overflow-x-hidden">
-                        <CustomizableTable
-                            table={table}
-                        />
+                        {isInfiniteScroll ? (
+                            <InfiniteScroll
+                                dataLength={products.length}
+                                next={() => setPage((filters.pagina || 1) + 1)}
+                                hasMore={products.length < (productData?.meta.total || 0)}
+                                loader={<div className="text-center p-4 text-sm text-gray-500">Cargando más productos...</div>}
+                                scrollableTarget="main-scroll-container"
+                            >
+                                <CustomizableTable table={table} />
+                            </InfiniteScroll>
+                        ) : (
+                            <CustomizableTable
+                                table={table}
+                                isLoading={isLoading}
+                            />
+                        )}
+
                     </div>
                 ) : (
                     <div className="p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {data?.data.map((product: any) => (
+                            {productData?.data.map((product: any) => (
                                 <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                     <div className="flex items-start justify-between mb-3">
                                         <Checkbox
@@ -582,11 +567,11 @@ const ProductListScreen = () => {
                 )}
                 {/* Pagination */}
                 {
-                    !isInfiniteScroll && (
+                    !isInfiniteScroll && (productData?.data?.length ?? 0) > 0 && (
                         <Pagination
                             currentPage={filters.pagina || 1}
                             onPageChange={onPageChange}
-                            totalData={data?.meta.total || 1}
+                            totalData={productData?.meta.total || 1}
                             onShowRowsChange={onShowRowsChange}
                             showRows={filters.pagina_registros}
                         />
