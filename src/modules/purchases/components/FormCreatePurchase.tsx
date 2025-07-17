@@ -2,7 +2,8 @@ import React from "react";
 import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";
 import { ComboboxSelect } from "@/modules/products/components/SelectCombobox"; 
-import type { FormData } from "../hooks/usePurchaseForm";
+import { usePurchaseForm, type FormData } from "../hooks/usePurchaseForm";
+import { useBranchStore } from "@/states/branchStore";
 
 const proveedores = [
   { id: 71, proveedor: "JUANMOTORS" },
@@ -54,7 +55,7 @@ interface Props {
 }
 
 const FormCreatePurchase: React.FC<Props> = ({
-  formData, errors, isLoading, onChange, onBlur, onSubmit
+  formData, errors, onChange, onBlur
 }) => {
   const inputClass = (f: string) =>
     errors[f] ? "h-8 text-sm border-red-500 focus:border-red-500" : "h-8 text-sm";
@@ -93,6 +94,7 @@ const FormCreatePurchase: React.FC<Props> = ({
             value={formData.nro_comprobante}
             onChange={(e) => onChange("nro_comprobante", e.target.value)}
             onBlur={() => onBlur("nro_comprobante")}
+            placeholder="FA-01"
             className={inputClass("nro_comprobante")}
           />
           {errors.nro_comprobante && <p className="text-sm text-red-500 mt-1">{errors.nro_comprobante}</p>}
