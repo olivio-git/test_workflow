@@ -165,7 +165,7 @@ export const createCartStore = (user: string) => {
                 }),
                 {
                     name: `${CART_CONSTANTS.STORAGE_PREFIX}${user}`,
-                    storage: createJSONStorage(() => localStorage),
+                    storage: createJSONStorage(() => sessionStorage),
                     partialize: (state) => ({
                         items: state.items,
                         discountAmount: state.discountAmount,
