@@ -5,7 +5,7 @@ import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
-import CreateCategory from "@/modules/categories/screens/CreateCategory";
+// import CreateCategory from "@/modules/categories/screens/CreateCategory";
 import TableCreateCategory from "@/modules/categories/components/TableCreateCategory";
 import CreateSale from "@/modules/sales/screens/createSale";
 

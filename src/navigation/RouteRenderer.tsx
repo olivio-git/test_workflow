@@ -23,19 +23,22 @@ const RouteRenderer: React.FC<RouteRendererProps> = ({
     return <div>Cargando...</div>;
   }
 
-  if (!isLoading && location.pathname !== redirectTo) {
-      localStorage.setItem("lastPath", location.pathname);
-  } 
+  if (!isLoading && route.type === "protected" && isAuthenticated) {
+    localStorage.setItem("lastPath", location.pathname);
+  }
+
   if (!Component) {
     return <div>Componente no encontrado para la ruta: {route.path}</div>;
   }
 
   if (route.type === "protected" && !isAuthenticated) {
-    return <Navigate to={redirectTo} />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   if (route.type === "public" && isAuthenticated) {
-    return <Navigate to="/dashboard" />;
+    const lastPath = localStorage.getItem("lastPath");
+    const targetPath = lastPath && lastPath !== "/" ? lastPath : "/dashboard";
+    return <Navigate to={targetPath} replace />;
   }
 
   if (route.type === "protected") {
