@@ -390,13 +390,15 @@ const CreateSale = () => {
                                                                             autoFocus
                                                                         />
                                                                     ) : (
-                                                                        <div
-                                                                            className="flex items-center gap-1 cursor-pointer hover:bg-gray-100 p-1 rounded"
+                                                                        <Button
+                                                                            variant={"ghost"}
+                                                                            size={"sm"}
+                                                                            className="flex items-center gap-1 cursor-pointer hover:bg-gray-100 p-1 rounded h-8 w-full justify-start"
                                                                             onClick={() => setEditingQuantity(product.product.id)}
                                                                         >
                                                                             <span className="text-sm font-medium">{product.quantity}</span>
                                                                             <Edit3 className="h-3 w-3 text-gray-400" />
-                                                                        </div>
+                                                                        </Button>
                                                                     )}
                                                                 </div>
 
@@ -421,13 +423,15 @@ const CreateSale = () => {
                                                                             autoFocus
                                                                         />
                                                                     ) : (
-                                                                        <div
-                                                                            className="flex items-center gap-1 cursor-pointer hover:bg-gray-100 p-1 rounded"
+                                                                        <Button
+                                                                            variant={"ghost"}
+                                                                            size={"sm"}
+                                                                            className="flex items-center gap-1 cursor-pointer hover:bg-gray-100 p-1 rounded h-8 w-full justify-start"
                                                                             onClick={() => setEditingPrice(product.product.id)}
                                                                         >
                                                                             <span className="text-sm font-medium">${basePrice.toFixed(2)}</span>
                                                                             <Edit3 className="h-3 w-3 text-gray-400" />
-                                                                        </div>
+                                                                        </Button>
                                                                     )}
                                                                 </div>
 
@@ -454,13 +458,15 @@ const CreateSale = () => {
                                                                             autoFocus
                                                                         />
                                                                     ) : (
-                                                                        <div
-                                                                            className="flex items-center gap-1 cursor-pointer hover:bg-gray-100 p-1 rounded"
+                                                                        <Button
+                                                                            variant={"ghost"}
+                                                                            size={"sm"}
+                                                                            className="flex items-center gap-1 cursor-pointer hover:bg-green-50 p-1 rounded  h-8 w-full justify-start"
                                                                             onClick={() => setEditingSubtotal(product.product.id)}
                                                                         >
                                                                             <span className="text-sm font-medium text-green-600">${itemSubtotal.toFixed(2)}</span>
                                                                             <Edit3 className="h-3 w-3 text-gray-400" />
-                                                                        </div>
+                                                                        </Button>
                                                                     )}
                                                                 </div>
                                                             </div>
