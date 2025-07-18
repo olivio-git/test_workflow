@@ -27,7 +27,7 @@ import { useBranchStore } from "@/states/branchStore"
 import authSDK from "@/services/sdk-simple-auth"
 import { useNavigate } from "react-router"
 import ProductFilters from "../components/productList/productFilters"
-import { useCartStore } from "@/modules/shoppingCart/store/cartStore"
+import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
 
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
@@ -43,7 +43,7 @@ const ProductListScreen = () => {
 
     const { data: productData, isLoading, error, isFetching } = useProductsPaginated(filters);
 
-    const { addItem } = useCartStore()
+    const { addItem } = useCartWithUtils(user?.name ?? '')
     const [sorting, setSorting] = useState<SortingState>([])
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);

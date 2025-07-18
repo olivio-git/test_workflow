@@ -25,4 +25,23 @@ export type CartState = {
     getItemSubtotal: (productId: number) => number
     getCartSubtotal: () => number
     getCartTotal: () => number
+
+    getCartCount: () => number;
+    getDiscountAmount: () => number;
+    isItemInCart: (productId: number) => boolean;
+    getItemQuantity: (productId: number) => number;
 };
+
+export interface CartSummary {
+    itemCount: number;
+    subtotal: number;
+    discount: number;
+    total: number;
+    itemsLength: number;
+}
+
+export interface StoreItem {
+    items: CartItem[];
+    discountAmount?: number
+    discountPercent?: number
+}

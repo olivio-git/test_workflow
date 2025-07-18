@@ -1,0 +1,9 @@
+export const CART_CONSTANTS = {
+    STORAGE_PREFIX: 'cart-storage-',
+    DEFAULT_QUANTITY: 1,
+    MAX_QUANTITY: 999,
+    MIN_QUANTITY: 1,
+    MAX_DISCOUNT_PERCENT: 100,
+    MIN_DISCOUNT_PERCENT: 0,
+    DECIMAL_PLACES: 2,
+} as const;

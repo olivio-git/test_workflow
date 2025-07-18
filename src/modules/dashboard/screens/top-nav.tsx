@@ -9,7 +9,8 @@ import SelectBranch from "../components/SelectBranch";
 import type RouteType from "@/navigation/RouteType";
 import { Button } from "@/components/atoms/button";
 import { Badge } from "@/components/atoms/badge";
-import { useCartStore } from "@/modules/shoppingCart/store/cartStore";
+import authSDK from "@/services/sdk-simple-auth";
+import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils";
 
 interface TopNavProps {
   isSidebarMenuOpen: boolean;
@@ -51,14 +52,17 @@ const TopNav: React.FC<TopNavProps> = ({
   handleToogleSidebarMenu,
   onOpenCartChange
 }) => {
+  const user = authSDK.getCurrentUser()
   const location = useLocation();
-  const [open, setOpen] = useState(false); 
+  const [open, setOpen] = useState(false);
   const routes = protectedRoutes.filter((route) => route.type === "protected");
   const flatRoutes = flattenRoutes(routes);
 
   const currentRoute = flatRoutes.find((route) => route.path === location.pathname);
   const parentRoute = findParentRoute(routes, location.pathname);
-  const cartLength = useCartStore((state) => state.items.length)
+  const {
+    getCartCount: cartLength
+  } = useCartWithUtils(user?.name || '')
   useHotkeys(
     "ctrl+k",
     (e) => {
@@ -144,9 +148,9 @@ const TopNav: React.FC<TopNavProps> = ({
         </div>
         <Button variant="outline" className="relative size-10" size={'sm'} onClick={onOpenCartChange}>
           <ShoppingCart className="h-4 w-4" />
-          {cartLength > 0 && (
+          {cartLength() > 0 && (
             <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
-              {cartLength}
+              {cartLength()}
             </Badge>
           )}
         </Button>
