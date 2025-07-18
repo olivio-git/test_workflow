@@ -460,7 +460,7 @@ const TableCreateCategory = () => {
                     </div>
                   ) : (
                     <>
-                      <span className="font-medium text-gray-900">{cat.categoria}</span>
+                      <span className="text-sm font-semibold text-zinc-900">{cat.categoria}</span>
                       {cat.subcategorias && cat.subcategorias.length > 0 && (
                         <Badge variant="secondary" className="text-xs">
                           {cat.subcategorias.length} subcategorías
@@ -490,7 +490,7 @@ const TableCreateCategory = () => {
                 )}
 
                 {addingSubId === cat.id ? (
-                  <div className="flex gap-2 mb-4">
+                  <div className="flex gap-2 mb-4 mt-1">
                     <Input
                       value={newSubName}
                       onChange={(e) => setNewSubName(e.target.value)}

@@ -9,6 +9,7 @@ import protectedRoutes from "./Protected.Route";
 import BranchSelection from "@/modules/auth/screens/BranchScreen";
 import { environment } from "@/utils/environment";
 import type RouteType from "./RouteType";
+import SplashScreen from "@/components/common/SplashScreen";
 
 const Navigation = () => {
   const [authState, setAuthState] = useState<{
@@ -20,6 +21,7 @@ const Navigation = () => {
   });
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const unsubscribe = authSDK.onAuthStateChanged((possible: AuthState) => {
@@ -33,6 +35,7 @@ const Navigation = () => {
         }));
       }
       setIsLoading(false);
+      setIsInitialized(true);
     });
     return () => unsubscribe();
   }, []);
@@ -42,14 +45,14 @@ const Navigation = () => {
     setAuthState((prev) => ({ ...prev, selectedBranch: branchId }));
   };
 
+  if (!isInitialized || isLoading) {
+    return <SplashScreen />;
+  }
+
   if (authState.user && !authState.selectedBranch) {
     return (
       <BranchSelection user={authState.user} onSelect={handleBranchSelect} />
     );
-  }
-
-  if (isLoading) {
-    return <div>Cargando...</div>;
   }
 
   const mapProtectedRoutes = protectedRoutes.flatMap((rt: RouteType) => {
