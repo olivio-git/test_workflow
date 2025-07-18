@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Trash2, Edit2, Check, X } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Trash2, Plus } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import DialogSearchDetails from "./DialogSearchDetails";
@@ -24,88 +25,298 @@ interface Props {
 const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [editing, setEditing] = useState<{id:string; field:string} | null>(null);
-  const [temp, setTemp] = useState("");
+  const [editing, setEditing] = useState<{row: number; col: number} | null>(null);
+  const [tempValue, setTempValue] = useState("");
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
 
-  const startEdit = (id: string, field: string, val: number) => {
-    setEditing({ id, field });
-    setTemp(String(val));
+  // Utilidades para manejo de moneda en centavos
+  // const toCents = (amount: number): number => Math.round(amount * 100);
+  // const fromCents = (cents: number): number => cents / 100;
+  const roundToTwo = (num: number): number => Math.round((num + Number.EPSILON) * 100) / 100;
+
+  // Función para cálculos financieros precisos
+  const calculatePrecise = (detail: PurchaseDetail, fieldName: string, newValue: number) => {
+    const updatedDetail = { ...detail };
+    
+    if (fieldName === "costo") {
+      updatedDetail.costo = roundToTwo(newValue);
+      // Calcular precios basados en porcentajes, pero redondeados
+      updatedDetail.precio_venta = roundToTwo(newValue * (1 + updatedDetail.inc_p_venta / 100));
+      updatedDetail.precio_venta_alt = roundToTwo(newValue * (1 + updatedDetail.inc_p_venta_alt / 100));
+    } else if (fieldName === "inc_p_venta") {
+      updatedDetail.inc_p_venta = roundToTwo(newValue);
+      updatedDetail.precio_venta = roundToTwo(updatedDetail.costo * (1 + newValue / 100));
+    } else if (fieldName === "inc_p_venta_alt") {
+      updatedDetail.inc_p_venta_alt = roundToTwo(newValue);
+      updatedDetail.precio_venta_alt = roundToTwo(updatedDetail.costo * (1 + newValue / 100));
+    } else if (fieldName === "precio_venta") {
+      updatedDetail.precio_venta = roundToTwo(newValue);
+      updatedDetail.inc_p_venta = updatedDetail.costo > 0 
+        ? roundToTwo(((newValue - updatedDetail.costo) / updatedDetail.costo) * 100) 
+        : 0;
+    } else if (fieldName === "precio_venta_alt") {
+      updatedDetail.precio_venta_alt = roundToTwo(newValue);
+      updatedDetail.inc_p_venta_alt = updatedDetail.costo > 0 
+        ? roundToTwo(((newValue - updatedDetail.costo) / updatedDetail.costo) * 100) 
+        : 0;
+    } else if (fieldName === "cantidad") {
+      updatedDetail.cantidad = Math.round(newValue); // Cantidad siempre entero
+    } else {
+      (updatedDetail as any)[fieldName] = roundToTwo(newValue);
+    }
+    
+    // Subtotal siempre redondeado
+    updatedDetail.subtotal = roundToTwo(updatedDetail.costo * updatedDetail.cantidad);
+    
+    return updatedDetail;
   };
-  const cancel = () => setEditing(null);
-  const confirm = () => {
+
+  const editableColumns = ['cantidad', 'costo', 'inc_p_venta', 'precio_venta', 'inc_p_venta_alt', 'precio_venta_alt'];
+
+  // Hotkeys para navegación y acciones globales - shortcuts simplificados
+  useHotkeys('ctrl+m', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsSearchOpen(true);
+  }, { 
+    enableOnFormTags: true,
+    preventDefault: true,
+    enableOnContentEditable: true
+  });
+
+  useHotkeys('escape', () => {
+    if (editing) {
+      cancelEdit();
+    } else if (selectedRow !== null) {
+      setSelectedRow(null);
+    }
+  }, { enableOnFormTags: true });
+
+  // Navegación con flechas cuando hay una fila seleccionada
+  useHotkeys('arrowup', (e) => {
+    if (!editing && selectedRow !== null && selectedRow > 0) {
+      e.preventDefault();
+      setSelectedRow(selectedRow - 1);
+    }
+  }, { enableOnFormTags: true });
+
+  useHotkeys('arrowdown', (e) => {
+    if (!editing && selectedRow !== null && selectedRow < detalles.length - 1) {
+      e.preventDefault();
+      setSelectedRow(selectedRow + 1);
+    }
+  }, { enableOnFormTags: true });
+
+  // Eliminar fila seleccionada
+  useHotkeys('delete, backspace', (e) => {
+    if (!editing && selectedRow !== null) {
+      e.preventDefault();
+      const detail = detalles[selectedRow];
+      remove(detail.id_producto);
+      setSelectedRow(null);
+    }
+  }, { enableOnFormTags: true });
+
+  // Editar primera celda de la fila seleccionada - simplificado
+  useHotkeys('ctrl+enter', (e) => {
+    if (!editing && selectedRow !== null) {
+      e.preventDefault();
+      startEdit(selectedRow, 0); // Siempre empezar en la primera celda (cantidad)
+    }
+  }, { enableOnFormTags: true });
+
+  // Duplicar fila seleccionada
+  useHotkeys('ctrl+d', (e) => {
+    if (!editing && selectedRow !== null) {
+      e.preventDefault();
+      duplicateRow(selectedRow);
+    }
+  }, { enableOnFormTags: true });
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editing]);
+
+  const startEdit = (rowIndex: number, colIndex: number) => {
+    const detail = detalles[rowIndex];
+    const fieldName = editableColumns[colIndex];
+    const currentValue = detail[fieldName as keyof PurchaseDetail] as number;
+    
+    // Formatear el valor inicial según el tipo de campo
+    let formattedValue: string;
+    if (fieldName === 'cantidad') {
+      formattedValue = Math.round(currentValue).toString();
+    } else if (fieldName.includes('inc_p_venta')) {
+      // Porcentajes con 1 decimal
+      formattedValue = roundToTwo(currentValue).toFixed(1);
+    } else {
+      // Moneda con 2 decimales
+      formattedValue = roundToTwo(currentValue).toFixed(2);
+    }
+    
+    setEditing({ row: rowIndex, col: colIndex });
+    setTempValue(formattedValue);
+    setSelectedRow(null); // Desseleccionar fila al entrar en modo edición
+  };
+
+  const saveEdit = () => {
     if (!editing) return;
-    const num = parseFloat(temp);
-    if (isNaN(num) || num < 0) return;
-    setDetalles(detalles.map(d => {
-      if (d.id_producto !== editing.id) return d;
-      const u = { ...d, [editing.field]: num };
-      u.subtotal = u.costo * u.cantidad;
-      if (editing.field === "costo") {
-        u.precio_venta = num * (1 + u.inc_p_venta/100);
-        u.precio_venta_alt = num * (1 + u.inc_p_venta_alt/100);
-      }
-      if (editing.field === "inc_p_venta") {
-        u.precio_venta = u.costo * (1 + num/100);
-      }
-      if (editing.field === "inc_p_venta_alt") {
-        u.precio_venta_alt = u.costo * (1 + num/100);
-      }
-      if (editing.field === "precio_venta") {
-        u.inc_p_venta = u.costo>0 ? ((num-u.costo)/u.costo)*100 : 0;
-      }
-      if (editing.field === "precio_venta_alt") {
-        u.inc_p_venta_alt = u.costo>0 ? ((num-u.costo)/u.costo)*100 : 0;
-      }
-      return u;
-    }));
+    
+    const numValue = parseFloat(tempValue);
+    if (isNaN(numValue) || numValue < 0) {
+      setEditing(null);
+      return;
+    }
+
+    const fieldName = editableColumns[editing.col];
+    const newDetalles = [...detalles];
+    const detail = { ...newDetalles[editing.row] };
+    
+    // Usar función de cálculo preciso
+    const updatedDetail = calculatePrecise(detail, fieldName, numValue);
+    
+    newDetalles[editing.row] = updatedDetail;
+    setDetalles(newDetalles);
+    setSelectedRow(editing.row);
     setEditing(null);
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setTempValue("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    e.stopPropagation();
+    
+    switch (e.key) {
+      case 'Enter':
+        e.preventDefault();
+        saveEdit();
+        // Mover a la siguiente fila
+        if (editing && editing.row < detalles.length - 1) {
+          setTimeout(() => startEdit(editing.row + 1, editing.col), 10);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        cancelEdit();
+        break;
+      case 'Tab':
+        e.preventDefault();
+        saveEdit();
+        // Mover a la siguiente celda
+        if (editing) {
+          setTimeout(() => {
+            let nextCol = editing.col + 1;
+            let nextRow = editing.row;
+            
+            if (nextCol >= editableColumns.length) {
+              nextCol = 0;
+              nextRow++;
+            }
+            
+            if (nextRow < detalles.length) {
+              startEdit(nextRow, nextCol);
+            }
+          }, 10);
+        }
+        break;
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTempValue(e.target.value);
   };
 
   const remove = (id: string) => {
     setDetalles(detalles.filter(d => d.id_producto !== id));
   };
 
-  const EditableCell: React.FC<{
-    id: string; field: string; value: number; format?: "currency"|"percentage"|"number";
-  }> = ({ id, field, value, format="number" }) => {
-    const isEd = editing?.id===id && editing.field===field;
-    const fmt = (v: number) => {
-      if (format==="currency") return `$${v.toFixed(2)}`;
-      if (format==="percentage") return `${v.toFixed(1)}%`;
-      return v.toString();
+  const duplicateRow = (rowIndex: number) => {
+    const detail = detalles[rowIndex];
+    const newDetail = {
+      ...detail,
+      id_producto: `${detail.id_producto}_copy_${Date.now()}`, // Generar nuevo ID único
     };
-    if (isEd) {
+    
+    const newDetalles = [...detalles];
+    newDetalles.splice(rowIndex + 1, 0, newDetail);
+    setDetalles(newDetalles);
+    setSelectedRow(rowIndex + 1);
+  };
+
+  const handleRowClick = (rowIndex: number) => {
+    if (!editing) {
+      setSelectedRow(selectedRow === rowIndex ? null : rowIndex);
+    }
+  };
+
+  const handleProductAdded = (productId: string) => {
+    // Encontrar el índice del producto recién agregado
+    const newProductIndex = detalles.findIndex(d => d.id_producto === productId);
+    if (newProductIndex !== -1) {
+      setSelectedRow(newProductIndex);
+    }
+  };
+
+  const formatValue = (value: number, format: "currency" | "percentage" | "number") => {
+    // Asegurar que siempre mostramos valores redondeados
+    const roundedValue = roundToTwo(value);
+    
+    switch (format) {
+      case "currency":
+        return `${roundedValue.toFixed(2)}`;
+      case "percentage":
+        return `${roundedValue.toFixed(1)}%`;
+      default:
+        // Para cantidad, mostrar como entero si es un número entero
+        return Number.isInteger(roundedValue) ? roundedValue.toString() : roundedValue.toFixed(2);
+    }
+  };
+
+  const EditableCell: React.FC<{
+    rowIndex: number;
+    colIndex: number;
+    value: number;
+    format?: "currency" | "percentage" | "number";
+  }> = ({ rowIndex, colIndex, value, format = "number" }) => {
+    const isActive = editing?.row === rowIndex && editing?.col === colIndex;
+
+    if (isActive) {
       return (
-        <div className="flex gap-1">
-          <Input
-            value={temp}
-            onChange={e=>setTemp(e.target.value)}
-            className="h-6 text-xs w-20"
-            autoFocus
-            onKeyDown={e=>{ if(e.key==="Enter")confirm(); if(e.key==="Escape")cancel(); }}
-          />
-          <Button size="sm" variant="ghost" className="p-0" onClick={confirm}><Check/></Button>
-          <Button size="sm" variant="ghost" className="p-0" onClick={cancel}><X/></Button>
-        </div>
+        <Input
+          ref={inputRef}
+          value={tempValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onBlur={saveEdit}
+          className="w-full h-6 text-xs text-center border border-gray-400 p-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+          autoFocus
+        />
       );
     }
+
     return (
       <div
-        className="cursor-pointer p-1 hover:bg-gray-50 rounded border border-transparent hover:border-gray-200 flex items-center gap-1"
-        onClick={()=>startEdit(id, field, value)}
+        className="w-full h-6 flex items-center rounded-lg justify-center cursor-pointer hover:bg-white border border-gray-100 transition-colors duration-150 text-xs text-gray-700"
+        onClick={() => startEdit(rowIndex, colIndex)}
       >
-        <span className="text-xs">{fmt(value)}</span>
-        <Edit2 className="w-3 h-3 text-gray-400" />
+        {formatValue(value, format)}
       </div>
     );
   };
 
-  const totalCosto = detalles.reduce((s,d)=>s + d.subtotal, 0);
-  const totalGeneral = detalles.reduce((s,d)=>s + d.precio_venta*d.cantidad, 0);
-  const totalMenor = detalles.reduce((s,d)=>s + d.precio_venta_alt*d.cantidad, 0);
+  const totalCosto = roundToTwo(detalles.reduce((s, d) => s + d.subtotal, 0));
+  const totalGeneral = roundToTwo(detalles.reduce((s, d) => s + (d.precio_venta * d.cantidad), 0));
+  const totalMenor = roundToTwo(detalles.reduce((s, d) => s + (d.precio_venta_alt * d.cantidad), 0));
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 mt-4">
+    <div className="p-4 bg-white border border-gray-200 rounded-lg" ref={tableRef}>
       <DialogSearchDetails
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -113,75 +324,181 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
         setDetails={setDetalles}
         isSearchOpen={isSearchOpen}
         setIsSearchOpen={setIsSearchOpen}
+        onProductAdded={handleProductAdded}
       />
-      {detalles.length>0 ? (
+      
+      {/* Header con indicadores de shortcuts */}
+      <div className="p-2 border-b border-gray-200">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-gray-900">Detalle de Compra</span>
+          <div className="flex items-center gap-2">
+            <div className="text-xs text-gray-500 hidden sm:block">
+              Ctrl+M: Agregar | ↑↓: Navegar | Ctrl+Enter: Editar | Del: Eliminar
+            </div>
+            <Button
+              onClick={() => setIsSearchOpen(true)}
+              variant="outline"
+              size="sm"
+              className="hover:bg-gray-50"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Agregar Producto <span className="text-xs ml-1 opacity-60">(Ctrl+M)</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {detalles.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead className="bg-gray-50">
-              <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Costo</th>
-                <th>% Venta</th>
-                <th>Precio Venta</th>
-                <th>% Venta Alt</th>
-                <th>Precio Venta Alt</th>
-                <th>Subtotal</th>
-                <th>Acciones</th>
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-60 border border-gray-200">Producto</th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-16 border border-gray-200">
+                  Cantidad
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">
+                  Costo
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-16 border border-gray-200">
+                  % Inc
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">P. Venta</th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-16 border border-gray-200">% Alt</th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">P. Venta. Alt</th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">Subtotal</th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-12 border border-gray-200">Acciones</th>
               </tr>
             </thead>
-            <tbody>
-              {detalles.map(d=>(
-                <tr key={d.id_producto} className="hover:bg-gray-50">
-                  <td className="px-2">
-                    <div className="font-medium">{d.producto.descripcion}</div>
-                    <div className="text-gray-500">OEM: {d.producto.codigo_oem}</div>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {detalles.map((detail, rowIndex) => (
+                <tr 
+                  key={detail.id_producto} 
+                  className={`
+                    transition-colors duration-150 cursor-pointer
+                    ${selectedRow === rowIndex ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}
+                  `}
+                  onClick={() => handleRowClick(rowIndex)}
+                >
+                  <td className="px-4 py-3">
+                    <div className="space-y-1">
+                      <div className="font-medium text-gray-900 leading-tight text-sm">{detail.producto.descripcion}</div>
+                      <div className="text-xs text-gray-500 font-mono">OEM: {detail.producto.codigo_oem}</div>
+                    </div>
                   </td>
-                  <td className="text-center">
-                    <EditableCell id={d.id_producto} field="cantidad" value={d.cantidad} format="number"/>
+                  <td className="px-3 py-3 text-center">
+                    <EditableCell
+                      rowIndex={rowIndex}
+                      colIndex={0}
+                      value={detail.cantidad}
+                      format="number"
+                    />
                   </td>
-                  <td className="text-center">
-                    <EditableCell id={d.id_producto} field="costo" value={d.costo} format="currency"/>
+                  <td className="px-3 py-3 text-center">
+                    <EditableCell
+                      rowIndex={rowIndex}
+                      colIndex={1}
+                      value={detail.costo}
+                      format="currency"
+                    />
                   </td>
-                  <td className="text-center">
-                    <EditableCell id={d.id_producto} field="inc_p_venta" value={d.inc_p_venta} format="percentage"/>
+                  <td className="px-3 py-3 text-center">
+                    <EditableCell
+                      rowIndex={rowIndex}
+                      colIndex={2}
+                      value={detail.inc_p_venta}
+                      format="percentage"
+                    />
                   </td>
-                  <td className="text-center">
-                    <EditableCell id={d.id_producto} field="precio_venta" value={d.precio_venta} format="currency"/>
+                  <td className="px-3 py-3 text-center">
+                    <EditableCell
+                      rowIndex={rowIndex}
+                      colIndex={3}
+                      value={detail.precio_venta}
+                      format="currency"
+                    />
                   </td>
-                  <td className="text-center">
-                    <EditableCell id={d.id_producto} field="inc_p_venta_alt" value={d.inc_p_venta_alt} format="percentage"/>
+                  <td className="px-3 py-3 text-center">
+                    <EditableCell
+                      rowIndex={rowIndex}
+                      colIndex={4}
+                      value={detail.inc_p_venta_alt}
+                      format="percentage"
+                    />
                   </td>
-                  <td className="text-center">
-                    <EditableCell id={d.id_producto} field="precio_venta_alt" value={d.precio_venta_alt} format="currency"/>
+                  <td className="px-3 py-3 text-center">
+                    <EditableCell
+                      rowIndex={rowIndex}
+                      colIndex={5}
+                      value={detail.precio_venta_alt}
+                      format="currency"
+                    />
                   </td>
-                  <td className="text-center font-semibold">${d.subtotal.toFixed(2)}</td>
-                  <td className="text-center">
-                    <Button size="sm" variant="ghost" onClick={()=>remove(d.id_producto)} className="p-0 text-red-600 hover:bg-red-50">
-                      <Trash2 className="w-3 h-3"/>
+                  <td className="px-3 py-3 text-center">
+                    <div className="text-sm font-medium text-gray-900">
+                      ${detail.subtotal.toFixed(2)}
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 text-center">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        remove(detail.id_producto);
+                      }}
+                      className="size-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot className="bg-gray-50">
-              <tr>
-                <td colSpan={2} className="text-right font-semibold">TOTALES:</td>
-                <td className="text-center font-semibold">${totalCosto.toFixed(2)}</td>
-                <td />
-                <td className="text-center font-semibold text-green-600">${totalGeneral.toFixed(2)}</td>
-                <td />
-                <td className="text-center font-semibold text-blue-600">${totalMenor.toFixed(2)}</td>
-                <td className="text-center font-semibold">${totalCosto.toFixed(2)}</td>
-                <td/>
+            <tfoot className="bg-gray-50 border-t border-gray-200">
+              <tr className="font-semibold text-gray-800">
+                <td colSpan={2} className="px-4 py-4 text-right font-bold text-sm">
+                  TOTALES:
+                </td>
+                <td className="px-3 py-4 text-center">
+                  <div className="text-sm font-medium text-gray-900">
+                    ${totalCosto.toFixed(2)}
+                  </div>
+                </td>
+                <td className="px-3 py-4"></td>
+                <td className="px-3 py-4 text-center">
+                  <div className="text-sm font-medium text-green-600">
+                    ${totalGeneral.toFixed(2)}
+                  </div>
+                </td>
+                <td className="px-3 py-4"></td>
+                <td className="px-3 py-4 text-center">
+                  <div className="text-sm font-medium text-blue-600">
+                    ${totalMenor.toFixed(2)}
+                  </div>
+                </td>
+                <td className="px-3 py-4 text-center">
+                  <div className="text-sm font-medium text-gray-900">
+                    ${totalCosto.toFixed(2)}
+                  </div>
+                </td>
+                <td className="px-3 py-4"></td>
               </tr>
             </tfoot>
           </table>
         </div>
       ) : (
-        <div className="py-8 text-center text-gray-500 border border-gray-200 bg-gray-50 rounded-lg">
-          <p>No hay productos en el detalle.</p>
-          <p className="text-sm mt-1">Haz clic en "Agregar Producto" para empezar.</p>
+        <div className="py-12 text-center">
+          <p className="text-sm text-gray-600">No hay productos en el detalle.</p>
+          <Button
+            onClick={() => setIsSearchOpen(true)}
+            variant="outline"
+            size="sm"
+            className="mt-4 hover:bg-gray-50"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Agregar Producto <span className="text-xs ml-1 opacity-60">(Ctrl+M)</span>
+          </Button>
         </div>
       )}
     </div>
