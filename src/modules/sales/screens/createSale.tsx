@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, ShoppingCart, X, Edit3 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Edit3, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Label } from "@/components/atoms/label";
@@ -7,9 +7,10 @@ import { Input } from "@/components/atoms/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
 import { Badge } from "@/components/atoms/badge";
-import DialogSearchDetails from "@/modules/purchases/components/DialogSearchDetails";
 import { useCartStore } from "@/modules/shoppingCart/store/cartStore";
 import { toast } from "@/hooks/use-toast";
+import ProductSelectorModal from "@/modules/products/components/ProductSelectorModal";
+import type { ProductGet } from "@/modules/products/types/ProductGet";
 
 export interface Product {
     id: string;
@@ -76,6 +77,7 @@ const CreateSale = () => {
         toast({
             title: "Venta Existosa",
             description: `Venta realizada con exito`,
+            className: "border border-gray-200"
         });
         clearCart()
         setSaleInfo(
@@ -95,16 +97,20 @@ const CreateSale = () => {
             }
         )
     };
+
+    const handleAddProductItem = (product: ProductGet) => {
+        console.log(product)
+    }
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto p-6">
+        <div className="min-h-screen">
+            <div className="max-w-7xl mx-auto p-2">
                 {/* Header */}
-                <div className="flex items-center mb-8">
+                <div className="flex items-center mb-2">
                     {/* <Button variant="ghost" size="sm" className="mr-4">
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Volver
                     </Button> */}
-                    <h1 className="text-2xl font-semibold text-gray-900">Nueva Venta</h1>
+                    <h1 className="text-xl font-bold text-gray-900">Nueva Venta</h1>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -254,36 +260,33 @@ const CreateSale = () => {
                         {/* 2. Productos */}
                         <Card className="border-0 shadow-sm">
                             <CardHeader className="pb-4">
-                                <CardTitle className="text-lg font-medium flex items-center justify-between">
-                                    <div className="flex items-center">
-                                        Productos a Vender
-                                    </div>
-                                    <Button
-                                        // onClick={() => setIsAddProductOpen(true)}
-                                        className="bg-black hover:bg-gray-800 text-white"
-                                        size="sm"
-                                    >
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Seleccionar Productos
-                                    </Button>
+                                <CardTitle>
+                                    {/* seleccionar productos */}
+                                    <ProductSelectorModal
+                                        searchTerm={searchTerm}
+                                        setSearchTerm={setSearchTerm}
+                                        isSearchOpen={isSearchOpen}
+                                        setIsSearchOpen={setIsSearchOpen}
+                                        addItem={handleAddProductItem}
+                                    />
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     {items.map((product) => {
-                                        const basePrice = product.customPrice ?? parseFloat(product.product.precio_venta);
-                                        const itemSubtotal = product.customSubtotal ?? basePrice * product.quantity;
+                                        const basePrice = product.customPrice
+                                        const itemSubtotal = product.customSubtotal
                                         return (
-                                            <div key={product.product.id} className="border-gray-200 rounded-lg p-4 border">
+                                            <div key={product.product.id} className="border-gray-200 rounded-lg p-3 border">
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
-                                                        <div className="flex items-center gap-3 mb-2">
+                                                        <div className="flex items-center gap-3 mb-1">
                                                             <Badge variant="secondary" className="text-xs">
                                                                 {product.product.id}
                                                             </Badge>
                                                             <span className="text-xs text-gray-500">{product.product.marca}</span>
                                                         </div>
-                                                        <h4 className="font-medium text-gray-900 mb-3">{product.product.descripcion}</h4>
+                                                        <h4 className="font-medium text-gray-900 mb-1">{product.product.descripcion}</h4>
 
                                                         <div className="grid grid-cols-3 gap-3">
                                                             <div>
@@ -389,7 +392,7 @@ const CreateSale = () => {
                                                         onClick={() => removeItem(product.product.id)}
                                                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                                     >
-                                                        <X className="h-4 w-4" />
+                                                        <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </div>
                                             </div>
@@ -447,15 +450,16 @@ const CreateSale = () => {
                                 <div className="space-y-3">
                                     <Button
                                         onClick={handleCheckout}
-                                        className="w-full bg-black hover:bg-gray-800 text-white py-3 text-base font-medium cursor-pointer">
+                                        className="w-full bg-black hover:bg-gray-800 text-white py-3 font-medium cursor-pointer">
+                                        <Save className="mr-2" />
                                         Guardar Venta
                                     </Button>
 
-                                    <Button variant="outline" className="w-full py-3 text-base font-medium cursor-pointer">
+                                    <Button variant="outline" className="w-full py-3 font-medium cursor-pointer">
                                         Nueva Venta
                                     </Button>
 
-                                    <Button disabled variant="ghost" className="w-full py-3 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer">
+                                    <Button disabled variant="ghost" className="w-full py-3 font-medium text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer">
                                         Eliminar
                                     </Button>
                                 </div>
@@ -463,15 +467,6 @@ const CreateSale = () => {
                         </Card>
                     </div>
                 </div>
-                {/* seleccionar productos */}
-                {/* <DialogSearchDetails
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    details={detalles}
-                    setDetails={setDetalles}
-                    isSearchOpen={isSearchOpen}
-                    setIsSearchOpen={setIsSearchOpen}
-                /> */}
             </div>
         </div>
     );

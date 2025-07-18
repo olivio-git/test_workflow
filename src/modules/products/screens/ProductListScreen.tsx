@@ -162,13 +162,11 @@ const ProductListScreen = () => {
             size: 120,
             minSize: 100,
             cell: ({ row, getValue }) => {
-                const precio = Number.parseFloat(getValue<string>());
-                const precioAlt = Number.parseFloat(row.original.precio_venta_alt);
+                const precioAlt = row.original.precio_venta_alt;
                 // const descuento = (((precio - precioAlt) / precio) * 100).toFixed(0);
-
                 return (
                     <div className="space-y-1">
-                        <div className="font-bold text-green-600">${precio.toFixed(2)}</div>
+                        <div className="font-bold text-green-600">${getValue<number>().toFixed(2)}</div>
                         {/* {precioAlt < precio && ( */}
                         <div className="flex items-center gap-1">
                             <span className=" text-gray-500">Alt: ${precioAlt.toFixed(2)}</span>
@@ -193,7 +191,7 @@ const ProductListScreen = () => {
                         className={`flex gap-1 flex-wrap justify-center px-2 py-1 rounded ${getStockColor(stock)}`}
                     >
                         <div className="flex items-center gap-1">
-                            <span className="font-medium">{Number.parseFloat(stock).toFixed(1)}</span>
+                            <span className="font-medium">{getValue<number>().toFixed(0)}</span>
                         </div>
                         <span className="">{row.original.unidad_medida}</span>
                     </div>
@@ -207,7 +205,7 @@ const ProductListScreen = () => {
             minSize: 100,
             cell: ({ getValue }) => (
                 <div className="text-center">
-                    <div className="text-sm font-medium">{Number.parseFloat(getValue<string>()).toFixed(1)}</div>
+                    <div className="text-sm font-medium">{getValue<number>().toFixed(0)}</div>
                     <div className=" text-gray-500">disponible</div>
                 </div>
             ),
@@ -252,11 +250,11 @@ const ProductListScreen = () => {
             size: 100,
             minSize: 100,
             cell: ({ getValue }) => {
-                const value = Number.parseInt(getValue<string>());
+                const value = getValue<number>()
                 return (
                     <div className="text-center">
                         <div className={`text-sm font-medium ${value > 0 ? "text-blue-600" : "text-gray-400"}`}>
-                            {Number.parseFloat(getValue<string>()).toFixed(1)}
+                            {getValue<number>().toFixed(0)}
                         </div>
                         <div className=" text-gray-500">pedidos</div>
                     </div>
@@ -270,7 +268,7 @@ const ProductListScreen = () => {
             minSize: 100,
             cell: ({ getValue }) => (
                 <div className="text-center">
-                    <div className="text-sm font-medium text-green-600">{getValue<string>()}</div>
+                    <div className="text-sm font-medium text-green-600">{getValue<number>()}</div>
                     {/* <div className=" text-gray-500">reservado</div> */}
                 </div>
             ),
@@ -315,7 +313,7 @@ const ProductListScreen = () => {
                     <Button
                         variant="default"
                         size="icon"
-                        onClick={() => addItem({ product: row.original, quantity: 1 })}
+                        onClick={() => addItem(row.original)}
                         aria-label="Añadir Producto al Carrito"
                         className="size-8 cursor-pointer"
                     >

@@ -10,18 +10,39 @@ export const useCartStore = create<CartState>()(
             discountAmount: 0,
             discountPercent: 0,
 
-            addItem: (item) => {
-                const existing = get().items.find(i => i.product.id === item.product.id)
+            addItem: (product) => {
+                const existing = get().items.find((i) => i.product.id === product.id);
+                const basePrice = product.precio_venta;
+                const quantity = 1;
+                const subtotal = calculateSubtotalByItem(basePrice, quantity);
+
                 if (existing) {
+                    const updatedQuantity = existing.quantity + 1;
+                    const updatedSubtotal = calculateSubtotalByItem(
+                        existing.customPrice ?? basePrice,
+                        updatedQuantity
+                    );
+
                     set({
-                        items: get().items.map(i =>
-                            i.product.id === item.product.id
-                                ? { ...i, quantity: i.quantity + item.quantity }
+                        items: get().items.map((i) =>
+                            i.product.id === product.id
+                                ? {
+                                    ...i,
+                                    quantity: updatedQuantity,
+                                    customSubtotal: updatedSubtotal,
+                                }
                                 : i
-                        )
-                    })
+                        ),
+                    });
                 } else {
-                    set({ items: [...get().items, item] })
+                    const newItem: CartItem = {
+                        product,
+                        quantity,
+                        customPrice: basePrice,
+                        customSubtotal: subtotal,
+                    };
+
+                    set({ items: [...get().items, newItem] });
                 }
             },
 
@@ -32,33 +53,50 @@ export const useCartStore = create<CartState>()(
             updateQuantity: (productId, quantity) => {
                 if (quantity < 1) return;
                 set({
-                    items: get().items.map(i =>
-                        i.product.id === productId ? { ...i, quantity } : i
-                    )
-                })
+                    items: get().items.map((i) =>
+                        i.product.id === productId
+                            ? {
+                                ...i,
+                                quantity,
+                                customSubtotal: calculateSubtotalByItem(
+                                    i.customPrice ?? i.product.precio_venta,
+                                    quantity
+                                ),
+                            }
+                            : i
+                    ),
+                });
             },
 
             updateCustomPrice: (productId, price) => {
                 set({
-                    items: get().items.map(i =>
-                        i.product.id === productId ? { ...i, customPrice: price, customSubtotal: undefined } : i
-                    )
-                })
+                    items: get().items.map((i) =>
+                        i.product.id === productId
+                            ? {
+                                ...i,
+                                customPrice: price,
+                                customSubtotal: calculateSubtotalByItem(price, i.quantity),
+                            }
+                            : i
+                    ),
+                });
             },
 
             updateCustomSubtotal: (productId, subtotal) => {
                 const item = get().items.find(i => i.product.id === productId)
                 if (!item || item.quantity < 1) return
 
-                const newPrice = item.quantity > 0 ? subtotal / item.quantity : 0
-
                 set({
-                    items: get().items.map(i =>
+                    items: get().items.map((i) =>
                         i.product.id === productId
-                            ? { ...i, customSubtotal: subtotal, customPrice: newPrice }
+                            ? {
+                                ...i,
+                                customSubtotal: subtotal,
+                                customPrice: calculateSubtotalByItem(subtotal / i.quantity, 1),
+                            }
                             : i
-                    )
-                })
+                    ),
+                });
             },
 
             clearCart: () => set({ items: [], discountAmount: undefined, discountPercent: undefined }),
@@ -78,10 +116,8 @@ export const useCartStore = create<CartState>()(
             },
 
             getItemSubtotal: (productId) => {
-                const item = get().items.find(i => i.product.id === productId)
-                if (!item) return 0
-
-                return item.customSubtotal ?? (item.customPrice ?? parseFloat(item.product.precio_venta)) * item.quantity
+                const item = get().items.find((i) => i.product.id === productId);
+                return item ? item.customSubtotal : 0;
             },
 
             getCartSubtotal: () => {
@@ -92,8 +128,8 @@ export const useCartStore = create<CartState>()(
                 const subtotal = get().getCartSubtotal()
                 const { discountAmount, discountPercent } = get()
 
-                if (discountAmount !== undefined) return subtotal - discountAmount
-                if (discountPercent !== undefined) return subtotal * (1 - discountPercent / 100)
+                if (discountAmount) return Math.max(0, subtotal - discountAmount);
+                if (discountPercent) return Math.max(0, subtotal * (1 - discountPercent / 100));
 
                 return subtotal
             }
@@ -106,7 +142,10 @@ export const useCartStore = create<CartState>()(
 
 const calculateSubtotal = (items: CartItem[]) => {
     return items.reduce((sum, item) => {
-        const subtotal = item.customSubtotal ?? (item.customPrice ?? parseFloat(item.product.precio_venta)) * item.quantity
+        const subtotal = calculateSubtotalByItem(item.customPrice, item.quantity)
         return sum + subtotal
     }, 0)
 }
+
+export const calculateSubtotalByItem = (price: number, qty: number) =>
+    Number((price * qty).toFixed(2));

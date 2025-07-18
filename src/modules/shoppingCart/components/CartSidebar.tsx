@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Button } from "@/components/atoms/button"
 import { Separator } from "@/components/atoms/separator"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/atoms/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/atoms/sheet"
 import { cn } from "@/lib/utils"
 import { CreditCard, Maximize2, Receipt, ShoppingCart } from "lucide-react"
 import { useCartStore } from "../store/cartStore"

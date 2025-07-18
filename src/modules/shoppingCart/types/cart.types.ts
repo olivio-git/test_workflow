@@ -3,8 +3,8 @@ import type { ProductGet } from "@/modules/products/types/ProductGet";
 export type CartItem = {
     product: ProductGet;
     quantity: number;
-    customPrice?: number;
-    customSubtotal?: number;
+    customPrice: number;
+    customSubtotal: number;
 };
 
 export type CartState = {
@@ -12,7 +12,7 @@ export type CartState = {
     discountAmount?: number
     discountPercent?: number
 
-    addItem: (item: CartItem) => void
+    addItem: (item: ProductGet) => void
     removeItem: (productId: number) => void
     updateQuantity: (productId: number, quantity: number) => void
     updateCustomPrice: (productId: number, price: number) => void
