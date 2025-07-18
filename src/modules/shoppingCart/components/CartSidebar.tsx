@@ -1,14 +1,15 @@
 import { useState } from "react"
 import { Button } from "@/components/atoms/button"
 import { Separator } from "@/components/atoms/separator"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/atoms/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/atoms/sheet"
 import { cn } from "@/lib/utils"
 import { CreditCard, Maximize2, Receipt, ShoppingCart } from "lucide-react"
-import { useCartStore } from "../store/cartStore"
 import CartItemComponent from "./cartItemComponent"
 import { Label } from "@/components/atoms/label"
 import { Input } from "@/components/atoms/input"
 import { useNavigate } from "react-router"
+import { useCartWithUtils } from "../hooks/useCartWithUtils"
+import authSDK from "@/services/sdk-simple-auth"
 
 const CartSidebar = ({
     open,
@@ -17,9 +18,10 @@ const CartSidebar = ({
     open: boolean
     onOpenChange: (open: boolean) => void
 }) => {
+    const user = authSDK.getCurrentUser()
+
     const [expandedView, setExpandedView] = useState(false)
     const navigate = useNavigate()
-
     const {
         items: cart,
         getCartSubtotal,
@@ -32,7 +34,8 @@ const CartSidebar = ({
         updateCustomSubtotal,
         setDiscountAmount,
         setDiscountPercent,
-    } = useCartStore();
+    } = useCartWithUtils(user?.name || '')
+
 
     const subtotal = getCartSubtotal();
     const total = getCartTotal();
@@ -67,6 +70,9 @@ const CartSidebar = ({
                             )
                         }
                     </SheetTitle>
+                    <SheetDescription className="-mt-2" >
+                            {cart.length} productos en el carrito
+                    </SheetDescription>
                 </SheetHeader>
 
                 <div className="mt-2 max-h-[90vh] h-full">

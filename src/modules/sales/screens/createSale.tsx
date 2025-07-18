@@ -7,10 +7,11 @@ import { Input } from "@/components/atoms/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
 import { Badge } from "@/components/atoms/badge";
-import { useCartStore } from "@/modules/shoppingCart/store/cartStore";
 import { toast } from "@/hooks/use-toast";
 import ProductSelectorModal from "@/modules/products/components/ProductSelectorModal";
 import type { ProductGet } from "@/modules/products/types/ProductGet";
+import authSDK from "@/services/sdk-simple-auth";
+import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils";
 
 export interface Product {
     id: string;
@@ -23,6 +24,8 @@ export interface Product {
 }
 
 const CreateSale = () => {
+    const user = authSDK.getCurrentUser()
+
     const [saleInfo, setSaleInfo] = useState({
         fechaVenta: "08/07/2025",
         forma: "VENTA MAYOR",
@@ -53,7 +56,7 @@ const CreateSale = () => {
         setDiscountAmount,
         setDiscountPercent,
         clearCart
-    } = useCartStore();
+    } = useCartWithUtils(user?.name || '')
     const subtotal = getCartSubtotal();
     const total = getCartTotal();
     const [editingGlobalAmount, setEditingGlobalAmount] = useState(false);
@@ -431,7 +434,82 @@ const CreateSale = () => {
                                     <span className="text-sm font-medium">{saleInfo.responsable}</span>
                                 </div>
 
-                                <div className="space-y-3 py-4 border-t border-b">
+                                <div className="space-y-3 py-4 border-t border-b border-gray-200">
+                                    {/* Descuento */}
+                                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-sm font-medium text-gray-700">Descuento</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <Label className="text-xs text-gray-600">Porcentaje (%)</Label>
+                                                {editingGlobalPercent ? (
+                                                    <Input
+                                                        value={discountPercent?.toString()}
+                                                        onChange={(e) => setDiscountPercent(parseFloat(e.target.value) || 0)}
+                                                        onBlur={(e) => handleGlobalPercentSubmit(e.target.value)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleGlobalPercentSubmit(e.currentTarget.value)}
+                                                        className="h-8 text-sm"
+                                                        type="number"
+                                                        min="0"
+                                                        max="100"
+                                                        step="0.1"
+                                                        autoFocus
+                                                    />
+                                                ) : (
+                                                    <Button
+                                                        onClick={() => setEditingGlobalPercent(true)}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
+                                                    >
+                                                        {discountPercent ?? 0}%
+                                                    </Button>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <Label className="text-xs text-gray-600">Monto ($)</Label>
+                                                {editingGlobalAmount ? (
+                                                    <Input
+                                                        value={discountAmount?.toString()}
+                                                        onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                                                        onBlur={(e) => handleGlobalAmountSubmit(e.target.value)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleGlobalAmountSubmit(e.currentTarget.value)}
+                                                        className="h-8 text-sm"
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        autoFocus
+                                                    />
+                                                ) : (
+                                                    <Button
+                                                        onClick={() => setEditingGlobalAmount(true)}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
+                                                    >
+                                                        ${discountAmount?.toFixed(2) ?? 0.00}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-1">
+                                            {[5, 10, 15, 20].map((percentage) => (
+                                                <Button
+                                                    key={percentage}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-xs h-7 px-2 border-orange-300 text-orange-700 hover:bg-orange-100"
+                                                    onClick={() => setDiscountPercent(percentage)}
+                                                >
+                                                    {percentage}%
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
                                     <div className="flex justify-between">
                                         <span className="text-sm text-gray-600">Subtotal:</span>
                                         <span className="font-medium">${subtotal.toFixed(2)}</span>
@@ -468,7 +546,7 @@ const CreateSale = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 export default CreateSale
