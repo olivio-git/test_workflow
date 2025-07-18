@@ -35,13 +35,13 @@ export function ComboboxSelect({
     setQuery(event.target.value)
   }
 
-  useEffect(() => {
-    if (comboboxInputRef.current) {
-      setTimeout(() => {
-        comboboxInputRef.current?.focus() 
-      }, 0)
-    }
-  }, [filteredOptions])
+  // useEffect(() => {
+  //   if (comboboxInputRef.current) {
+  //     setTimeout(() => {
+  //       comboboxInputRef.current?.focus() 
+  //     }, 0)
+  //   }
+  // }, [filteredOptions])
 
   return (
     <Combobox 
