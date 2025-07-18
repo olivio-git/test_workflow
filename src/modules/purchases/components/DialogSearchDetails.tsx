@@ -1,16 +1,14 @@
 import { AlertDialogHeader } from "@/components/atoms/alert-dialog";
-import { Badge } from "@/components/atoms/badge";
-import { Button } from "@/components/atoms/button";
+import { Badge } from "@/components/atoms/badge"; 
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle, 
 } from "@/components/atoms/dialog";
 import { Input } from "@/components/atoms/input";
 import { apiConstructor } from "@/modules/products/services/api";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Loader2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 
 // Tipo de dato que responde el api
@@ -176,21 +174,8 @@ export default function DialogSearchDetails({
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  return (
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold text-gray-900">
-        Detalle de Productos
-      </h3>
-      <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-        <DialogTrigger asChild>
-          <Button
-            size="sm"
-            className="h-8 border-gray-200 hover:border-gray-300"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Agregar Producto
-          </Button>
-        </DialogTrigger>
+  return ( 
+      <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}> 
         <DialogContent className="max-w-4xl border-gray-200">
           <AlertDialogHeader>
             <DialogTitle>Buscar Productos</DialogTitle>
@@ -291,6 +276,5 @@ export default function DialogSearchDetails({
           </div>
         </DialogContent>
       </Dialog>
-    </div>
   );
 };

@@ -2,8 +2,8 @@ import React from "react";
 import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";
 import { ComboboxSelect } from "@/modules/products/components/SelectCombobox"; 
-import { usePurchaseForm, type FormData } from "../hooks/usePurchaseForm";
-import { useBranchStore } from "@/states/branchStore";
+import { type FormData } from "../hooks/usePurchaseForm";
+// import { useBranchStore } from "@/states/branchStore";
 
 const proveedores = [
   { id: 71, proveedor: "JUANMOTORS" },
@@ -20,31 +20,31 @@ const proveedores = [
   { id: 12, proveedor: "MOTOCENTER" },
 ];
 
-const tipoCompra = [
-  {
-    id:1,
-    tipo:"Credito"
-  },
-  {
-    id:2,
-    tipo:"Contado"
-  },
-  {
-    id:3,
-    tipo:"Cuenta corriente"
-  }
-]
+// const tipoCompra = [
+//   {
+//     id:1,
+//     tipo:"Credito"
+//   },
+//   {
+//     id:2,
+//     tipo:"Contado"
+//   },
+//   {
+//     id:3,
+//     tipo:"Cuenta corriente"
+//   }
+// ]
 
-const forma = [
-  {
-    id:1,
-    forma:"Mayor"
-  },
-  {
-    id:2,
-    forma:"Menor"
-  }
-]
+// const forma = [
+//   {
+//     id:1,
+//     forma:"Mayor"
+//   },
+//   {
+//     id:2,
+//     forma:"Menor"
+//   }
+// ]
 interface Props {
   formData: FormData;
   errors: Record<string,string>;
