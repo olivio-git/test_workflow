@@ -23,8 +23,8 @@ const CartItemComponent: React.FC<CartItemProps> = ({
     const [editingSubtotal, setEditingSubtotal] = useState<number | null>(null);
     const [editingQuantity, setEditingQuantity] = useState<number | null>(null);
 
-    const basePrice = item.customPrice ?? parseFloat(item.product.precio_venta);
-    const itemSubtotal = item.customSubtotal ?? basePrice * item.quantity;
+    const basePrice = item.customPrice
+    const itemSubtotal = item.customSubtotal
 
     return (
         <div key={item.product.id} className="border border-gray-200 rounded-lg p-4 space-y-2">

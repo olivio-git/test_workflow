@@ -10,12 +10,13 @@ import type { ProductSalesStats } from "../types/ProductSalesStats";
 import { ProductSalesSchema } from "../schemas/productTwoYaersSales.schema";
 import type { ProductProviderOrder } from "../types/ProductProviderOrder";
 import { ProductProviderOrderListSchema } from "../schemas/productProviderOrdersSchema";
+import { ProductListResponseSchema } from "../schemas/productResponse.schema";
 
 export const fetchProducts = async (filters: ProductFilters): Promise<ProductListResponse> => {
     const response = await apiClient.get(PRODUCT_ENDPOINTS.all, {
         params: filters,
     })
-    return response.data
+    return ProductListResponseSchema.parse(response.data)
 }
 export const fetchProductDetail = async (id: number): Promise<ProductDetail> => {
     const res = await apiClient.get(PRODUCT_ENDPOINTS.byId(id))

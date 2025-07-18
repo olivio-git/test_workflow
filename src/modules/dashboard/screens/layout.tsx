@@ -70,7 +70,7 @@ export default function Layout({ children }: LayoutProps) {
         </header>
         <main
           id="main-scroll-container"
-          className="flex-1 overflow-auto p-2 bg-white">{children}</main>
+          className="flex-1 overflow-auto p-2  bg-gray-50">{children}</main>
       </div>
       <CartSidebar
         open={isOpen}

@@ -1,8 +1,4 @@
-import type { ProductGet } from "./ProductGet";
+import { z } from "zod"
+import type { ProductListResponseSchema } from "../schemas/productResponse.schema"
 
-export interface ProductListResponse {
-    data: ProductGet[];
-    meta: {
-        total: number;
-    };
-}
+export type ProductListResponse = z.infer<typeof ProductListResponseSchema>
