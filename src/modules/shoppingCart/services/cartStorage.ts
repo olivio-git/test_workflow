@@ -10,9 +10,9 @@ export class CartStorage {
     if (typeof window === 'undefined') return null;
 
     try {
-      return localStorage.getItem(this.getStorageKey(userId));
+      return sessionStorage.getItem(this.getStorageKey(userId));
     } catch (error) {
-      console.error('Error reading cart from localStorage:', error);
+      console.error('Error reading cart from sessionStorage:', error);
       return null;
     }
   }
@@ -21,9 +21,9 @@ export class CartStorage {
     if (typeof window === 'undefined') return;
 
     try {
-      localStorage.setItem(this.getStorageKey(userId), data);
+      sessionStorage.setItem(this.getStorageKey(userId), data);
     } catch (error) {
-      console.error('Error saving cart to localStorage:', error);
+      console.error('Error saving cart to sessionStorage:', error);
     }
   }
 
@@ -31,9 +31,9 @@ export class CartStorage {
     if (typeof window === 'undefined') return;
 
     try {
-      localStorage.removeItem(this.getStorageKey(userId));
+      sessionStorage.removeItem(this.getStorageKey(userId));
     } catch (error) {
-      console.error('Error removing cart from localStorage:', error);
+      console.error('Error removing cart from sessionStorage:', error);
     }
   }
 
@@ -41,9 +41,9 @@ export class CartStorage {
     if (typeof window === 'undefined') return;
 
     try {
-      Object.keys(localStorage).forEach(key => {
+      Object.keys(sessionStorage).forEach(key => {
         if (key.startsWith(CART_CONSTANTS.STORAGE_PREFIX)) {
-          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
         }
       });
     } catch (error) {
