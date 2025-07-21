@@ -1,6 +1,7 @@
 import LoginScreen from "@/modules/auth/screens/LoginScreen";
 import type RouteType from "./RouteType";
-import {LogIn } from "lucide-react" 
+import {LogIn, Table2Icon } from "lucide-react" 
+import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 
 
 export const publicRoutes: RouteType[] = [
@@ -13,4 +14,13 @@ export const publicRoutes: RouteType[] = [
     role: ['guest'],
     icon: LogIn
   },
+  // {
+  //   path: "/products",
+  //   name: "Lista de Productos",
+  //   type: "public",
+  //   element: ProductListScreen,
+  //   isAdmin: false,
+  //   role: ["guest"],
+  //   icon: Table2Icon,
+  // },
 ]; 

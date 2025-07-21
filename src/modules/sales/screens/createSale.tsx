@@ -163,6 +163,13 @@ const CreateSale = () => {
 
     // FUNCIÓN para manejar errores del formulario
     const onError = (errors: any) => {
+        if (watch('detalles').length <= 0) {
+            toast({
+                title: "Ha ocurrido un error",
+                description: `Para realizar una venta debes agregar al menos un producto`,
+                className: "border border-red-200"
+            });
+        }
         console.log("Errores del formulario:", errors);
     };
 
@@ -188,7 +195,7 @@ const CreateSale = () => {
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <Label htmlFor="fechaVenta" className="text-sm font-medium text-gray-700 mb-2">Fecha de Venta</Label>
+                                            <Label htmlFor="fechaVenta" className="text-sm font-medium text-gray-700 mb-2">Fecha de Venta *</Label>
                                             <Input
                                                 id="fechaVenta"
                                                 type="date"
@@ -198,7 +205,7 @@ const CreateSale = () => {
                                             {errors.fecha && <p className="text-red-500 text-sm mt-1">{errors.fecha.message}</p>}
                                         </div>
                                         <div>
-                                            <Label htmlFor="forma" className="text-sm font-medium text-gray-700 mb-2">Forma</Label>
+                                            <Label htmlFor="forma" className="text-sm font-medium text-gray-700 mb-2">Forma de venta *</Label>
                                             <Controller
                                                 name="forma_venta"
                                                 control={control}
@@ -208,9 +215,9 @@ const CreateSale = () => {
                                                             <SelectValue placeholder="Selecciona una forma" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="VENTA MAYOR">VENTA MAYOR</SelectItem>
-                                                            <SelectItem value="VENTA MENOR">VENTA MENOR</SelectItem>
-                                                            <SelectItem value="VENTA ESPECIAL">VENTA ESPECIAL</SelectItem>
+                                                            <SelectItem value="MY">VENTA MAYOR</SelectItem>
+                                                            <SelectItem value="M">VENTA MENOR</SelectItem>
+                                                            <SelectItem value="Y">VENTA ESPECIAL</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 )}
@@ -235,7 +242,7 @@ const CreateSale = () => {
                                             />
                                         </div>
                                         <div>
-                                            <Label htmlFor="responsable" className="text-sm font-medium text-gray-700 mb-2">Responsable de Venta</Label>
+                                            <Label htmlFor="responsable" className="text-sm font-medium text-gray-700 mb-2">Responsable de Venta *</Label>
                                             <Controller
                                                 name="id_responsable"
                                                 control={control}
@@ -252,9 +259,10 @@ const CreateSale = () => {
                                                     </Select>
                                                 )}
                                             />
+                                            {errors.id_responsable && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
                                         </div>
                                         <div>
-                                            <Label htmlFor="cliente" className="text-sm font-medium text-gray-700 mb-2">Cliente</Label>
+                                            <Label htmlFor="cliente" className="text-sm font-medium text-gray-700 mb-2">Cliente *</Label>
                                             <Controller
                                                 name="id_cliente"
                                                 control={control}
@@ -264,13 +272,14 @@ const CreateSale = () => {
                                                             <SelectValue placeholder="Selecciona un cliente" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="1">A TODOMOTOR</SelectItem>
-                                                            <SelectItem value="2">REPUESTOS GARCÍA</SelectItem>
-                                                            <SelectItem value="3">AUTOMOTRIZ CENTRAL</SelectItem>
+                                                            <SelectItem value="67">A TODOMOTOR</SelectItem>
+                                                            <SelectItem value="6">REPUESTOS GARCÍA</SelectItem>
+                                                            <SelectItem value="7">AUTOMOTRIZ CENTRAL</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 )}
                                             />
+                                            {errors.id_cliente && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
                                         </div>
                                         <div>
                                             <Label htmlFor="altClie" className="text-sm font-medium text-gray-700 mb-2">Alt. Clie</Label>
@@ -281,7 +290,7 @@ const CreateSale = () => {
                                             />
                                         </div>
                                         <div>
-                                            <Label htmlFor="tipoVenta" className="text-sm font-medium text-gray-700 mb-2">Tipo de Venta</Label>
+                                            <Label htmlFor="tipoVenta" className="text-sm font-medium text-gray-700 mb-2">Tipo de Venta *</Label>
                                             <Controller
                                                 name="tipo_venta"
                                                 control={control}
@@ -291,13 +300,14 @@ const CreateSale = () => {
                                                             <SelectValue placeholder="Selecciona un tipo" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="VENTA AL CONTADO">VENTA AL CONTADO</SelectItem>
-                                                            <SelectItem value="VENTA A CREDITO">VENTA A CREDITO</SelectItem>
-                                                            <SelectItem value="VENTA MIXTA">VENTA MIXTA</SelectItem>
+                                                            <SelectItem value="VC">VENTA AL CONTADO</SelectItem>
+                                                            <SelectItem value="C">VENTA A CREDITO</SelectItem>
+                                                            <SelectItem value="V">VENTA MIXTA</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 )}
                                             />
+                                            {errors.tipo_venta && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
                                         </div>
                                         <div>
                                             <Label htmlFor="fechaPlazo" className="text-sm font-medium text-gray-700 mb-2">Fecha Plazo (Venta Crédito)</Label>
@@ -335,6 +345,7 @@ const CreateSale = () => {
                                             className="min-h-[100px]"
                                         />
                                     </div>
+                                    <span className="text-xs text-gray-500">* Campos requeridos</span>
                                 </CardContent>
                             </Card>
 
