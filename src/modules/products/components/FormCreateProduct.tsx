@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react"; 
 import { Package, Wand2, Save } from "lucide-react";
 import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";  
@@ -7,6 +6,7 @@ import { Button } from "@/components/atoms/button";
 import { useQuery } from "@tanstack/react-query";
 import { apiConstructor } from "../services/api";
 import { ComboboxSelect } from "./SelectCombobox";
+import { toast } from "@/hooks/use-toast";
 
 interface Category {
   id: number;
@@ -42,8 +42,7 @@ interface FormTouched {
   [key: string]: boolean;
 }
 
-const FormCreateProduct: React.FC = () => {
-  const { toast } = useToast();
+const FormCreateProduct: React.FC = () => { 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<FormTouched>({});

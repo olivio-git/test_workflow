@@ -25,7 +25,9 @@ interface Props {
 const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [editing, setEditing] = useState<{row: number; col: number} | null>(null);
+  const [editing, setEditing] = useState<{ row: number; col: number } | null>(
+    null
+  );
   const [tempValue, setTempValue] = useState("");
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,106 +36,182 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   // Utilidades para manejo de moneda en centavos
   // const toCents = (amount: number): number => Math.round(amount * 100);
   // const fromCents = (cents: number): number => cents / 100;
-  const roundToTwo = (num: number): number => Math.round((num + Number.EPSILON) * 100) / 100;
+  const roundToTwo = (num: number): number =>
+    Math.round((num + Number.EPSILON) * 100) / 100;
 
   // Función para cálculos financieros precisos
-  const calculatePrecise = (detail: PurchaseDetail, fieldName: string, newValue: number) => {
+  // Función para cálculos financieros precisos - CORREGIDA
+  const calculatePrecise = (
+    detail: PurchaseDetail,
+    fieldName: string,
+    newValue: number
+  ) => {
     const updatedDetail = { ...detail };
-    
+
     if (fieldName === "costo") {
       updatedDetail.costo = roundToTwo(newValue);
-      // Calcular precios basados en porcentajes, pero redondeados
-      updatedDetail.precio_venta = roundToTwo(newValue * (1 + updatedDetail.inc_p_venta / 100));
-      updatedDetail.precio_venta_alt = roundToTwo(newValue * (1 + updatedDetail.inc_p_venta_alt / 100));
+      // Precio de venta basado en costo
+      updatedDetail.precio_venta = roundToTwo(
+        newValue * (1 + updatedDetail.inc_p_venta / 100)
+      );
+      // Precio alternativo basado en el nuevo precio de venta
+      updatedDetail.precio_venta_alt = roundToTwo(
+        updatedDetail.precio_venta * (1 + updatedDetail.inc_p_venta_alt / 100)
+      );
     } else if (fieldName === "inc_p_venta") {
       updatedDetail.inc_p_venta = roundToTwo(newValue);
-      updatedDetail.precio_venta = roundToTwo(updatedDetail.costo * (1 + newValue / 100));
+      // Recalcular precio de venta basado en costo
+      updatedDetail.precio_venta = roundToTwo(
+        updatedDetail.costo * (1 + newValue / 100)
+      );
+      // Recalcular precio alternativo basado en el nuevo precio de venta
+      updatedDetail.precio_venta_alt = roundToTwo(
+        updatedDetail.precio_venta * (1 + updatedDetail.inc_p_venta_alt / 100)
+      );
     } else if (fieldName === "inc_p_venta_alt") {
       updatedDetail.inc_p_venta_alt = roundToTwo(newValue);
-      updatedDetail.precio_venta_alt = roundToTwo(updatedDetail.costo * (1 + newValue / 100));
+      // Precio alternativo basado en precio de venta (no en costo)
+      updatedDetail.precio_venta_alt = roundToTwo(
+        updatedDetail.precio_venta * (1 + newValue / 100)
+      );
     } else if (fieldName === "precio_venta") {
       updatedDetail.precio_venta = roundToTwo(newValue);
-      updatedDetail.inc_p_venta = updatedDetail.costo > 0 
-        ? roundToTwo(((newValue - updatedDetail.costo) / updatedDetail.costo) * 100) 
-        : 0;
+      // Recalcular porcentaje de incremento sobre costo
+      updatedDetail.inc_p_venta =
+        updatedDetail.costo > 0
+          ? roundToTwo(
+              ((newValue - updatedDetail.costo) / updatedDetail.costo) * 100
+            )
+          : 0;
+      // Recalcular precio alternativo basado en el nuevo precio de venta
+      updatedDetail.precio_venta_alt = roundToTwo(
+        newValue * (1 + updatedDetail.inc_p_venta_alt / 100)
+      );
     } else if (fieldName === "precio_venta_alt") {
       updatedDetail.precio_venta_alt = roundToTwo(newValue);
-      updatedDetail.inc_p_venta_alt = updatedDetail.costo > 0 
-        ? roundToTwo(((newValue - updatedDetail.costo) / updatedDetail.costo) * 100) 
-        : 0;
+      // Recalcular porcentaje alternativo basado en precio de venta (no en costo)
+      updatedDetail.inc_p_venta_alt =
+        updatedDetail.precio_venta > 0
+          ? roundToTwo(
+              ((newValue - updatedDetail.precio_venta) /
+                updatedDetail.precio_venta) *
+                100
+            )
+          : 0;
     } else if (fieldName === "cantidad") {
       updatedDetail.cantidad = Math.round(newValue); // Cantidad siempre entero
     } else {
       (updatedDetail as any)[fieldName] = roundToTwo(newValue);
     }
-    
+
     // Subtotal siempre redondeado
-    updatedDetail.subtotal = roundToTwo(updatedDetail.costo * updatedDetail.cantidad);
-    
+    updatedDetail.subtotal = roundToTwo(
+      updatedDetail.costo * updatedDetail.cantidad
+    );
+
     return updatedDetail;
   };
 
-  const editableColumns = ['cantidad', 'costo', 'inc_p_venta', 'precio_venta', 'inc_p_venta_alt', 'precio_venta_alt'];
+  const editableColumns = [
+    "cantidad",
+    "costo",
+    "inc_p_venta",
+    "precio_venta",
+    "inc_p_venta_alt",
+    "precio_venta_alt",
+  ];
 
   // Hotkeys para navegación y acciones globales - shortcuts simplificados
-  useHotkeys('ctrl+m', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsSearchOpen(true);
-  }, { 
-    enableOnFormTags: true,
-    preventDefault: true,
-    enableOnContentEditable: true
-  });
-
-  useHotkeys('escape', () => {
-    if (editing) {
-      cancelEdit();
-    } else if (selectedRow !== null) {
-      setSelectedRow(null);
+  useHotkeys(
+    "ctrl+m",
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsSearchOpen(true);
+    },
+    {
+      enableOnFormTags: true,
+      preventDefault: true,
+      enableOnContentEditable: true,
     }
-  }, { enableOnFormTags: true });
+  );
+
+  useHotkeys(
+    "escape",
+    () => {
+      if (editing) {
+        cancelEdit();
+      } else if (selectedRow !== null) {
+        setSelectedRow(null);
+      }
+    },
+    { enableOnFormTags: true }
+  );
 
   // Navegación con flechas cuando hay una fila seleccionada
-  useHotkeys('arrowup', (e) => {
-    if (!editing && selectedRow !== null && selectedRow > 0) {
-      e.preventDefault();
-      setSelectedRow(selectedRow - 1);
-    }
-  }, { enableOnFormTags: true });
+  useHotkeys(
+    "arrowup",
+    (e) => {
+      if (!editing && selectedRow !== null && selectedRow > 0) {
+        e.preventDefault();
+        setSelectedRow(selectedRow - 1);
+      }
+    },
+    { enableOnFormTags: true }
+  );
 
-  useHotkeys('arrowdown', (e) => {
-    if (!editing && selectedRow !== null && selectedRow < detalles.length - 1) {
-      e.preventDefault();
-      setSelectedRow(selectedRow + 1);
-    }
-  }, { enableOnFormTags: true });
+  useHotkeys(
+    "arrowdown",
+    (e) => {
+      if (
+        !editing &&
+        selectedRow !== null &&
+        selectedRow < detalles.length - 1
+      ) {
+        e.preventDefault();
+        setSelectedRow(selectedRow + 1);
+      }
+    },
+    { enableOnFormTags: true }
+  );
 
   // Eliminar fila seleccionada
-  useHotkeys('delete, backspace', (e) => {
-    if (!editing && selectedRow !== null) {
-      e.preventDefault();
-      const detail = detalles[selectedRow];
-      remove(detail.id_producto);
-      setSelectedRow(null);
-    }
-  }, { enableOnFormTags: true });
+  useHotkeys(
+    "delete, backspace",
+    (e) => {
+      if (!editing && selectedRow !== null) {
+        e.preventDefault();
+        const detail = detalles[selectedRow];
+        remove(detail.id_producto);
+        setSelectedRow(null);
+      }
+    },
+    { enableOnFormTags: true }
+  );
 
   // Editar primera celda de la fila seleccionada - simplificado
-  useHotkeys('ctrl+enter', (e) => {
-    if (!editing && selectedRow !== null) {
-      e.preventDefault();
-      startEdit(selectedRow, 0); // Siempre empezar en la primera celda (cantidad)
-    }
-  }, { enableOnFormTags: true });
+  useHotkeys(
+    "ctrl+enter",
+    (e) => {
+      if (!editing && selectedRow !== null) {
+        e.preventDefault();
+        startEdit(selectedRow, 0); // Siempre empezar en la primera celda (cantidad)
+      }
+    },
+    { enableOnFormTags: true }
+  );
 
   // Duplicar fila seleccionada
-  useHotkeys('ctrl+d', (e) => {
-    if (!editing && selectedRow !== null) {
-      e.preventDefault();
-      duplicateRow(selectedRow);
-    }
-  }, { enableOnFormTags: true });
+  useHotkeys(
+    "ctrl+d",
+    (e) => {
+      if (!editing && selectedRow !== null) {
+        e.preventDefault();
+        duplicateRow(selectedRow);
+      }
+    },
+    { enableOnFormTags: true }
+  );
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -145,19 +223,19 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
     const detail = detalles[rowIndex];
     const fieldName = editableColumns[colIndex];
     const currentValue = detail[fieldName as keyof PurchaseDetail] as number;
-    
+
     // Formatear el valor inicial según el tipo de campo
     let formattedValue: string;
-    if (fieldName === 'cantidad') {
+    if (fieldName === "cantidad") {
       formattedValue = Math.round(currentValue).toString();
-    } else if (fieldName.includes('inc_p_venta')) {
+    } else if (fieldName.includes("inc_p_venta")) {
       // Porcentajes con 1 decimal
       formattedValue = roundToTwo(currentValue).toFixed(1);
     } else {
       // Moneda con 2 decimales
       formattedValue = roundToTwo(currentValue).toFixed(2);
     }
-    
+
     setEditing({ row: rowIndex, col: colIndex });
     setTempValue(formattedValue);
     setSelectedRow(null); // Desseleccionar fila al entrar en modo edición
@@ -165,7 +243,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   const saveEdit = () => {
     if (!editing) return;
-    
+
     const numValue = parseFloat(tempValue);
     if (isNaN(numValue) || numValue < 0) {
       setEditing(null);
@@ -175,10 +253,10 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
     const fieldName = editableColumns[editing.col];
     const newDetalles = [...detalles];
     const detail = { ...newDetalles[editing.row] };
-    
+
     // Usar función de cálculo preciso
     const updatedDetail = calculatePrecise(detail, fieldName, numValue);
-    
+
     newDetalles[editing.row] = updatedDetail;
     setDetalles(newDetalles);
     setSelectedRow(editing.row);
@@ -192,9 +270,9 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation();
-    
+
     switch (e.key) {
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         saveEdit();
         // Mover a la siguiente fila
@@ -202,11 +280,11 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
           setTimeout(() => startEdit(editing.row + 1, editing.col), 10);
         }
         break;
-      case 'Escape':
+      case "Escape":
         e.preventDefault();
         cancelEdit();
         break;
-      case 'Tab':
+      case "Tab":
         e.preventDefault();
         saveEdit();
         // Mover a la siguiente celda
@@ -214,12 +292,12 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
           setTimeout(() => {
             let nextCol = editing.col + 1;
             let nextRow = editing.row;
-            
+
             if (nextCol >= editableColumns.length) {
               nextCol = 0;
               nextRow++;
             }
-            
+
             if (nextRow < detalles.length) {
               startEdit(nextRow, nextCol);
             }
@@ -234,7 +312,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   };
 
   const remove = (id: string) => {
-    setDetalles(detalles.filter(d => d.id_producto !== id));
+    setDetalles(detalles.filter((d) => d.id_producto !== id));
   };
 
   const duplicateRow = (rowIndex: number) => {
@@ -243,7 +321,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
       ...detail,
       id_producto: `${detail.id_producto}_copy_${Date.now()}`, // Generar nuevo ID único
     };
-    
+
     const newDetalles = [...detalles];
     newDetalles.splice(rowIndex + 1, 0, newDetail);
     setDetalles(newDetalles);
@@ -258,16 +336,21 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   const handleProductAdded = (productId: string) => {
     // Encontrar el índice del producto recién agregado
-    const newProductIndex = detalles.findIndex(d => d.id_producto === productId);
+    const newProductIndex = detalles.findIndex(
+      (d) => d.id_producto === productId
+    );
     if (newProductIndex !== -1) {
       setSelectedRow(newProductIndex);
     }
   };
 
-  const formatValue = (value: number, format: "currency" | "percentage" | "number") => {
+  const formatValue = (
+    value: number,
+    format: "currency" | "percentage" | "number"
+  ) => {
     // Asegurar que siempre mostramos valores redondeados
     const roundedValue = roundToTwo(value);
-    
+
     switch (format) {
       case "currency":
         return `${roundedValue.toFixed(2)}`;
@@ -275,7 +358,9 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
         return `${roundedValue.toFixed(1)}%`;
       default:
         // Para cantidad, mostrar como entero si es un número entero
-        return Number.isInteger(roundedValue) ? roundedValue.toString() : roundedValue.toFixed(2);
+        return Number.isInteger(roundedValue)
+          ? roundedValue.toString()
+          : roundedValue.toFixed(2);
     }
   };
 
@@ -312,11 +397,18 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   };
 
   const totalCosto = roundToTwo(detalles.reduce((s, d) => s + d.subtotal, 0));
-  const totalGeneral = roundToTwo(detalles.reduce((s, d) => s + (d.precio_venta * d.cantidad), 0));
-  const totalMenor = roundToTwo(detalles.reduce((s, d) => s + (d.precio_venta_alt * d.cantidad), 0));
+  const totalGeneral = roundToTwo(
+    detalles.reduce((s, d) => s + d.precio_venta * d.cantidad, 0)
+  );
+  const totalMenor = roundToTwo(
+    detalles.reduce((s, d) => s + d.precio_venta_alt * d.cantidad, 0)
+  );
 
   return (
-    <div className="p-4 bg-white border border-gray-200 rounded-lg" ref={tableRef}>
+    <div
+      className="p-4 bg-white border border-gray-200 rounded-lg"
+      ref={tableRef}
+    >
       <DialogSearchDetails
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -326,11 +418,13 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
         setIsSearchOpen={setIsSearchOpen}
         onProductAdded={handleProductAdded}
       />
-      
+
       {/* Header con indicadores de shortcuts */}
       <div className="p-2 border-b border-gray-200">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-900">Detalle de Compra</span>
+          <span className="text-sm font-semibold text-gray-900">
+            Detalle de Compra
+          </span>
           <div className="flex items-center gap-2">
             <div className="text-xs text-gray-500 hidden sm:block">
               Ctrl+M: Agregar | ↑↓: Navegar | Ctrl+Enter: Editar | Del: Eliminar
@@ -339,10 +433,13 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
               onClick={() => setIsSearchOpen(true)}
               variant="outline"
               size="sm"
-              className="hover:bg-gray-50"
+              className="bg-black text-white"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Agregar Producto <span className="text-xs ml-1 opacity-60">(Ctrl+M)</span>
+              <Plus className="w-4 h-4 mr-2 text-white" />
+              Agregar Producto{" "}
+              <span className="text-xs text-white ml-1 opacity-60">
+                (Ctrl+M)
+              </span>
             </Button>
           </div>
         </div>
@@ -353,7 +450,9 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-60 border border-gray-200">Producto</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-60 border border-gray-200">
+                  Producto
+                </th>
                 <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-16 border border-gray-200">
                   Cantidad
                 </th>
@@ -363,27 +462,45 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
                 <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-16 border border-gray-200">
                   % Inc
                 </th>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">P. Venta</th>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-16 border border-gray-200">% Alt</th>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">P. Venta. Alt</th>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">Subtotal</th>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-12 border border-gray-200">Acciones</th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">
+                  P. Venta
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-16 border border-gray-200">
+                  % Alt
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">
+                  P. Venta. Alt
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20 border border-gray-200">
+                  Subtotal
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-12 border border-gray-200">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {detalles.map((detail, rowIndex) => (
-                <tr 
-                  key={detail.id_producto} 
+                <tr
+                  key={detail.id_producto}
                   className={`
                     transition-colors duration-150 cursor-pointer
-                    ${selectedRow === rowIndex ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}
+                    ${
+                      selectedRow === rowIndex
+                        ? "bg-blue-50 border-blue-200"
+                        : "hover:bg-gray-50"
+                    }
                   `}
                   onClick={() => handleRowClick(rowIndex)}
                 >
                   <td className="px-4 py-3">
                     <div className="space-y-1">
-                      <div className="font-medium text-gray-900 leading-tight text-sm">{detail.producto.descripcion}</div>
-                      <div className="text-xs text-gray-500 font-mono">OEM: {detail.producto.codigo_oem}</div>
+                      <div className="font-medium text-gray-900 leading-tight text-sm">
+                        {detail.producto.descripcion}
+                      </div>
+                      <div className="text-xs text-gray-500 font-mono">
+                        OEM: {detail.producto.codigo_oem}
+                      </div>
                     </div>
                   </td>
                   <td className="px-3 py-3 text-center">
@@ -457,7 +574,10 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
             </tbody>
             <tfoot className="bg-gray-50 border-t border-gray-200">
               <tr className="font-semibold text-gray-800">
-                <td colSpan={2} className="px-4 py-4 text-right font-bold text-sm">
+                <td
+                  colSpan={2}
+                  className="px-4 py-4 text-right font-bold text-sm"
+                >
                   TOTALES:
                 </td>
                 <td className="px-3 py-4 text-center">
@@ -489,7 +609,9 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
         </div>
       ) : (
         <div className="py-12 text-center">
-          <p className="text-sm text-gray-600">No hay productos en el detalle.</p>
+          <p className="text-sm text-gray-600">
+            No hay productos en el detalle.
+          </p>
           <Button
             onClick={() => setIsSearchOpen(true)}
             variant="outline"
@@ -497,7 +619,8 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
             className="mt-4 hover:bg-gray-50"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Agregar Producto <span className="text-xs ml-1 opacity-60">(Ctrl+M)</span>
+            Agregar Producto{" "}
+            <span className="text-xs ml-1 opacity-60">(Ctrl+M)</span>
           </Button>
         </div>
       )}
