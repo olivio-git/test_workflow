@@ -335,7 +335,12 @@ const FormCreateProduct: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await apiConstructor({ url: '/products', data: formData, method: "POST" });
-      alert("Producto creado con exito\nCodigo interno: "+response?.codigo_interno)
+      toast({
+        title: "Producto creado",
+        description: `El producto ${formData.descripcion} ha sido creado exitosamente. Código: ${response?.codigo_interno}`,
+        variant:"destructive",
+        color: "green",
+      }); 
       resetForm();
     } catch (error) {
       toast({
