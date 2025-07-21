@@ -41,7 +41,7 @@ const ProductListScreen = () => {
         resetFilters,
     } = useProductFilters(Number(selectedBranchId) || 1); // suponiendo sucursal 1 por sesión
 
-    const { data: productData, isLoading, error, isFetching } = useProductsPaginated(filters);
+    const { data: productData, isLoading, error, isFetching, isError } = useProductsPaginated(filters);
 
     const { addItem } = useCartWithUtils(user?.name ?? '')
     const [sorting, setSorting] = useState<SortingState>([])
@@ -163,7 +163,6 @@ const ProductListScreen = () => {
             minSize: 100,
             cell: ({ row, getValue }) => {
                 const precioAlt = row.original.precio_venta_alt;
-                // const descuento = (((precio - precioAlt) / precio) * 100).toFixed(0);
                 return (
                     <div className="space-y-1">
                         <div className="font-bold text-green-600">${getValue<number>().toFixed(2)}</div>
@@ -469,7 +468,7 @@ const ProductListScreen = () => {
                 />
                 {/* Results Info */}
                 <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
-                    Showing {products.length} of {productData?.meta.total} products
+                    Mostrando {products.length} de {productData?.meta.total} productos
                     {selectedProducts.length > 0 && (
                         <span className="ml-4 text-blue-600">{selectedProducts.length} selected</span>
                     )}
@@ -500,12 +499,23 @@ const ProductListScreen = () => {
                                 loader={<div className="text-center p-4 text-sm text-gray-500">Cargando más productos...</div>}
                                 scrollableTarget="main-scroll-container"
                             >
-                                <CustomizableTable table={table} />
+                                <CustomizableTable
+                                    table={table}
+                                    isError={isError}
+                                    errorMessage="Ocurrió un error al cargar los productos"
+                                    isLoading={isLoading}
+                                    noDataMessage="No se encontraron productos"
+                                />
                             </InfiniteScroll>
                         ) : (
                             <CustomizableTable
                                 table={table}
+                                isError={isError}
+                                isFetching={isFetching}
                                 isLoading={isLoading}
+                                errorMessage="Ocurrió un error al cargar los productos"
+                                rows={filters.pagina_registros}
+                                noDataMessage="No se encontraron productos"
                             />
                         )}
 

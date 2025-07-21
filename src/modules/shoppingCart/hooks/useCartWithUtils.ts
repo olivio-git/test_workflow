@@ -3,8 +3,9 @@ import { useCartStore } from "./useCartStore";
 import type { CartSummary } from "../types/cart.types";
 import { useStore } from "zustand";
 
-export const useCartWithUtils = (userId: string) => {
-    const cartStore = useCartStore(userId);
+export const useCartWithUtils = (user: string) => {
+    if (!user) user = "guest"
+    const cartStore = useCartStore(user);
     const state = useStore(cartStore, (state) => state)
 
     const incrementQuantity = (productId: number) => {
