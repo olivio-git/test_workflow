@@ -37,7 +37,7 @@ const ProductDetailScreen = () => {
         gestion_2: gestiones.gestion_2,
     })
 
-    const { data: productStockLocalData } = useProductStock({
+    const { data: productStockLocalData, isError: isErrorStockLocalData, isFetching: isFetchingStockLocalData, isLoading: isLoadingStockLocalData } = useProductStock({
         producto: Number(id),
         sucursal: selectedBranchId ? Number(selectedBranchId) : 0,
         resto_only: 0
@@ -53,7 +53,7 @@ const ProductDetailScreen = () => {
         producto: Number(id),
         sucursal: selectedBranchId ? Number(selectedBranchId) : 0,
     })
-    
+
     const [sucursalActiva, setSucursalActiva] = useState("T01")
     useEffect(() => {
         // console.log("Product data loaded:", product)
@@ -142,6 +142,9 @@ const ProductDetailScreen = () => {
                     {/* Overview Tab */}
                     <ProductOverview
                         productStockData={productStockLocalData ?? []}
+                        isError={isErrorStockLocalData}
+                        isFetching={isFetchingStockLocalData}
+                        isLoading={isLoadingStockLocalData}
                     />
 
                     {/* Inventory Tab */}

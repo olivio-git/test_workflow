@@ -11,13 +11,30 @@ import {
     TableRow,
 } from "@/components/atoms/table"
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
+import { Skeleton } from "../atoms/skeleton";
+import ErrorDataComponent from "./errorDataComponent";
+import NoDataComponent from "./noDataComponent";
 interface Props<T> {
     table: Table<T>
     renderBottomRow?: () => React.ReactNode;
     isLoading?: boolean;
+    isFetching?: boolean
+    isError?: boolean,
+    rows?: number
+    errorMessage?: string
+    noDataMessage?: string
 }
 
-const CustomizableTable = <T,>({ table, renderBottomRow, isLoading }: Props<T>) => {
+const CustomizableTable = <T,>({
+    table,
+    renderBottomRow,
+    isLoading,
+    isFetching,
+    isError,
+    rows,
+    errorMessage,
+    noDataMessage
+}: Props<T>) => {
 
     return (
         <AtomTable className="w-full table-fixed text-xs">
@@ -63,11 +80,40 @@ const CustomizableTable = <T,>({ table, renderBottomRow, isLoading }: Props<T>) 
                 ))}
             </TableHeader>
             <TableBody className="divide-y divide-gray-200">
-                {isLoading ? (
+                {isLoading || isFetching ? (
+                    [...Array(rows || 25)].map((_, rowIndex) => (
+                        <TableRow key={`skeleton-row-${rowIndex}`}>
+                            {table.getVisibleFlatColumns().map((column, colIndex) => (
+                                <TableCell
+                                    key={`skeleton-cell-${rowIndex}-${colIndex}`}
+                                    style={{ width: column.getSize() }}
+                                >
+                                    <Skeleton className="h-6 w-full rounded" />
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    ))
+                ) : isError ? (
                     <TableRow>
-                        <TableCell colSpan={table.getVisibleFlatColumns().length} className="text-center py-10">
-                            {/* <Spinner className="mx-auto mb-2" /> */}
-                            <span className="text-gray-500">Cargando datos...</span>
+                        <TableCell
+                            colSpan={table.getVisibleFlatColumns().length}
+                            className="text-center"
+                        >
+                            <ErrorDataComponent
+                                errorMessage={errorMessage}
+                            // onRetry={() => { }}
+                            />
+                        </TableCell>
+                    </TableRow>
+                ) : table.getRowModel().rows.length === 0 ? (
+                    <TableRow>
+                        <TableCell
+                            colSpan={table.getVisibleFlatColumns().length}
+                            className="text-center"
+                        >
+                            <NoDataComponent
+                                message={noDataMessage}
+                            />
                         </TableCell>
                     </TableRow>
                 ) : (

@@ -8,10 +8,16 @@ import CustomizableTable from "@/components/common/CustomizableTable";
 import { format } from "date-fns";
 
 interface ProductOverviewProps {
-    productStockData: ProductStock[]
+    productStockData: ProductStock[],
+    isLoading: boolean;
+    isFetching: boolean
+    isError: boolean,
 }
 const ProductOverview: React.FC<ProductOverviewProps> = ({
-    productStockData
+    productStockData,
+    isError,
+    isFetching,
+    isLoading,
 }) => {
     const imagenProducto = null
     const compraReciente = productStockData.length > 0
@@ -200,6 +206,11 @@ const ProductOverview: React.FC<ProductOverviewProps> = ({
                             <div className="overflow-x-auto">
                                 <CustomizableTable
                                     table={table}
+                                    isError={isError}
+                                    isFetching={isFetching}
+                                    isLoading={isLoading}
+                                    errorMessage="Ocurrió un error al cargar los productos"
+                                    noDataMessage="No se encontraron productos"
                                 />
                             </div>
                         </CardContent>
