@@ -122,11 +122,11 @@ const ProductOverview: React.FC<ProductOverviewProps> = ({
         enableRowSelection: true,
     })
     return (
-        <TabsContent value="overview" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Main Content */}
-                <div className={`lg:${compraReciente ? 'col-span-3' : 'col-span-2'} space-y-8`}>
-                    <div className={`grid grid-cols-1 ${compraReciente ? 'md:grid-cols-5' : ''} gap-8`}>
+                <div className={`lg:${compraReciente ? 'col-span-3' : 'col-span-2'} space-y-4`}>
+                    <div className={`grid grid-cols-1 ${compraReciente ? 'md:grid-cols-5' : ''} gap-4`}>
                         {/* Compra más reciente - Diseño simple */}
                         {
                             compraReciente && (
@@ -220,7 +220,7 @@ const ProductOverview: React.FC<ProductOverviewProps> = ({
                 {/* Sidebar */}
                 {
                     !compraReciente && (
-                        <div className="space-y-8">
+                        <div className="space-y-4">
                             {/* Product Image */}
                             <Card className="bg-white border border-gray-200">
                                 <CardHeader>

@@ -15,7 +15,7 @@ const NoDataComponent: React.FC<NoDataProps> = ({
                     {message ?? 'No se encontraron datos'}
                 </h3>
                 <p className="text-sm text-blue-400 leading-relaxed">
-                    Intenta ajustar los filtros de búsqueda o verifica que los códigos estén escritos correctamente.
+                    Actualmente no hay datos disponibles para mostrar.
                 </p>
             </div>
         </div>

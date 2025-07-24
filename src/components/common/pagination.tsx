@@ -78,7 +78,7 @@ const Pagination: React.FC<PaginationProps> = ({
             <div className="flex items-center gap-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-0">Mostrar:</label>
                 <Select value={showRows.toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger>
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border border-gray-200 shadow-lg">
@@ -97,7 +97,7 @@ const Pagination: React.FC<PaginationProps> = ({
                     variant="outline"
                     onClick={handlePrevious}
                     disabled={currentPage === 1}
-                    className="cursor-pointer disabled:cursor-not-allowed size-9"
+                    className="cursor-pointer disabled:cursor-not-allowed size-8"
                 >
                     <ChevronLeftIcon className="size-4" />
                 </Button>
@@ -113,7 +113,7 @@ const Pagination: React.FC<PaginationProps> = ({
                             <Button
                                 variant={page === currentPage ? "default" : 'outline'} size="sm"
                                 onClick={() => handlePageClick(page)}
-                                className="cursor-pointe min-w-9"
+                                className="cursor-pointer min-w-8"
                             >
                                 {page}
                             </Button>
@@ -126,7 +126,7 @@ const Pagination: React.FC<PaginationProps> = ({
                     variant="outline"
                     onClick={handleNext}
                     disabled={currentPage === totalPages}
-                    className="cursor-pointer disabled:cursor-not-allowed size-9"
+                    className="cursor-pointer disabled:cursor-not-allowed size-8"
                 >
                     <ChevronRightIcon className="size-4" />
                 </Button>

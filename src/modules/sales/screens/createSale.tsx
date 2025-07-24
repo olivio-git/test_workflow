@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ShoppingCart, Edit3, Save, Trash2 } from "lucide-react";
+import { ShoppingCart, Edit3, Save, Trash2, CornerUpLeft } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Label } from "@/components/atoms/label";
@@ -17,6 +17,7 @@ import { FormProvider, useForm, useWatch, Controller } from "react-hook-form";
 import { SaleSchema } from "../schemas/sales.schema";
 import type { Sale, SaleDetail } from "../types/sale";
 import { zodResolver } from "@hookform/resolvers/zod";
+import SalesSummary from "../components/salesSummary";
 
 export interface Product {
     id: string;
@@ -62,6 +63,7 @@ const CreateSale = () => {
         control,
         handleSubmit,
         setValue,
+        getValues,
         formState: { errors }
     } = methods
 
@@ -159,11 +161,14 @@ const CreateSale = () => {
 
         // Mostrar toast de éxito
         handleCheckout();
+        console.log(data)
     };
 
     // FUNCIÓN para manejar errores del formulario
     const onError = (errors: any) => {
-        if (watch('detalles').length <= 0) {
+        const values = getValues()
+        console.log(values)
+        if (values.detalles && values.detalles.length <= 0) {
             toast({
                 title: "Ha ocurrido un error",
                 description: `Para realizar una venta debes agregar al menos un producto`,
@@ -171,29 +176,38 @@ const CreateSale = () => {
             });
         }
         console.log("Errores del formulario:", errors);
+        console.log(values)
     };
 
+    const onSearchChange=(value:string)=>{
+        console.log(value)
+    }
     return (
         <div className="min-h-screen">
             <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit, onError)} className="max-w-7xl mx-auto p-2">
                     {/* Header */}
-                    <div className="flex items-center mb-2">
-                        <h1 className="text-xl font-bold text-gray-900">Nueva Venta</h1>
+                    <div className="flex gap-2 items-center mb-2">
+                        <Button
+                            type="button"
+                            size={'sm'}
+                            variant={'outline'}
+                            className="cursor-pointer"
+                        >
+                            <CornerUpLeft />
+                            {/* Atras */}
+                        </Button>
+                        <h1 className="text-lg font-bold text-gray-900">Nueva Venta</h1>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         {/* Formulario de información de venta - Columna izquierda */}
-                        <div className="lg:col-span-2 space-y-6">
+                        <div className="lg:col-span-2 space-y-4">
                             {/* 1. Datos de la Venta */}
                             <Card className="border-0 shadow-sm">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="text-lg font-medium flex items-center">
-                                        Datos de la Venta
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                <CardContent className="space-y-3 py-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <div>
                                             <Label htmlFor="fechaVenta" className="text-sm font-medium text-gray-700 mb-2">Fecha de Venta *</Label>
                                             <Input
@@ -231,7 +245,6 @@ const CreateSale = () => {
                                                 {...register("nro_comprobante")}
                                                 placeholder="Número de comprobante"
                                             />
-                                            {errors.nro_comprobante && <p className="text-red-500 text-sm mt-1">{errors.nro_comprobante.message}</p>}
                                         </div>
                                         <div>
                                             <Label htmlFor="nroComprobanteSecundario" className="text-sm font-medium text-gray-700 mb-2">N° Comprobante Secundario</Label>
@@ -251,10 +264,11 @@ const CreateSale = () => {
                                                         <SelectTrigger>
                                                             <SelectValue placeholder="Selecciona un responsable" />
                                                         </SelectTrigger>
-                                                        <SelectContent>
+                                                        <SelectContent showSearch={true} onSearchChange={onSearchChange}>
                                                             <SelectItem value="1">VARGAS MADELEN</SelectItem>
                                                             <SelectItem value="2">GARCIA LUIS</SelectItem>
                                                             <SelectItem value="3">RODRIGUEZ ANA</SelectItem>
+                                                            <SelectItem value="4">ROMRIGUEZ ANA</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 )}
@@ -377,7 +391,7 @@ const CreateSale = () => {
                                                                 </Badge>
                                                                 <span className="text-xs text-gray-500">{product.product.marca}</span>
                                                             </div>
-                                                            <h4 className="font-medium text-gray-900 mb-1">{product.product.descripcion}</h4>
+                                                            <h4 className="text-sm font-medium text-gray-900 mb-1">{product.product.descripcion}</h4>
 
                                                             <div className="grid grid-cols-3 gap-3">
                                                                 <div>
@@ -511,152 +525,24 @@ const CreateSale = () => {
 
                         {/* Resumen del pedido - Columna derecha */}
                         <div className="space-y-6">
-                            <Card className="border-0 shadow-sm">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="text-lg font-medium flex items-center">
-                                        <ShoppingCart className="h-5 w-5 mr-2" />
-                                        Resumen de Venta
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-600">Cliente:</span>
-                                        <Badge className="bg-gray-100 text-gray-800">{watch("cliente_nombre")}</Badge>
-                                    </div>
-
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-600">Responsable:</span>
-                                        <span className="text-sm font-medium">{watch("id_responsable")}</span>
-                                    </div>
-
-                                    <div className="space-y-3 py-4 border-t border-b border-gray-200">
-                                        {/* Descuento */}
-                                        <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-sm font-medium text-gray-700">Descuento</span>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <Label className="text-xs text-gray-600">Porcentaje (%)</Label>
-                                                    {editingGlobalPercent ? (
-                                                        <Input
-                                                            value={discountPercent?.toString()}
-                                                            onChange={(e) => setDiscountPercent(parseFloat(e.target.value) || 0)}
-                                                            onBlur={(e) => handleGlobalPercentSubmit(e.target.value)}
-                                                            onKeyDown={(e) => e.key === 'Enter' && handleGlobalPercentSubmit(e.currentTarget.value)}
-                                                            className="h-8 text-sm"
-                                                            type="number"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.1"
-                                                            autoFocus
-                                                        />
-                                                    ) : (
-                                                        <Button
-                                                            type="button"
-                                                            onClick={() => setEditingGlobalPercent(true)}
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
-                                                        >
-                                                            {discountPercent ?? 0}%
-                                                        </Button>
-                                                    )}
-                                                </div>
-
-                                                <div>
-                                                    <Label className="text-xs text-gray-600">Monto ($)</Label>
-                                                    {editingGlobalAmount ? (
-                                                        <Input
-                                                            value={discountAmount?.toString()}
-                                                            onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                                                            onBlur={(e) => handleGlobalAmountSubmit(e.target.value)}
-                                                            onKeyDown={(e) => e.key === 'Enter' && handleGlobalAmountSubmit(e.currentTarget.value)}
-                                                            className="h-8 text-sm"
-                                                            type="number"
-                                                            min="0"
-                                                            step="0.01"
-                                                            autoFocus
-                                                        />
-                                                    ) : (
-                                                        <Button
-                                                            type="button"
-                                                            onClick={() => setEditingGlobalAmount(true)}
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
-                                                        >
-                                                            ${discountAmount?.toFixed(2) ?? 0.00}
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex gap-1">
-                                                {[5, 10, 15, 20].map((percentage) => (
-                                                    <Button
-                                                        key={percentage}
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="text-xs h-7 px-2 border-orange-300 text-orange-700 hover:bg-orange-100"
-                                                        onClick={() => setDiscountPercent(percentage)}
-                                                    >
-                                                        {percentage}%
-                                                    </Button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-sm text-gray-600">Subtotal:</span>
-                                            <span className="font-medium">${subtotal.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-sm text-gray-600">Descuento ({discountPercent?.toFixed(2)}%):</span>
-                                            <span className="font-medium text-orange-600">-${discountAmount?.toFixed(2)}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-between items-center py-2">
-                                        <span className="text-lg font-semibold">TOTAL:</span>
-                                        <span className="text-2xl font-bold text-gray-900">${total.toFixed(2)}</span>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        {/* Botón de submit */}
-                                        <Button
-                                            type="submit"
-                                            disabled={isPending}
-                                            className="w-full bg-black hover:bg-gray-800 text-white py-3 font-medium"
-                                        >
-                                            <Save className="mr-2" />
-                                            {isPending ? "Registrando..." : "Registrar Venta"}
-                                        </Button>
-
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            className="w-full py-3 font-medium"
-                                            onClick={() => {
-                                                reset();
-                                                clearCart();
-                                            }}
-                                        >
-                                            Nueva Venta
-                                        </Button>
-
-                                        <Button
-                                            type="button"
-                                            disabled
-                                            variant="ghost"
-                                            className="w-full py-3 font-medium text-red-600 hover:text-red-700 hover:bg-red-50"
-                                        >
-                                            Eliminar
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <SalesSummary
+                                clearCart={clearCart}
+                                discountAmount={discountAmount || 0}
+                                discountPercent={discountPercent || 0}
+                                editingGlobalAmount={editingGlobalAmount}
+                                editingGlobalPercent={editingGlobalPercent}
+                                handleGlobalAmountSubmit={handleGlobalAmountSubmit}
+                                handleGlobalPercentSubmit={handleGlobalPercentSubmit}
+                                isPending={isPending}
+                                reset={reset}
+                                setDiscountAmount={setDiscountAmount}
+                                setDiscountPercent={setDiscountPercent}
+                                setEditingGlobalAmount={setEditingGlobalAmount}
+                                setEditingGlobalPercent={setEditingGlobalPercent}
+                                subtotal={subtotal}
+                                total={total}
+                                watch={watch}
+                            />
                         </div>
                     </div>
                 </form>

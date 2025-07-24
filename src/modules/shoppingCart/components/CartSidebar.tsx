@@ -75,7 +75,7 @@ const CartSidebar = ({
                     </SheetDescription>
                 </SheetHeader>
 
-                <div className="mt-2 max-h-[90vh] h-full">
+                <div className="mt-2 max-h-[87vh] h-full">
                     {cart.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                             <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-50" />

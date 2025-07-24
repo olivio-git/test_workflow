@@ -6,16 +6,27 @@ import { ArrowDownRight, ArrowUpRight, TrendingUp } from "lucide-react";
 import type { ProductSalesItem, ProductSalesStats } from "../../types/ProductSalesStats";
 import CustomizableTable from "@/components/common/CustomizableTable";
 import { TableCell, TableRow } from "@/components/atoms/table";
+import { YearSelector } from "@/components/common/YearSelector";
 
 interface ProductSalesProps {
     gestion_1: number;
     gestion_2: number;
+    handleChangeGestion1: (value: string) => void
+    handleChangeGestion2: (value: string) => void
     productSalesData: ProductSalesStats
+    isLoadingData: boolean,
+    isFetchingData: boolean
+    isErrorData: boolean
 }
 const ProductSales: React.FC<ProductSalesProps> = ({
     gestion_1,
     gestion_2,
-    productSalesData
+    handleChangeGestion1,
+    handleChangeGestion2,
+    productSalesData,
+    isLoadingData,
+    isErrorData,
+    isFetchingData
 }) => {
     // Calcular totales y métricas
     const totalVentasActual = productSalesData?.data.reduce((sum, venta) => sum + venta.gestion_2, 0) ?? 0
@@ -93,16 +104,29 @@ const ProductSales: React.FC<ProductSalesProps> = ({
                     <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
                         <TrendingUp className="h-5 w-5 text-gray-700" />
                         Análisis de Ventas Anuales
-                        <Badge variant={diferenciaTotalVentas >= 0 ? "default" : "destructive"} className="ml-auto">
-                            {diferenciaTotalVentas >= 0 ? "+" : ""}
-                            {diferenciaTotalVentas} vs año anterior
-                        </Badge>
+                        <div className="flex items-center ml-auto gap-4">
+                            <YearSelector
+                                value={gestion_1.toString()}
+                                onValueChange={handleChangeGestion1}
+                            />
+                            <YearSelector
+                                value={gestion_2.toString()}
+                                onValueChange={handleChangeGestion2}
+                            />
+                            <Badge variant={diferenciaTotalVentas >= 0 ? "default" : "destructive"}>
+                                {diferenciaTotalVentas >= 0 ? "+" : ""}
+                                {diferenciaTotalVentas} vs año anterior
+                            </Badge>
+                        </div>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto">
                         <CustomizableTable
                             table={table}
+                            isLoading={isLoadingData}
+                            isError={isErrorData}
+                            isFetching={isFetchingData}
                             renderBottomRow={() => (
                                 <TableRow className="bg-gray-50 font-bold">
                                     <TableCell className="font-bold p-1">TOTAL</TableCell>
