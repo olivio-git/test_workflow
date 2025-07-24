@@ -1,6 +1,6 @@
 import type RouteType from "./RouteType";
 import Content from "@/modules/dashboard/screens/content";
-import { BoxIcon, Layers, LayoutDashboardIcon, Package, ShoppingBag, Table2Icon, TableCellsMerge } from "lucide-react";
+import { BoxIcon, LayoutDashboardIcon, Package, ShoppingBag, Table2Icon, TableCellsMerge } from "lucide-react";
 import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
