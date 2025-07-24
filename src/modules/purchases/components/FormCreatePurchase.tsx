@@ -7,17 +7,7 @@ import { type FormData } from "../hooks/usePurchaseForm";
 
 const proveedores = [
   { id: 71, proveedor: "JUANMOTORS" },
-  { id: 72, proveedor: "AUTOPARTS SRL" },
-  { id: 70, proveedor: "REPUESTOS DEL SUR" },
-  { id: 4, proveedor: "MOTOIMPORT" },
-  { id: 5, proveedor: "MECANICA TOTAL" },
-  { id: 6, proveedor: "PARTES EXPRESS" },
-  { id: 7, proveedor: "MOTORLINE" },
-  { id: 8, proveedor: "REPUESTOS LEONE" },
-  { id: 9, proveedor: "AUTOMUNDO" },
-  { id: 10, proveedor: "MOTOPIEZAS" },
-  { id: 11, proveedor: "REPUESTOS RIVERA" },
-  { id: 12, proveedor: "MOTOCENTER" },
+  { id: 72, proveedor: "AUTOPARTS SRL" }
 ];
 
 // const tipoCompra = [

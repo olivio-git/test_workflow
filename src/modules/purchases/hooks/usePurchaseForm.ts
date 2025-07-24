@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
 import { apiConstructor } from "@/modules/products/services/api";
+import { toast } from "@/hooks/use-toast";
+
 
 export interface FormData {
   fecha: string;
@@ -92,6 +94,7 @@ export function usePurchaseForm(initialBranch: number) {
     try {
       await apiConstructor({ url: "/purchases", method: "POST", data: formData });
       reset();
+      toast({ title: "Compra creada exitosamente", description: "La compra se ha guardado correctamente." });
     } finally {
       setIsLoading(false);
     }

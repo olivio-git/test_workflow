@@ -243,10 +243,9 @@ export default function DialogSearchDetails({
                           <p className="text-sm font-semibold text-green-600">
                             ${product.precio_venta}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            Stock: {product.stock_actual}{" "}
-                            {product.unidad_medida}
-                          </p>
+                            <p className="text-sm text-gray-500">
+                            Stock: {parseInt(product.stock_actual, 10)} {product.unidad_medida}
+                            </p>
                         </div>
                       </div>
                     </div>

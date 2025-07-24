@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react"; 
 import { Package, Wand2, Save } from "lucide-react";
 import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";  
@@ -7,6 +6,7 @@ import { Button } from "@/components/atoms/button";
 import { useQuery } from "@tanstack/react-query";
 import { apiConstructor } from "../services/api";
 import { ComboboxSelect } from "./SelectCombobox";
+import { toast } from "@/hooks/use-toast";
 
 interface Category {
   id: number;
@@ -42,8 +42,7 @@ interface FormTouched {
   [key: string]: boolean;
 }
 
-const FormCreateProduct: React.FC = () => {
-  const { toast } = useToast();
+const FormCreateProduct: React.FC = () => { 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<FormTouched>({});
@@ -335,7 +334,12 @@ const FormCreateProduct: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await apiConstructor({ url: '/products', data: formData, method: "POST" });
-      alert("Producto creado con exito\nCodigo interno: "+response?.codigo_interno)
+      toast({
+        title: "Producto creado",
+        description: `El producto ${formData.descripcion} ha sido creado exitosamente. Código: ${response?.codigo_interno}`,
+        variant:"destructive",
+        color: "green",
+      }); 
       resetForm();
     } catch (error) {
       toast({
