@@ -8,6 +8,8 @@ export default function SearchButton({ onClick }: { onClick: () => void }) {
     <Button
       type="button"
       onClick={onClick}
+      size={'sm'}
+      variant={'outline'}
       className="bg-white border border-gray-200 rounded-lg"
     >
       <SearchIcon className="w-4 h-4 text-gray-400" />

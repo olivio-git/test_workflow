@@ -9,9 +9,13 @@ import { Badge } from "@/components/atoms/badge";
 
 interface ProductInventoryProps {
     productStockData: ProductStock[]
+    isLoadingData: boolean
+    isErrorData: boolean
 }
 const ProductInventory: React.FC<ProductInventoryProps> = ({
-    productStockData
+    productStockData,
+    isErrorData,
+    isLoadingData
 }) => {
 
     const columns: ColumnDef<ProductStock>[] = [
@@ -103,6 +107,8 @@ const ProductInventory: React.FC<ProductInventoryProps> = ({
                     <div className="overflow-x-auto">
                         <CustomizableTable
                             table={table}
+                            isLoading={isLoadingData}
+                            isError={isErrorData}
                         />
                     </div>
                 </CardContent>

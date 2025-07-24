@@ -17,7 +17,7 @@ import NoDataComponent from "./noDataComponent";
 interface Props<T> {
     table: Table<T>
     renderBottomRow?: () => React.ReactNode;
-    isLoading?: boolean;
+    isLoading: boolean;
     isFetching?: boolean
     isError?: boolean,
     rows?: number
@@ -71,7 +71,7 @@ const CustomizableTable = <T,>({
                                     <div
                                         onMouseDown={header.getResizeHandler()}
                                         onTouchStart={header.getResizeHandler()}
-                                        className="absolute right-0 top-0 h-full w-px cursor-col-resize bg-gray-200 group-hover:bg-blue-400"
+                                        className="absolute right-0 top-0 h-full w-px group-hover:w-1 cursor-col-resize bg-gray-200 group-hover:bg-blue-300 transition-all duration-300"
                                     />
                                 )}
                             </TableHead>

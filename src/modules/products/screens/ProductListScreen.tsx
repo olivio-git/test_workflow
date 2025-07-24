@@ -7,6 +7,7 @@ import {
     Settings,
     Eye,
     ShoppingCart,
+    Loader2,
 } from "lucide-react"
 import { Button } from "@/components/atoms/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
@@ -55,18 +56,18 @@ const ProductListScreen = () => {
     const COLUMN_VISIBILITY_KEY = `product-columns-${user?.name}`;
 
     useEffect(() => {
-        const savedVisibility = sessionStorage.getItem(COLUMN_VISIBILITY_KEY);
+        const savedVisibility = localStorage.getItem(COLUMN_VISIBILITY_KEY);
         if (savedVisibility) {
             try {
                 setColumnVisibility(JSON.parse(savedVisibility));
             } catch {
-                sessionStorage.removeItem(COLUMN_VISIBILITY_KEY);
+                localStorage.removeItem(COLUMN_VISIBILITY_KEY);
             }
         }
     }, [user]);
 
     useEffect(() => {
-        sessionStorage.setItem(COLUMN_VISIBILITY_KEY, JSON.stringify(columnVisibility));
+        localStorage.setItem(COLUMN_VISIBILITY_KEY, JSON.stringify(columnVisibility));
     }, [columnVisibility, user]);
 
 
@@ -402,7 +403,7 @@ const ProductListScreen = () => {
                                     placeholder="Buscar productos..."
                                     value={filters.descripcion ?? ""}
                                     onChange={(e) => updateFilter("descripcion", e.target.value)}
-                                    className="pl-10 w-full text-gray-900 text-xs"
+                                    className="pl-10 w-full"
                                 />
                             </div>
                         </div>
@@ -410,7 +411,6 @@ const ProductListScreen = () => {
                         <div className="flex items-center gap-2 flex-wrap md:gap-4">
                             <div className="flex items-center space-x-2">
                                 <Switch
-                                    className="bg-gray-200"
                                     id="infinite-scroll"
                                     checked={isInfiniteScroll}
                                     onCheckedChange={(checked) => {
@@ -420,7 +420,7 @@ const ProductListScreen = () => {
                                         }
                                     }}
                                 />
-                                <Label htmlFor="infinite-scroll" className="text-sm text-gray-700">
+                                <Label htmlFor="infinite-scroll">
                                     Scroll Infinito
                                 </Label>
                             </div>
@@ -475,14 +475,14 @@ const ProductListScreen = () => {
                     <div className="flex items-center gap-2">
                         <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
                         <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                            <SelectTrigger className="h-8">
+                            <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="border border-gray-200 shadow-lg">
-                                <SelectItem className="hover:bg-gray-50" value={"10"}>10</SelectItem>
-                                <SelectItem className="hover:bg-gray-50" value={"25"}>25</SelectItem>
-                                <SelectItem className="hover:bg-gray-50" value={"50"}>50</SelectItem>
-                                <SelectItem className="hover:bg-gray-50" value={"100"}>100</SelectItem>
+                            <SelectContent className="shadow-lg">
+                                <SelectItem value={"10"}>10</SelectItem>
+                                <SelectItem value={"25"}>25</SelectItem>
+                                <SelectItem value={"50"}>50</SelectItem>
+                                <SelectItem value={"100"}>100</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -496,7 +496,12 @@ const ProductListScreen = () => {
                                 dataLength={products.length}
                                 next={() => setPage((filters.pagina || 1) + 1)}
                                 hasMore={products.length < (productData?.meta.total || 0)}
-                                loader={<div className="text-center p-4 text-sm text-gray-500">Cargando más productos...</div>}
+                                loader={
+                                    <div className="flex items-center justify-center gap-2 text-center p-6 text-xs sm:text-sm text-gray-500 bg-gray-50">
+                                        <Loader2 className="size-4 animate-spin" />
+                                        Cargando más productos...
+                                    </div>
+                                }
                                 scrollableTarget="main-scroll-container"
                             >
                                 <CustomizableTable

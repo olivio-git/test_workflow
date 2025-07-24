@@ -9,9 +9,13 @@ import CustomizableTable from "@/components/common/CustomizableTable";
 
 interface ProductLogisticsProps {
     ProductProviderOrders: ProductProviderOrder[]
+    isLoadingData: boolean
+    isErrorData: boolean
 }
 const ProductLogistics: React.FC<ProductLogisticsProps> = ({
-    ProductProviderOrders
+    ProductProviderOrders,
+    isErrorData,
+    isLoadingData
 }) => {
     const columns: ColumnDef<ProductProviderOrder>[] = [
         {
@@ -85,6 +89,8 @@ const ProductLogistics: React.FC<ProductLogisticsProps> = ({
                     <div className="overflow-x-auto">
                         <CustomizableTable
                             table={table}
+                            isLoading={isLoadingData}
+                            isError={isErrorData}
                         />
                     </div>
                 </CardContent>

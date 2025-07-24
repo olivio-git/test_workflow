@@ -138,7 +138,7 @@ const TopNav: React.FC<TopNavProps> = ({
         {renderBreadcrumb()}
       </div>
 
-      <div className="flex items-center gap-2 ml-auto sm:gap-4 sm:ml-0">
+      <div className="flex items-center gap-2 ml-auto sm:gap-3 sm:ml-0">
         <div className="flex items-center gap-4 w-full">
           <SelectBranch></SelectBranch>
         </div>
@@ -146,7 +146,7 @@ const TopNav: React.FC<TopNavProps> = ({
           <SearchButton onClick={() => setOpen(true)} />
           <CommandPalette open={open} setOpen={setOpen} />
         </div>
-        <Button variant="outline" className="relative size-10" size={'sm'} onClick={onOpenCartChange}>
+        <Button variant="outline" className="relative size-8" size={'sm'} onClick={onOpenCartChange}>
           <ShoppingCart className="h-4 w-4" />
           {cartLength() > 0 && (
             <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
@@ -154,12 +154,13 @@ const TopNav: React.FC<TopNavProps> = ({
             </Badge>
           )}
         </Button>
-        <button
+        <Button
+          variant={'outline'}
           type="button"
-          className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="flex items-center justify-center hover:bg-gray-100 transition-colors size-8"
         >
           <Bell className="w-4 h-4 text-gray-600 sm:h-5 sm:w-5" />
-        </button>
+        </Button>
       </div>
     </nav>
   );
