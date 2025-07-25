@@ -5,8 +5,8 @@ import { Input } from "@/components/atoms/input";
 import { Button } from "@/components/atoms/button";
 import { useQuery } from "@tanstack/react-query";
 import { apiConstructor } from "../services/api";
-import { ComboboxSelect } from "./SelectCombobox";
 import { toast } from "@/hooks/use-toast";
+import { ComboboxSelect } from "@/components/common/SelectCombobox";
 
 interface Category {
   id: number;

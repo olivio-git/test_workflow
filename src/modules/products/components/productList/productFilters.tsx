@@ -1,12 +1,12 @@
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { useCategoriesWithSubcategories } from "@/modules/catalog/hooks/useCategories";
 import { useCommonBrands } from "@/modules/catalog/hooks/useCommonBrands";
 import { Search } from "lucide-react";
 import type { useProductFilters } from "../../hooks/useProductFilters";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
+import { ComboboxSelect } from "@/components/common/SelectCombobox";
 
 interface ProductFiltersProps {
     filters: ReturnType<typeof useProductFilters>["filters"]
@@ -103,80 +103,50 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
             {/* Filters */}
             <div className="p-2 border-b border-gray-200">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Categorias</label>
-                        <Select
-                            value={filters.categoria !== undefined ? String(filters.categoria) : "all"}
-                            onValueChange={(value) => {
+                        <Label>Categorias</Label>
+                        <ComboboxSelect
+                            value={filters.categoria}
+                            onChange={(value) => {
                                 const parsedValue = value === "all" ? undefined : Number(value);
                                 updateFilter("subcategoria", undefined);
                                 updateFilter("categoria", parsedValue);
-                            }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="TODAS" />
-                            </SelectTrigger>
-                            <SelectContent className="border border-gray-200 shadow-lg">
-                                <SelectItem className="hover:bg-gray-50 capitalize" value="all">TODAS</SelectItem>
-                                {categoriesData?.map((category) => (
-                                    <SelectItem key={category.id} className="hover:bg-gray-50 capitalize" value={String(category.id)}>
-                                        {category.categoria}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            }}
+                            options={categoriesData || []}
+                            optionTag={"categoria"}
+                            enableAllOption={true}
+                        />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Subcategorias</label>
-                        <Select
+                        <Label>Subcategorias</Label>
+                        <ComboboxSelect
                             disabled={filters.categoria === undefined}
                             value={filters.subcategoria !== undefined ? String(filters.subcategoria) : "all"}
-                            onValueChange={(value) => {
+                            onChange={(value) => {
                                 const parsedValue = value === "all" ? undefined : Number(value);
                                 updateFilter("subcategoria", parsedValue);
-                            }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="TODAS" />
-                            </SelectTrigger>
-                            <SelectContent className="border border-gray-200 shadow-lg">
-                                <SelectItem className="hover:bg-gray-50" value="all">TODAS</SelectItem>
-                                {categoriesData
-                                    ?.find((cat) => cat.id === filters.categoria)
-                                    ?.subcategorias?.map((sub) => (
-                                        <SelectItem
-                                            key={sub.id}
-                                            value={String(sub.id)}
-                                            className="hover:bg-gray-50"
-                                        >
-                                            {sub.subcategoria}
-                                        </SelectItem>
-                                    ))}
-                            </SelectContent>
-                        </Select>
+                            }}
+                            options={categoriesData
+                                ?.find((cat) => cat.id === filters.categoria)
+                                ?.subcategorias || []}
+                            optionTag={"subcategoria"}
+                            enableAllOption={true}
+                        />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Marca</label>
-                        <Select value={filters.marca ?? "all"}
-                            onValueChange={(value) => {
+                        <Label>Marca</Label>
+                        <ComboboxSelect
+                            value={filters.marca}
+                            onChange={(value) => {
                                 updateFilter("marca", value === "all" ? "" : value);
-                            }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder='TODAS' />
-                            </SelectTrigger>
-                            <SelectContent className="border border-gray-200 shadow-lg">
-                                <SelectItem className="hover:bg-gray-50" value="all">TODAS</SelectItem>
-                                {brandsData?.map((brand) => (
-                                    <SelectItem
-                                        key={brand.id}
-                                        value={brand.marca}
-                                        className="hover:bg-gray-50"
-                                    >
-                                        {brand.marca}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            }}
+                            options={brandsData || []}
+                            optionTag={"marca"}
+                            enableAllOption={true}
+                        />
                     </div>
 
                     <div className="space-y-2">

@@ -15,6 +15,7 @@ export const ProductGetSchema = z.object({
     unidad_medida: z.string(),
     stock_actual: z.string().transform(Number),
     stock_resto: z.string().transform(Number),
+    stock_minimo: z.string().transform(Number).nullable(),
     pedido_transito: z.string().transform(Number),
     pedido_almacen: z.string().transform(Number),
     precio_venta: z.string().transform(Number),
