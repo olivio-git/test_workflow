@@ -18,6 +18,7 @@ import { SaleSchema } from "../schemas/sales.schema";
 import type { Sale, SaleDetail } from "../types/sale";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SalesSummary from "../components/salesSummary";
+import { Kbd } from "@/components/atoms/kbd";
 
 export interface Product {
     id: string;
@@ -195,6 +196,7 @@ const CreateSale = () => {
                             className="cursor-pointer"
                         >
                             <CornerUpLeft />
+                            <Kbd>esc</Kbd>
                             {/* Atras */}
                         </Button>
                         <h1 className="text-lg font-bold text-gray-900">Nueva Venta</h1>

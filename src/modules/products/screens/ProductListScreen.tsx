@@ -90,10 +90,10 @@ const ProductListScreen = () => {
     }, [filters.descripcion, filters.categoria, filters.subcategoria, filters.codigo_oem]);
 
     // Función para determinar el color del stock
-    const getStockColor = (stock: string) => {
-        const stockNum = Number.parseInt(stock)
-        if (stockNum <= 10) return "text-red-600 bg-red-50"
-        if (stockNum <= 50) return "text-yellow-600 bg-yellow-50"
+    const getStockColor = (stock: number, stock_min: number) => {
+        const stockMin: number = stock_min || 10
+        if (stock <= stockMin) return "text-red-600 bg-red-50"
+        if (stock <= (stockMin + 10)) return "text-yellow-600 bg-yellow-50"
         return "text-green-600 bg-green-50"
     }
     const handleProductDetail = (productId: number) => {
@@ -185,10 +185,11 @@ const ProductListScreen = () => {
             size: 110,
             minSize: 100,
             cell: ({ row, getValue }) => {
-                const stock = getValue<string>();
+                const stock = getValue<number>();
+                const stockMin = row.original.stock_minimo || 1;
                 return (
                     <div
-                        className={`flex gap-1 flex-wrap justify-center px-2 py-1 rounded ${getStockColor(stock)}`}
+                        className={`flex gap-1 flex-wrap justify-center px-2 py-1 rounded ${getStockColor(stock, stockMin)}`}
                     >
                         <div className="flex items-center gap-1">
                             <span className="font-medium">{getValue<number>().toFixed(0)}</span>
@@ -415,9 +416,8 @@ const ProductListScreen = () => {
                                     checked={isInfiniteScroll}
                                     onCheckedChange={(checked) => {
                                         setIsInfiniteScroll(checked);
-                                        if (!checked) {
-                                            setPage(1);
-                                        }
+                                        setPage(1);
+                                        setProducts([])
                                     }}
                                 />
                                 <Label htmlFor="infinite-scroll">
@@ -468,7 +468,14 @@ const ProductListScreen = () => {
                 />
                 {/* Results Info */}
                 <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
-                    Mostrando {products.length} de {productData?.meta.total} productos
+                    {
+                        isInfiniteScroll ?
+
+                            `Mostrando ${products.length} de ${productData?.meta.total} productos`
+                            :
+                            `Mostrando ${((filters.pagina ?? 1) * (filters.pagina_registros ?? 1)) - ((filters.pagina_registros ?? 1) - 1)} 
+                            - ${(filters.pagina ?? 1) * (filters.pagina_registros ?? 1)} de ${productData?.meta.total} productos`
+                    }
                     {selectedProducts.length > 0 && (
                         <span className="ml-4 text-blue-600">{selectedProducts.length} selected</span>
                     )}
