@@ -1,46 +1,37 @@
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
-import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Save, ShoppingCart } from "lucide-react";
 import type { UseFormReset, UseFormWatch } from "react-hook-form";
 import type { Sale } from "../types/sale";
+import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice";
+import { EditablePercentage } from "@/modules/shoppingCart/components/EditablePercentage";
 interface SalesSummaryProps {
     isPending: boolean
     clearCart: () => void
-    handleGlobalPercentSubmit: (value: string) => void
-    handleGlobalAmountSubmit: (value: string) => void
     setDiscountPercent: (percent: number) => void
     setDiscountAmount: (amount: number) => void
     watch: UseFormWatch<Sale>
     reset: UseFormReset<Sale>
-    editingGlobalPercent: boolean
-    editingGlobalAmount: boolean
     discountPercent: number
     discountAmount: number
     subtotal: number
     total: number
-    setEditingGlobalPercent: React.Dispatch<React.SetStateAction<boolean>>;
-    setEditingGlobalAmount: React.Dispatch<React.SetStateAction<boolean>>;
+    responsibleName?: string
 }
 const SalesSummary: React.FC<SalesSummaryProps> = ({
     isPending,
     clearCart,
-    handleGlobalPercentSubmit,
-    handleGlobalAmountSubmit,
     setDiscountPercent,
     setDiscountAmount,
     watch,
     reset,
-    editingGlobalPercent,
-    editingGlobalAmount,
     discountPercent,
     discountAmount,
     subtotal,
     total,
-    setEditingGlobalPercent,
-    setEditingGlobalAmount
+    responsibleName
 }) => {
     return (
         <Card className="border-0 shadow-sm">
@@ -53,12 +44,12 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
             <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Cliente:</span>
-                    <Badge className="bg-gray-100 text-gray-800">{watch("cliente_nombre")}</Badge>
+                    <Badge variant={'secondary'}>{watch("cliente_nombre")}</Badge>
                 </div>
 
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Responsable:</span>
-                    <span className="text-sm font-medium">{watch("id_responsable")}</span>
+                    <span className="text-sm font-medium">{responsibleName ?? ''}</span>
                 </div>
 
                 <div className="space-y-3 py-4 border-t border-b border-gray-200">
@@ -71,57 +62,26 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                         <div className="grid grid-cols-2 gap-2">
                             <div>
                                 <Label className="text-xs text-gray-600">Porcentaje (%)</Label>
-                                {editingGlobalPercent ? (
-                                    <Input
-                                        value={discountPercent?.toString()}
-                                        onChange={(e) => setDiscountPercent(parseFloat(e.target.value) || 0)}
-                                        onBlur={(e) => handleGlobalPercentSubmit(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleGlobalPercentSubmit(e.currentTarget.value)}
-                                        className="h-8 text-sm"
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        step="0.1"
-                                        autoFocus
-                                    />
-                                ) : (
-                                    <Button
-                                        type="button"
-                                        onClick={() => setEditingGlobalPercent(true)}
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
-                                    >
-                                        {discountPercent ?? 0}%
-                                    </Button>
-                                )}
+                                <EditablePercentage
+                                    value={discountPercent}
+                                    onSubmit={(value) => setDiscountPercent(value as number)}
+                                    className="w-full"
+                                    buttonClassName="w-full"
+                                    variant="outline"
+                                    showEditIcon={false}
+                                />
                             </div>
 
                             <div>
                                 <Label className="text-xs text-gray-600">Monto ($)</Label>
-                                {editingGlobalAmount ? (
-                                    <Input
-                                        value={discountAmount?.toString()}
-                                        onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                                        onBlur={(e) => handleGlobalAmountSubmit(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleGlobalAmountSubmit(e.currentTarget.value)}
-                                        className="h-8 text-sm"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        autoFocus
-                                    />
-                                ) : (
-                                    <Button
-                                        type="button"
-                                        onClick={() => setEditingGlobalAmount(true)}
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
-                                    >
-                                        ${discountAmount?.toFixed(2) ?? 0.00}
-                                    </Button>
-                                )}
+                                <EditablePrice
+                                    value={discountAmount}
+                                    onSubmit={(value) => setDiscountAmount(value as number)}
+                                    className="w-full"
+                                    buttonClassName="w-full"
+                                    variant="outline"
+                                    showEditIcon={false}
+                                />
                             </div>
                         </div>
 
@@ -160,6 +120,7 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                     <Button
                         type="submit"
                         disabled={isPending}
+                        size={'sm'}
                         className="w-full bg-black hover:bg-gray-800 text-white py-3 font-medium"
                     >
                         <Save className="mr-2" />
@@ -168,6 +129,7 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
 
                     <Button
                         type="button"
+                        size={'sm'}
                         variant="outline"
                         className="w-full py-3 font-medium"
                         onClick={() => {
@@ -179,6 +141,7 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                     </Button>
 
                     <Button
+                        size={'sm'}
                         type="button"
                         disabled
                         variant="ghost"

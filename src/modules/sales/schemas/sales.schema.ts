@@ -3,9 +3,9 @@ import { z } from "zod";
 export const SaleDetailSchema = z.object({
   id_producto: z.number(),
   cantidad: z.number().positive(),
-  precio: z.number().nonnegative(),
-  descuento: z.number().nonnegative(),
-  porcentaje_descuento: z.number().nonnegative()
+  precio: z.number().nonnegative().transform((val) => parseFloat(val.toFixed(5))),
+  descuento: z.number().nonnegative().transform((val) => parseFloat(val.toFixed(5))),
+  porcentaje_descuento: z.number().nonnegative().transform((val) => parseFloat(val.toFixed(5))),
 });
 
 export const SaleSchema = z.object({
