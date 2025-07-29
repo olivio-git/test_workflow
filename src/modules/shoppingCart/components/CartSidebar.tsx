@@ -128,7 +128,7 @@ const CartSidebar = ({
                                                             size="sm"
                                                             className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
                                                         >
-                                                            {discountPercent ?? 0}%
+                                                            {discountPercent?.toFixed(2) ?? 0}%
                                                         </Button>
                                                     )}
                                                 </div>
@@ -174,14 +174,17 @@ const CartSidebar = ({
                                     <Separator />
 
                                     <div className="grid sm:grid-cols-2 gap-2">
-                                        <Button className="w-full cursor-pointer" size="lg" onClick={() => {
+                                        <Button
+                                         className="w-full cursor-pointer" size={"sm"} onClick={() => {
                                             navigate('/dashboard/create-sale')
                                             onOpenChange(false)
                                         }}>
                                             <CreditCard className="w-4 h-4 mr-2" />
                                             Proceder a la Venta
                                         </Button>
-                                        <Button variant="outline" className="w-full bg-transparent cursor-pointer">
+                                        <Button 
+                                        size={'sm'}
+                                        variant="outline" className="w-full cursor-pointer">
                                             <Receipt className="w-4 h-4 mr-2" />
                                             Guardar Cotización
                                         </Button>

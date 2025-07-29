@@ -440,6 +440,7 @@ const ProductListScreen = () => {
                                                 key={column.id}
                                                 className="flex items-center space-x-2 cursor-pointer"
                                                 onSelect={(e) => e.preventDefault()}
+                                                onClick={() => column.toggleVisibility(!column.getIsVisible())}
                                             >
                                                 <Checkbox
                                                     className="border border-gray-400"
