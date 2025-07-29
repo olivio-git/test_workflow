@@ -71,7 +71,7 @@ const CartSidebar = ({
                         }
                     </SheetTitle>
                     <SheetDescription className="-mt-2" >
-                            {cart.length} productos en el carrito
+                        {cart.length} productos en el carrito
                     </SheetDescription>
                 </SheetHeader>
 
@@ -83,7 +83,7 @@ const CartSidebar = ({
                         </div>
                     ) : (
                         <div className="flex flex-col gap-2 justify-between h-full">
-                            <div className="space-y-4 grow overflow-y-auto">
+                            <div className="space-y-2 grow overflow-y-auto">
                                 {cart.map((item) => (
                                     <CartItemComponent
                                         key={item.product.id}
@@ -175,16 +175,16 @@ const CartSidebar = ({
 
                                     <div className="grid sm:grid-cols-2 gap-2">
                                         <Button
-                                         className="w-full cursor-pointer" size={"sm"} onClick={() => {
-                                            navigate('/dashboard/create-sale')
-                                            onOpenChange(false)
-                                        }}>
+                                            className="w-full cursor-pointer" size={"sm"} onClick={() => {
+                                                navigate('/dashboard/create-sale')
+                                                onOpenChange(false)
+                                            }}>
                                             <CreditCard className="w-4 h-4 mr-2" />
                                             Proceder a la Venta
                                         </Button>
-                                        <Button 
-                                        size={'sm'}
-                                        variant="outline" className="w-full cursor-pointer">
+                                        <Button
+                                            size={'sm'}
+                                            variant="outline" className="w-full cursor-pointer">
                                             <Receipt className="w-4 h-4 mr-2" />
                                             Guardar Cotización
                                         </Button>

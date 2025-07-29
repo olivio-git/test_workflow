@@ -461,7 +461,7 @@ const CreateSale = () => {
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-3 mb-1">
                                                                 <Badge variant="secondary" className="text-xs">
-                                                                    {product.product.id}
+                                                                    {product.product.categoria}
                                                                 </Badge>
                                                                 <span className="text-xs text-gray-500">{product.product.marca}</span>
                                                             </div>
