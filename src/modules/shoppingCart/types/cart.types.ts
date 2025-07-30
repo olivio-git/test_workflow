@@ -6,11 +6,13 @@ export type CartItem = {
     customPrice: number;
     customSubtotal: number;
 };
+type DiscountMode = 'amount' | 'percent' | null
 
 export type CartState = {
     items: CartItem[];
-    discountAmount?: number
-    discountPercent?: number
+    discountAmount: number
+    discountPercent: number
+    discountMode: DiscountMode
 
     addItem: (item: ProductGet) => void
     removeItem: (productId: number) => void
@@ -30,6 +32,7 @@ export type CartState = {
     getDiscountAmount: () => number;
     isItemInCart: (productId: number) => boolean;
     getItemQuantity: (productId: number) => number;
+    recalculateDiscount: () => void;
 };
 
 export interface CartSummary {

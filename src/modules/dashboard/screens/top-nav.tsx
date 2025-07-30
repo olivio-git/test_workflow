@@ -11,6 +11,8 @@ import { Button } from "@/components/atoms/button";
 import { Badge } from "@/components/atoms/badge";
 import authSDK from "@/services/sdk-simple-auth";
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils";
+import { TooltipWrapper } from "@/components/common/TooltipWrapper ";
+import ShortcutKey from "@/components/common/ShortcutKey";
 
 interface TopNavProps {
   isSidebarMenuOpen: boolean;
@@ -125,16 +127,18 @@ const TopNav: React.FC<TopNavProps> = ({
   return (
     <nav className="flex items-center justify-between h-full px-2 bg-white border-b border-gray-200 sm:px-4">
       <div className="font-medium text-sm flex items-center space-x-1 truncate w-full">
-        <button
+        <Button
           onClick={() => handleToogleSidebarMenu()}
-          className="rounded p-1.5 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+          variant={'outline'}
+          size={'sm'}
+          className="cursor-pointer size-8"
         >
           {isSidebarMenuOpen ? (
             <PanelLeftClose className="size-4 text-gray-800" />
           ) : (
             <PanelLeftOpen className="size-4 text-gray-800" />
           )}
-        </button>
+        </Button>
         {renderBreadcrumb()}
       </div>
 
@@ -146,14 +150,20 @@ const TopNav: React.FC<TopNavProps> = ({
           <SearchButton onClick={() => setOpen(true)} />
           <CommandPalette open={open} setOpen={setOpen} />
         </div>
-        <Button variant="outline" className="relative size-8" size={'sm'} onClick={onOpenCartChange}>
-          <ShoppingCart className="h-4 w-4" />
-          {cartLength() > 0 && (
-            <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
-              {cartLength()}
-            </Badge>
-          )}
-        </Button>
+        <TooltipWrapper
+          tooltip={
+            <p>Presiona <ShortcutKey combo="alt+c" /> para abrir el carrito</p>
+          }
+        >
+          <Button variant="outline" className="relative size-8 cursor-pointer" size={'sm'} onClick={onOpenCartChange}>
+            <ShoppingCart className="h-4 w-4" />
+            {cartLength() > 0 && (
+              <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                {cartLength()}
+              </Badge>
+            )}
+          </Button>
+        </TooltipWrapper>
         <Button
           variant={'outline'}
           type="button"

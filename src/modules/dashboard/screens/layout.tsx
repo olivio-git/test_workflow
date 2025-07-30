@@ -4,12 +4,13 @@ import { useEffect, useState } from "react"
 import Sidebar from "./sidebar"
 import CartSidebar from "@/modules/shoppingCart/components/CartSidebar"
 import { useCartUiStore } from "@/modules/shoppingCart/store/cartUiStore"
+import { useHotkeys } from "react-hotkeys-hook"
 interface LayoutProps {
   children: ReactNode
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { isOpen, close, toggle } = useCartUiStore()
+  const { isOpen, close, toggle, open } = useCartUiStore()
   const [mounted, setMounted] = useState(false)
   const [isSidebarMenuOpen, setIsSidebarMenuOpen] = useState(() => {
     if (typeof window !== "undefined") {
@@ -49,6 +50,12 @@ export default function Layout({ children }: LayoutProps) {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useHotkeys('alt+c', () => {
+    if (!isOpen) open();
+  }, {
+    enabled: !isOpen
+  });
 
   if (!mounted) {
     return null

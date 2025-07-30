@@ -20,6 +20,7 @@ import ProductInventory from "../components/productDetail/ProductInventory"
 import ProductLogistics from "../components/productDetail/ProductLogistics"
 import { useProductProviderOrders } from "../hooks/useProductProviderOrders"
 import ProductDetailSkeleton from "../components/productDetail/ProductDetailSkeleton"
+import ErrorDataComponent from "@/components/common/errorDataComponent"
 
 const ProductDetailScreen = () => {
     const { id } = useParams()
@@ -32,7 +33,8 @@ const ProductDetailScreen = () => {
     const {
         data: product,
         isLoading: isLoadingProduct,
-        // isError: isErrorProduct,
+        isError: isErrorProduct,
+        refetch: refetchProduct,
         // isFetching: isFetchingProduct
     } = useProductById(Number(id))
 
@@ -95,6 +97,10 @@ const ProductDetailScreen = () => {
             ...prev,
             gestion_2: parseInt(value)
         }))
+    }
+
+    const handleRetry = () => {
+        refetchProduct()
     }
     //     components/
     // │   └── detail/
@@ -178,43 +184,51 @@ const ProductDetailScreen = () => {
                                     </div>
                                 </div>
 
-                                {/* Overview Tab */}
-                                <ProductOverview
-                                    productStockData={productStockLocalData ?? []}
-                                    isError={isErrorStockLocalData}
-                                    isFetching={isFetchingStockLocalData}
-                                    isLoading={isLoadingStockLocalData}
-                                />
-
-                                {/* Inventory Tab */}
-                                <ProductInventory
-                                    productStockData={productStockSucursalesData ?? []}
-                                    isErrorData={isErrorStockSucursalesData}
-                                    isLoadingData={isLoadingStockSucursalesData}
-                                />
-
-                                {/* Sales Tab */}
                                 {
-                                    twoYearSalesData && (
-                                        <ProductSales
-                                            isLoadingData={isLoadingTwoYearSalesData}
-                                            gestion_1={gestiones.gestion_1}
-                                            gestion_2={gestiones.gestion_2}
-                                            handleChangeGestion1={handleChangeGestion1}
-                                            handleChangeGestion2={handleChangeGestion2}
-                                            productSalesData={twoYearSalesData}
-                                            isErrorData={isErrorTwoYearSalesData}
-                                            isFetchingData={isFetchingTwoYearSalesData}
+                                    isErrorProduct ? (
+                                        <ErrorDataComponent
+                                            errorMessage="No se pudo cargar el producto. Por favor, inténtalo de nuevo más tarde."
+                                            onRetry={handleRetry}
                                         />
+                                    ) : (
+                                        <>
+                                            {/* Overview Tab */}
+                                            < ProductOverview
+                                                productStockData={productStockLocalData ?? []}
+                                                isError={isErrorStockLocalData}
+                                                isFetching={isFetchingStockLocalData}
+                                                isLoading={isLoadingStockLocalData}
+                                            />
+
+                                            {/* Inventory Tab */}
+                                            <ProductInventory
+                                                productStockData={productStockSucursalesData ?? []}
+                                                isErrorData={isErrorStockSucursalesData}
+                                                isLoadingData={isLoadingStockSucursalesData}
+                                            />
+
+                                            {/* Sales Tab */}
+                                            <ProductSales
+                                                isLoadingData={isLoadingTwoYearSalesData}
+                                                gestion_1={gestiones.gestion_1}
+                                                gestion_2={gestiones.gestion_2}
+                                                handleChangeGestion1={handleChangeGestion1}
+                                                handleChangeGestion2={handleChangeGestion2}
+                                                productSalesData={twoYearSalesData ?? { meta: { getion_1: "", getion_2: "" }, data: [] }}
+                                                isErrorData={isErrorTwoYearSalesData}
+                                                isFetchingData={isFetchingTwoYearSalesData}
+                                            />
+
+                                            {/* Logistics Tab */}
+                                            <ProductLogistics
+                                                ProductProviderOrders={productProviderOrders ?? []}
+                                                isErrorData={isErrorProviderOrders}
+                                                isLoadingData={isLoadingProviderOrders}
+                                            />
+                                        </>
                                     )
                                 }
 
-                                {/* Logistics Tab */}
-                                <ProductLogistics
-                                    ProductProviderOrders={productProviderOrders ?? []}
-                                    isErrorData={isErrorProviderOrders}
-                                    isLoadingData={isLoadingProviderOrders}
-                                />
                             </Tabs>
                         </div>
                     </div>

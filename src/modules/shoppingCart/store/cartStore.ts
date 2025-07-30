@@ -13,6 +13,7 @@ export const createCartStore = (user: string) => {
                     items: [],
                     discountAmount: 0,
                     discountPercent: 0,
+                    discountMode: null,
 
                     addItem: (product) => {
                         const existing = get().items.find((i) => i.product.id === product.id);
@@ -48,10 +49,12 @@ export const createCartStore = (user: string) => {
 
                             set({ items: [...get().items, newItem] });
                         }
+                        get().recalculateDiscount();
                     },
 
                     removeItem: (productId) => {
                         set({ items: get().items.filter(i => i.product.id !== productId) })
+                        get().recalculateDiscount();
                     },
 
                     updateQuantity: (productId, quantity) => {
@@ -70,6 +73,7 @@ export const createCartStore = (user: string) => {
                                     : i
                             ),
                         });
+                        get().recalculateDiscount();
                     },
 
                     updateCustomPrice: (productId, price) => {
@@ -84,6 +88,7 @@ export const createCartStore = (user: string) => {
                                     : i
                             ),
                         });
+                        get().recalculateDiscount();
                     },
 
                     updateCustomSubtotal: (productId, subtotal) => {
@@ -101,22 +106,33 @@ export const createCartStore = (user: string) => {
                                     : i
                             ),
                         });
+                        get().recalculateDiscount();
                     },
 
-                    clearCart: () => set({ items: [], discountAmount: 0, discountPercent: 0 }),
+                    clearCart: () => set({ items: [], discountAmount: 0, discountPercent: 0, discountMode: null }),
 
                     setDiscountAmount: (amount) => {
                         const subtotal = get().getCartSubtotal()
-                        const validAmount = Math.max(0, amount)
-                        const percent = subtotal > 0 ? (validAmount / subtotal) * 100 : 0
-                        set({ discountAmount: validAmount, discountPercent: percent })
+                        const validAmount = Math.min(Math.max(0, amount), subtotal);
+                        const percent = subtotal > 0 ? (validAmount / subtotal) * 100 : 0;
+
+                        set({
+                            discountAmount: validAmount,
+                            discountPercent: percent,
+                            discountMode: 'amount'
+                        });
                     },
 
                     setDiscountPercent: (percent) => {
                         const subtotal = get().getCartSubtotal()
-                        const validPercent = Math.min(Math.max(0, percent), 100)
-                        const amount = (validPercent / 100) * subtotal
-                        set({ discountPercent: validPercent, discountAmount: amount })
+                        const validPercent = Math.min(Math.max(0, percent), 100);
+                        const amount = (validPercent / 100) * subtotal;
+
+                        set({
+                            discountPercent: validPercent,
+                            discountAmount: amount,
+                            discountMode: 'percent'
+                        });
                     },
 
                     getItemSubtotal: (productId) => {
@@ -162,6 +178,32 @@ export const createCartStore = (user: string) => {
                         const item = get().items.find(i => i.product.id === productId);
                         return item ? item.quantity : 0;
                     },
+                    recalculateDiscount: () => {
+                        const state = get();
+                        const { discountMode, discountAmount, discountPercent } = state;
+                        const newSubtotal = calculateSubtotal(state.items);
+
+                        // Solo recalcular si hay un descuento activo
+                        if (discountMode === null || (discountAmount === 0 && discountPercent === 0)) {
+                            return;
+                        }
+
+                        if (discountMode === 'percent') {
+                            // Si se editó el porcentaje, mantenerlo y recalcular el monto
+                            const newAmount = (discountPercent / 100) * newSubtotal;
+                            set({
+                                discountAmount: newAmount
+                            });
+                        } else if (discountMode === 'amount') {
+                            // Si se editó el monto, mantenerlo pero validar que no sea mayor al subtotal
+                            const validAmount = Math.min(discountAmount, newSubtotal);
+                            const newPercent = newSubtotal > 0 ? (validAmount / newSubtotal) * 100 : 0;
+                            set({
+                                discountAmount: validAmount,
+                                discountPercent: newPercent
+                            });
+                        }
+                    },
                 }),
                 {
                     name: `${CART_CONSTANTS.STORAGE_PREFIX}${user}`,
@@ -169,7 +211,8 @@ export const createCartStore = (user: string) => {
                     partialize: (state) => ({
                         items: state.items,
                         discountAmount: state.discountAmount,
-                        discountPercent: state.discountPercent
+                        discountPercent: state.discountPercent,
+                        discountMode: state.discountMode
                     }),
                 }
             ),

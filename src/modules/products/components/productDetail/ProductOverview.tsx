@@ -53,16 +53,52 @@ const ProductOverview: React.FC<ProductOverviewProps> = ({
             },
         },
         {
+            accessorKey: "costo",
+            header: `Costo`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        ${value.toFixed(2)}
+                    </div>
+                );
+            }
+        },
+        {
             accessorKey: "cantidad",
             header: `Cantidad`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        {value}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "precio_venta",
             header: `Precio Venta F.`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        ${value.toFixed(2)}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "precio_venta_alt",
             header: `Precio Venta Alt.`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        ${value.toFixed(2)}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "saldo",
@@ -150,8 +186,8 @@ const ProductOverview: React.FC<ProductOverviewProps> = ({
                                                     <p className="text-lg font-semibold text-gray-900">{compraReciente.fecha_adquisicion ? format(compraReciente.fecha_adquisicion, "dd-MM-yyyy") : 'Sin fecha'}</p>
                                                 </div>
                                                 <div>
-                                                    <label className="text-sm font-medium text-gray-600">Stock</label>
-                                                    <p className="text-lg font-semibold text-gray-900">${compraReciente.saldo.toFixed(2)}</p>
+                                                    <label className="text-sm font-medium text-gray-600">Costo</label>
+                                                    <p className="text-lg font-semibold text-gray-900">${compraReciente.costo.toFixed(2)}</p>
                                                 </div>
                                                 <div>
                                                     <label className="text-sm font-medium text-gray-600">Precio de Venta F.</label>
