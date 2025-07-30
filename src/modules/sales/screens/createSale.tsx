@@ -31,6 +31,8 @@ import { useSaleCustomers } from "../hooks/useSaleCustomers";
 import { PaginatedCombobox } from "@/components/common/paginatedCombobox";
 import { useBranchStore } from "@/states/branchStore";
 import type { SaleResponsible } from "../types/saleResponsible";
+import { useHotkeys } from "react-hotkeys-hook";
+import TooltipButton from "@/components/common/TooltipButton";
 
 export interface Product {
     id: string;
@@ -232,23 +234,23 @@ const CreateSale = () => {
         }
     }, [saleCustomersData, setValue]);
 
+    // Shortcuts
+    useHotkeys('escape', handleGoBack);
+
     return (
         <div className="min-h-screen">
             <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit, onError)} className="max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="flex gap-2 items-center mb-2">
-                        <Button
-                            type="button"
-                            size={'sm'}
-                            variant={'outline'}
-                            className="cursor-pointer"
+                        <TooltipButton
                             onClick={handleGoBack}
+                            tooltip={<p>Presiona <Kbd>esc</Kbd> para volver a la lista de productos</p>}
                         >
                             <CornerUpLeft />
                             <Kbd>esc</Kbd>
-                            {/* Atras */}
-                        </Button>
+                        </TooltipButton>
+
                         <h1 className="text-lg font-bold text-gray-900">Nueva Venta</h1>
                     </div>
 

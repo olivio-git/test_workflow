@@ -55,16 +55,52 @@ const ProductInventory: React.FC<ProductInventoryProps> = ({
             )
         },
         {
+            accessorKey: "costo",
+            header: `Costo`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        ${value.toFixed(2)}
+                    </div>
+                );
+            }
+        },
+        {
             accessorKey: "cantidad",
             header: `Cantidad`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        {value}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "precio_venta",
             header: `Precio Venta F.`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        ${value.toFixed(2)}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "precio_venta_alt",
             header: `Precio Venta Alt.`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        ${value.toFixed(2)}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "sucursal",

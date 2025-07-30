@@ -41,10 +41,26 @@ const ProductSales: React.FC<ProductSalesProps> = ({
         {
             accessorKey: "gestion_1",
             header: `Gestion ${gestion_1}`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        {value.toLocaleString()}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "gestion_2",
             header: `Gestion ${gestion_2}`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        {value.toLocaleString()}
+                    </div>
+                );
+            }
         },
         {
             id: "diferencia",
@@ -128,12 +144,13 @@ const ProductSales: React.FC<ProductSalesProps> = ({
                             isError={isErrorData}
                             isFetching={isFetchingData}
                             renderBottomRow={() => (
+                                !isErrorData && !isLoadingData && !isFetchingData &&
                                 <TableRow className="bg-gray-50 font-bold">
                                     <TableCell className="font-bold p-1">TOTAL</TableCell>
-                                    <TableCell className="font-bold p-1 text-gray-900">
+                                    <TableCell className="font-bold p-1 text-gray-900 text-end">
                                         {totalVentasAnterior.toLocaleString()}
                                     </TableCell>
-                                    <TableCell className="font-bold p-1  text-gray-600">
+                                    <TableCell className="font-bold p-1  text-gray-600 text-end">
                                         {totalVentasActual.toLocaleString()}
                                     </TableCell>
                                     <TableCell>

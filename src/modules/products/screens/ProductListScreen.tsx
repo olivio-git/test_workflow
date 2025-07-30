@@ -470,12 +470,14 @@ const ProductListScreen = () => {
                 {/* Results Info */}
                 <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
                     {
-                        isInfiniteScroll ?
+                        products.length > 0 ?
+                            isInfiniteScroll ?
 
-                            `Mostrando ${products.length} de ${productData?.meta.total} productos`
-                            :
-                            `Mostrando ${((filters.pagina ?? 1) * (filters.pagina_registros ?? 1)) - ((filters.pagina_registros ?? 1) - 1)} 
+                                `Mostrando ${products.length} de ${productData?.meta.total} productos`
+                                :
+                                `Mostrando ${((filters.pagina ?? 1) * (filters.pagina_registros ?? 1)) - ((filters.pagina_registros ?? 1) - 1)} 
                             - ${(filters.pagina ?? 1) * (filters.pagina_registros ?? 1)} de ${productData?.meta.total} productos`
+                            : <span>Cargando...</span>
                     }
                     {selectedProducts.length > 0 && (
                         <span className="ml-4 text-blue-600">{selectedProducts.length} selected</span>

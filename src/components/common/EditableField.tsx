@@ -35,6 +35,7 @@ export interface EditableFieldProps {
   confirmOnEnter?: boolean;
   cancelOnEscape?: boolean;
   confirmOnBlur?: boolean;
+  editOnFocus?: boolean;
 }
 
 export const EditableField: React.FC<EditableFieldProps> = ({
@@ -62,6 +63,7 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   confirmOnEnter = true,
   cancelOnEscape = true,
   confirmOnBlur = true,
+  editOnFocus = true,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState('');
@@ -205,6 +207,7 @@ export const EditableField: React.FC<EditableFieldProps> = ({
       size={size}
       onClick={startEditing}
       disabled={disabled}
+      onFocus={editOnFocus ? startEditing : undefined}
       className={cn(
         buttonClassName
       )}

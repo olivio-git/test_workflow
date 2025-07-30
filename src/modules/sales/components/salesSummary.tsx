@@ -7,6 +7,9 @@ import type { UseFormReset, UseFormWatch } from "react-hook-form";
 import type { Sale } from "../types/sale";
 import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice";
 import { EditablePercentage } from "@/modules/shoppingCart/components/EditablePercentage";
+import TooltipButton from "@/components/common/TooltipButton";
+import { Kbd } from "@/components/atoms/kbd";
+import ShortcutKey from "@/components/common/ShortcutKey";
 interface SalesSummaryProps {
     isPending: boolean
     clearCart: () => void
@@ -63,6 +66,7 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                             <div>
                                 <Label className="text-xs text-gray-600">Porcentaje (%)</Label>
                                 <EditablePercentage
+                                    key={discountPercent}
                                     value={discountPercent}
                                     onSubmit={(value) => setDiscountPercent(value as number)}
                                     className="w-full"
@@ -75,6 +79,7 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                             <div>
                                 <Label className="text-xs text-gray-600">Monto ($)</Label>
                                 <EditablePrice
+                                    key={discountAmount}
                                     value={discountAmount}
                                     onSubmit={(value) => setDiscountAmount(value as number)}
                                     className="w-full"
@@ -117,15 +122,21 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
 
                 <div className="space-y-3">
                     {/* Botón de submit */}
-                    <Button
-                        type="submit"
-                        disabled={isPending}
-                        size={'sm'}
-                        className="w-full bg-black hover:bg-gray-800 text-white py-3 font-medium"
+                    <TooltipButton
+                        buttonProps={{
+                            type: 'submit',
+                            disabled: isPending,
+                            variant: 'default',
+                            className: "w-full"
+                        }}
+                        tooltip={
+                            <p>Presiona <ShortcutKey combo="Alt + S"/> para realizar la venta</p>
+                        }
                     >
                         <Save className="mr-2" />
                         {isPending ? "Registrando..." : "Registrar Venta"}
-                    </Button>
+                        {/* <Kbd variant="dark" className="ml-2 ">Alt + S</Kbd> */}
+                    </TooltipButton>
 
                     <Button
                         type="button"
