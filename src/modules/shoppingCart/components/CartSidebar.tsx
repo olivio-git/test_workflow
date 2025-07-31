@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/atoms/button"
 import { Separator } from "@/components/atoms/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/atoms/sheet"
@@ -10,6 +10,7 @@ import { Input } from "@/components/atoms/input"
 import { useNavigate } from "react-router"
 import { useCartWithUtils } from "../hooks/useCartWithUtils"
 import authSDK from "@/services/sdk-simple-auth"
+import { useHotkeys, useHotkeysContext } from "react-hotkeys-hook";
 
 const CartSidebar = ({
     open,
@@ -19,6 +20,7 @@ const CartSidebar = ({
     onOpenChange: (open: boolean) => void
 }) => {
     const user = authSDK.getCurrentUser()
+    const { enableScope, disableScope } = useHotkeysContext();
 
     const [expandedView, setExpandedView] = useState(false)
     const navigate = useNavigate()
@@ -36,6 +38,32 @@ const CartSidebar = ({
         setDiscountPercent,
     } = useCartWithUtils(user?.name || '')
 
+    useHotkeys('escape',
+        (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onOpenChange(false);
+        },
+        {
+            scopes: ['cart-sidebar'],
+            enabled: open,
+            preventDefault: true,
+            keydown: true,
+            keyup: false
+        }
+    );
+
+    useEffect(() => {
+        if (open) {
+            enableScope('cart-sidebar');
+            disableScope("esc-scope");
+        } else {
+            disableScope('cart-sidebar');
+            setTimeout(() => {
+                enableScope("esc-scope");
+            }, 100);
+        }
+    }, [open, enableScope, disableScope]);
 
     const subtotal = getCartSubtotal();
     const total = getCartTotal();

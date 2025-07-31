@@ -235,7 +235,10 @@ const CreateSale = () => {
     }, [saleCustomersData, setValue]);
 
     // Shortcuts
-    useHotkeys('escape', handleGoBack);
+    useHotkeys('escape', handleGoBack, {
+        scopes: ["esc-scope"],
+        enabled: true
+    });
 
     return (
         <div className="min-h-screen">
