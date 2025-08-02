@@ -1,68 +1,43 @@
-import { useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 import { Input } from "@/components/atoms/input";
+import { Button } from "@/components/atoms/button";
 
-interface Category {
-  id: string;
-  categoria: string;
+interface Props {
+  value: string;
+  onChange: (val: string) => void;
+  onRefresh: () => void;
+  isLoading: boolean;
 }
 
-interface SearchCategoriesProps {
-  categories: Category[];
-  onSelect: (category: Category) => void;
-  disabled?: boolean;
-}
-
-export const SearchCategories = ({ categories, onSelect, disabled }: SearchCategoriesProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
-
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = categories.filter((category) =>
-        category.categoria.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredCategories(filtered);
-    } else {
-      setFilteredCategories([]);
-    }
-  }, [searchTerm, categories]);
-
+const SearchCategories = ({ value, onChange, onRefresh, isLoading }: Props) => {
   return (
-    <div className="relative">
-      <div className="relative">
-        <Input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setIsOpen(true);
-          }}
-          placeholder="Buscar categoría..."
-          className="pl-9"
-          disabled={disabled}
-        />
-        <Search className="absolute w-4 h-4 text-gray-400 left-2 top-2" />
+    <div className="flex flex-col gap-4 p-4 bg-white border border-gray-200 rounded-lg sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex gap-6 text-sm text-gray-600">
+        {/* Estos contadores los mantendremos fuera por ahora */}
       </div>
-      
-      {isOpen && filteredCategories.length > 0 && (
-        <div className="absolute z-10 w-full mt-1 overflow-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-          {filteredCategories.map((category) => (
-            <button
-              key={category.id}
-              className="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 focus:outline-none"
-              onClick={() => {
-                onSelect(category);
-                setSearchTerm(category.categoria);
-                setIsOpen(false);
-              }}
-            >
-              {category.categoria}
-            </button>
-          ))}
+
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <Search className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+          <Input
+            placeholder="Buscar categorías..."
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-64 pl-10 h-9"
+          />
         </div>
-      )}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onRefresh}
+          disabled={isLoading}
+          className="px-3 h-9"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+        </Button>
+      </div>
     </div>
   );
 };
+
+export default SearchCategories;
