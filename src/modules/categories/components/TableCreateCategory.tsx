@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search } from "lucide-react";
 import { Accordion } from "@/components/atoms/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -9,14 +8,15 @@ import FormCreateCategory from "./FormCreateCategory";
 import SearchCategories from "./SearchCategories";
 import CategoryItem from "./CategoryItem";
 import PaginationControls from "./PaginationControls";
+import CategoryItemSkeleton from "./CategorySqueleton";
+import { getCachedPage, setCachedPage } from "../Utils/PageCache";
+import type { PaginatedResponse } from "../types/Categories";
+
 
 interface Category {
   id: number;
   categoria: string;
-  subcategorias: Array<{
-    id: number;
-    subcategoria: string;
-  }>;
+  subcategorias: Array<{ id: number; subcategoria: string }>;
 }
 
 const SIMPLE_MODE = false;
@@ -25,6 +25,7 @@ const TableCreateCategory = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Estados
   const [newCategory, setNewCategory] = useState("");
   const [addingSubId, setAddingSubId] = useState<number | null>(null);
   const [newSubName, setNewSubName] = useState("");
@@ -37,48 +38,62 @@ const TableCreateCategory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
 
+  // Reinicia a página 1 si cambian búsqueda o perPage
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearchTerm, perPage]);
 
-  const simpleQuery = useQuery({
-    queryKey: ["categories-simple"],
-    queryFn: categoriesService.getCategoriesSimple,
-    enabled: SIMPLE_MODE,
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
-  });
+  // Query para categorías paginadas
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useQuery<PaginatedResponse<Category>, Error>({
+    queryKey: ["categories", { search: debouncedSearchTerm, page: currentPage, perPage }],
+    queryFn: async () => {
+      const cacheKey = `search=${debouncedSearchTerm}&page=${currentPage}&perPage=${perPage}`;
+      const cached = getCachedPage(cacheKey);
+      if (cached) return cached;
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["categories", debouncedSearchTerm, currentPage, perPage],
-    queryFn: () =>
-      categoriesService.getCategories({
+      const data = await categoriesService.getCategories({
         page: currentPage,
-        categoria: debouncedSearchTerm,
         perPage,
-      }),
+        categoria: debouncedSearchTerm,
+      });
+
+      setCachedPage(cacheKey, data);
+      return data;
+    },
     enabled: !SIMPLE_MODE,
-    placeholderData: (prev) => prev,
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
+    keepPreviousData: true,
+    staleTime: 0,
   });
 
+  // Datos listos
+  const allCategories = useMemo(() => {
+    return Array.isArray(data?.data) ? data.data : [];
+  }, [data]);
+
+  const lastPage = useMemo(() => {
+    return data?.meta?.last_page ?? 1;
+  }, [data]);
+
+  const totalCategories = useMemo(() => {
+    return data?.meta?.total ?? allCategories.length;
+  }, [data, allCategories]);
+
+  // Mutaciones
   const createCategoryMutation = useMutation({
     mutationFn: categoriesService.createCategory,
     onSuccess: () => {
       setNewCategory("");
-      queryClient.invalidateQueries({ queryKey: [SIMPLE_MODE ? "categories-simple" : "categories"] });
-      toast({
-        title: "Categoría creada",
-        description: `La categoría fue creada exitosamente.`,
-      });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast({ title: "Categoría creada", description: "Se creó exitosamente." });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error al crear",
-        description: error.message || "No se pudo crear la categoría.",
-        variant: "destructive",
-      });
+      toast({ title: "Error al crear", description: error.message, variant: "destructive" });
     },
   });
 
@@ -87,36 +102,11 @@ const TableCreateCategory = () => {
     onSuccess: () => {
       setAddingSubId(null);
       setNewSubName("");
-      queryClient.invalidateQueries({ queryKey: [SIMPLE_MODE ? "categories-simple" : "categories"] });
-      toast({
-        title: "Subcategoría creada",
-        description: "La subcategoría fue creada exitosamente.",
-      });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast({ title: "Subcategoría creada", description: "Se creó exitosamente." });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error al crear subcategoría",
-        description: error.message || "No se pudo crear la subcategoría.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteCategoryMutation = useMutation({
-    mutationFn: categoriesService.deleteCategory,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [SIMPLE_MODE ? "categories-simple" : "categories"] });
-      toast({
-        title: "Categoría eliminada",
-        description: "La categoría fue eliminada exitosamente.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error al eliminar",
-        description: error.message || "No se pudo eliminar la categoría.",
-        variant: "destructive",
-      });
+      toast({ title: "Error al crear subcategoría", description: error.message, variant: "destructive" });
     },
   });
 
@@ -126,84 +116,36 @@ const TableCreateCategory = () => {
     onSuccess: () => {
       setEditingId(null);
       setEditingName("");
-      queryClient.invalidateQueries({ queryKey: [SIMPLE_MODE ? "categories-simple" : "categories"] });
-      toast({
-        title: "Categoría actualizada",
-        description: "La categoría fue actualizada exitosamente.",
-      });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast({ title: "Categoría actualizada", description: "Actualizada correctamente." });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error al actualizar",
-        description: error.message || "No se pudo actualizar la categoría.",
-        variant: "destructive",
-      });
+      toast({ title: "Error al actualizar", description: error.message, variant: "destructive" });
     },
   });
 
-  const allCategories = useMemo(() => {
-    if (SIMPLE_MODE) return Array.isArray(simpleQuery.data) ? simpleQuery.data : simpleQuery.data?.data ?? [];
-    return Array.isArray(data?.data) ? data.data : [];
-  }, [data, simpleQuery.data]);
+  const deleteCategoryMutation = useMutation({
+    mutationFn: categoriesService.deleteCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast({ title: "Categoría eliminada", description: "Eliminada correctamente." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error al eliminar", description: error.message, variant: "destructive" });
+    },
+  });
 
-  const totalCategories = useMemo(() => {
-    if (SIMPLE_MODE) return simpleQuery.data?.meta?.total ?? allCategories.length;
-    return data?.meta?.total ?? allCategories.length;
-  }, [data, simpleQuery.data, allCategories]);
-
-  const totalSubcategories = useMemo(() => {
-    return allCategories.reduce((total: number, cat: Category) => {
-      return total + (Array.isArray(cat.subcategorias) ? cat.subcategorias.length : 0);
-    }, 0);
-  }, [allCategories]);
-
-  const lastPage = useMemo(() => {
-    return data?.meta?.last_page ?? 1;
-  }, [data]);
-
-  const isLoadingUnified = SIMPLE_MODE ? simpleQuery.isLoading : isLoading;
-  const isErrorUnified = SIMPLE_MODE ? simpleQuery.isError : isError;
-
-  useEffect(() => {
-    if (isErrorUnified) {
-      console.error("❌ Error en la query:", SIMPLE_MODE ? simpleQuery.error : isError);
-    }
-  }, [isErrorUnified, simpleQuery.error, isError]);
-
+  // Acciones UI
   const handleCreateCategory = () => {
-    if (!newCategory.trim()) {
-      return toast({
-        title: "Error de validación",
-        description: "El nombre de la categoría es requerido",
-        variant: "destructive",
-      });
-    }
-    if (newCategory.length < 3) {
-      return toast({
-        title: "Error de validación",
-        description: "La categoría debe tener al menos 3 caracteres",
-        variant: "destructive",
-      });
-    }
-
+    if (!newCategory.trim()) return toast({ title: "Campo requerido", description: "Debes ingresar un nombre", variant: "destructive" });
+    if (newCategory.length < 3) return toast({ title: "Nombre muy corto", description: "Mínimo 3 caracteres", variant: "destructive" });
     createCategoryMutation.mutate(newCategory);
   };
 
   const handleSubmitSubcategory = () => {
     if (!newSubName.trim() || addingSubId === null) return;
-
-    if (newSubName.length < 3) {
-      return toast({
-        title: "Error de validación",
-        description: "La subcategoría debe tener al menos 3 caracteres",
-        variant: "destructive",
-      });
-    }
-
-    createSubcategoryMutation.mutate({
-      subcategoria: newSubName,
-      categoriaId: addingSubId,
-    });
+    if (newSubName.length < 3) return toast({ title: "Nombre muy corto", description: "Mínimo 3 caracteres", variant: "destructive" });
+    createSubcategoryMutation.mutate({ subcategoria: newSubName, categoriaId: addingSubId });
   };
 
   const handleEditCategory = (category: Category) => {
@@ -213,19 +155,8 @@ const TableCreateCategory = () => {
 
   const handleSaveEdit = () => {
     if (!editingName.trim() || editingId === null) return;
-
-    if (editingName.length < 3) {
-      return toast({
-        title: "Error de validación",
-        description: "La categoría debe tener al menos 3 caracteres",
-        variant: "destructive",
-      });
-    }
-
-    updateCategoryMutation.mutate({
-      id: editingId,
-      categoria: editingName,
-    });
+    if (editingName.length < 3) return toast({ title: "Nombre muy corto", description: "Mínimo 3 caracteres", variant: "destructive" });
+    updateCategoryMutation.mutate({ id: editingId, categoria: editingName });
   };
 
   const handleCancelEdit = () => {
@@ -234,31 +165,18 @@ const TableCreateCategory = () => {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar esta categoría?")) {
+    if (window.confirm("¿Eliminar esta categoría?")) {
       deleteCategoryMutation.mutate(id);
     }
   };
 
   const handleRefresh = () => {
-    if (SIMPLE_MODE) {
-      simpleQuery.refetch();
-    } else {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-    }
+    refetch();
   };
 
   return (
     <div className="max-w-4xl p-4 mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Gestión de Categorías
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Administra las categorías y subcategorías del sistema
-          </p>
-        </div>
-      </div>
+      <h1 className="text-2xl font-semibold text-gray-900">Gestión de Categorías</h1>
 
       <div className="p-4 bg-white border border-gray-200 rounded-lg">
         <FormCreateCategory
@@ -273,12 +191,14 @@ const TableCreateCategory = () => {
         value={searchTerm}
         onChange={setSearchTerm}
         onRefresh={handleRefresh}
-        isLoading={isLoadingUnified}
+        isLoading={isFetching}
       />
 
       <div className="bg-white border border-gray-200 rounded-lg">
         <Accordion type="single" collapsible className="w-full">
-          {allCategories.length > 0 &&
+          {isFetching ? (
+            <CategoryItemSkeleton rows={perPage} />
+          ) : (
             allCategories.map((cat: Category) => (
               <CategoryItem
                 key={cat.id}
@@ -303,61 +223,38 @@ const TableCreateCategory = () => {
                 isDeleting={deleteCategoryMutation.isPending}
                 isSavingSub={createSubcategoryMutation.isPending}
               />
-            ))}
+            ))
+          )}
         </Accordion>
 
-        {isLoadingUnified && (
-          <div className="p-8 text-center">
-            <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-              <div className="w-4 h-4 border-2 border-gray-300 rounded-full border-t-blue-500 animate-spin" />
-              Cargando categorías...
-            </div>
-          </div>
+
+        {isLoading && (
+          <div className="p-6 text-center text-gray-500">Cargando categorías...</div>
         )}
 
-        {!allCategories.length && !isLoadingUnified && (
-          <div className="p-8 text-center text-gray-500">
-            {debouncedSearchTerm ? (
-              <>
-                <Search className="w-8 h-8 mx-auto mb-3 text-gray-300" />
-                <p className="text-sm">
-                  No se encontraron resultados para "{debouncedSearchTerm}"
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="text-sm">No hay categorías registradas</p>
-                <p className="mt-1 text-xs text-gray-400">
-                  Crea tu primera categoría usando el formulario superior
-                </p>
-              </>
-            )}
+        {!isLoading && allCategories.length === 0 && (
+          <div className="p-6 text-center text-gray-500">
+            {debouncedSearchTerm
+              ? `No se encontraron resultados para "${debouncedSearchTerm}"`
+              : "No hay categorías registradas"}
           </div>
         )}
       </div>
 
-      {!SIMPLE_MODE && (
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={lastPage}
-          onPageChange={setCurrentPage}
-          isLoading={isLoadingUnified}
-          perPage={perPage}
-          onPerPageChange={setPerPage}
-        />
-      )}
+
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={lastPage}
+        onPageChange={setCurrentPage}
+        isLoading={isFetching}
+        perPage={perPage}
+        onPerPageChange={setPerPage}
+      />
 
       {allCategories.length > 0 && (
         <div className="text-sm text-center text-gray-500">
-          {debouncedSearchTerm ? (
-            <p>Mostrando resultados para "{debouncedSearchTerm}"</p>
-          ) : (
-            <p>
-              Mostrando {allCategories.length} de {totalCategories} categorías{" "}
-              {data?.meta?.total &&
-                `en la página ${data.meta.current_page} de ${data.meta.last_page}`}
-            </p>
-          )}
+          Mostrando {allCategories.length} de {totalCategories} categorías{" "}
+          (página {currentPage} de {lastPage})
         </div>
       )}
     </div>
