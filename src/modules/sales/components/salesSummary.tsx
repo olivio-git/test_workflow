@@ -2,13 +2,12 @@ import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Label } from "@/components/atoms/label";
-import { Save, ShoppingCart } from "lucide-react";
+import { Loader2, Save, ShoppingCart } from "lucide-react";
 import type { UseFormReset, UseFormWatch } from "react-hook-form";
 import type { Sale } from "../types/sale";
 import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice";
 import { EditablePercentage } from "@/modules/shoppingCart/components/EditablePercentage";
 import TooltipButton from "@/components/common/TooltipButton";
-import { Kbd } from "@/components/atoms/kbd";
 import ShortcutKey from "@/components/common/ShortcutKey";
 interface SalesSummaryProps {
     isPending: boolean
@@ -22,6 +21,7 @@ interface SalesSummaryProps {
     subtotal: number
     total: number
     responsibleName?: string
+    hasProducts?: boolean
 }
 const SalesSummary: React.FC<SalesSummaryProps> = ({
     isPending,
@@ -34,7 +34,8 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
     discountAmount,
     subtotal,
     total,
-    responsibleName
+    responsibleName,
+    hasProducts = true
 }) => {
     return (
         <Card className="border-0 shadow-sm">
@@ -125,16 +126,25 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                     <TooltipButton
                         buttonProps={{
                             type: 'submit',
-                            disabled: isPending,
+                            disabled: isPending || !hasProducts,
                             variant: 'default',
                             className: "w-full"
                         }}
                         tooltip={
-                            <p>Presiona <ShortcutKey combo="Alt + S"/> para realizar la venta</p>
+                            <p>Presiona <ShortcutKey combo="Alt + S" /> para realizar la venta</p>
                         }
                     >
-                        <Save className="mr-2" />
-                        {isPending ? "Registrando..." : "Registrar Venta"}
+                        {isPending ? (
+                            <>
+                                <Loader2 className="mr-2 size-4 animate-spin" />
+                                Procesando venta...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="mr-2 size-4" />
+                                Registrar Venta
+                            </>
+                        )}
                         {/* <Kbd variant="dark" className="ml-2 ">Alt + S</Kbd> */}
                     </TooltipButton>
 

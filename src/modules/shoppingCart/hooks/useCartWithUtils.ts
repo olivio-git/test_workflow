@@ -1,7 +1,26 @@
-import type { ProductGet } from "@/modules/products/types/ProductGet";
 import { useCartStore } from "./useCartStore";
-import type { CartSummary } from "../types/cart.types";
+import type { CartProduct, CartSummary } from "../types/cart.types";
 import { useStore } from "zustand";
+import { toast } from "@/hooks/use-toast";
+
+export interface CartOperationResult {
+    success: boolean;
+    error?: string;
+    message: string;
+    data?: any;
+}
+
+export interface BulkAddResult {
+    success: boolean;
+    totalAdded: number;
+    totalFailed: number;
+    failedProducts: Array<{
+        product: CartProduct;
+        reason: string;
+        message: string;
+    }>;
+    message: string;
+}
 
 export const useCartWithUtils = (user: string) => {
     if (!user) user = "guest"
@@ -22,10 +41,206 @@ export const useCartWithUtils = (user: string) => {
         }
     };
 
-    const addMultipleItems = (products: ProductGet[]) => {
+    const addItemToCart = (product: CartProduct): CartOperationResult => {
+        const result = state.addItem(product);
+
+        if (result.success) {
+            toast({
+                title: "Producto agregado",
+                description: result.message,
+                className: "border border-green-200 bg-green-50"
+            });
+        } else {
+            toast({
+                title: "No se pudo agregar producto",
+                description: result.message,
+                variant: "destructive"
+            });
+        }
+
+        return result;
+    };
+
+    const addMultipleItems = (products: CartProduct[]): BulkAddResult => {
+        let totalAdded = 0;
+        let totalFailed = 0;
+        const failedProducts: BulkAddResult['failedProducts'] = [];
+
         products.forEach(product => {
-            state.addItem(product);
+            const result = state.addItem(product);
+
+            if (result.success) {
+                totalAdded++;
+            } else {
+                totalFailed++;
+                failedProducts.push({
+                    product,
+                    reason: result.error || 'UNKNOWN_ERROR',
+                    message: result.message
+                });
+            }
         });
+
+        const bulkResult: BulkAddResult = {
+            success: totalAdded > 0,
+            totalAdded,
+            totalFailed,
+            failedProducts,
+            message: `Se agregaron ${totalAdded} productos. ${totalFailed > 0 ? `${totalFailed} fallaron.` : ''}`
+        };
+
+        // Toast con resumen
+        if (totalAdded > 0) {
+            toast({
+                title: "Productos agregados",
+                description: bulkResult.message,
+                className: "border border-green-200 bg-green-50"
+            });
+        }
+
+        // Toast con errores específicos si los hay
+        if (totalFailed > 0) {
+            const errorMessage = failedProducts.length === 1
+                ? failedProducts[0].message
+                : `${totalFailed} productos no se pudieron agregar por problemas de stock`;
+
+            toast({
+                title: "Algunos productos no se agregaron",
+                description: errorMessage,
+                variant: "destructive"
+            });
+        }
+
+        return bulkResult;
+    };
+
+    const addItemWithQuantity = (product: CartProduct, quantity: number): CartOperationResult => {
+        const existingQuantity = state.getItemQuantity(product.id);
+        const totalQuantity = existingQuantity + quantity;
+
+        if (!product.stock_actual || product.stock_actual <= 0) {
+            const result = {
+                success: false,
+                error: 'NO_STOCK',
+                message: `${product.descripcion} no tiene stock disponible`
+            };
+
+            toast({
+                title: "Sin stock",
+                description: result.message,
+                variant: "destructive"
+            });
+
+            return result;
+        }
+
+        if (totalQuantity > product.stock_actual) {
+            const available = product.stock_actual - existingQuantity;
+            const result = {
+                success: false,
+                error: 'INSUFFICIENT_STOCK',
+                message: `Solo hay ${available} unidades adicionales disponibles de ${product.descripcion}`
+            };
+
+            toast({
+                title: "Stock insuficiente",
+                description: result.message,
+                variant: "destructive"
+            });
+
+            return result;
+        }
+
+        let addedCount = 0;
+        for (let i = 0; i < quantity; i++) {
+            const result = state.addItem(product);
+            if (result.success) {
+                addedCount++;
+            } else {
+                break; // Si falla uno, parar
+            }
+        }
+
+        const result = {
+            success: addedCount === quantity,
+            message: `Se agregaron ${addedCount} de ${quantity} unidades de ${product.descripcion}`
+        };
+
+        toast({
+            title: addedCount === quantity ? "Productos agregados" : "Agregado parcial",
+            description: result.message,
+            className: addedCount === quantity
+                ? "border border-green-200 bg-green-50"
+                : "border border-yellow-200 bg-yellow-50"
+        });
+
+        return result;
+    };
+
+    const validateCartWithToast = () => {
+        const validation = state.validateCart();
+
+        if (!validation.isValid) {
+            const issueMessages = validation.issues.map(issue =>
+                `${issue.productName}: ${issue.issue === 'NO_STOCK' ? 'Sin stock' : `Cantidad ${issue.currentQuantity} > Stock ${issue.availableStock}`}`
+            );
+
+            toast({
+                title: "Problemas en el carrito",
+                description: issueMessages.join(', '),
+                variant: "destructive"
+            });
+        }
+
+        return validation;
+    };
+
+    const removeOutOfStockItems = (): CartOperationResult => {
+        const validation = state.validateCart();
+        const outOfStockItems = validation.issues.filter(issue => issue.issue === 'NO_STOCK');
+
+        outOfStockItems.forEach(issue => {
+            state.removeItem(issue.productId);
+        });
+
+        if (outOfStockItems.length > 0) {
+            toast({
+                title: "Productos removidos",
+                description: `Se removieron ${outOfStockItems.length} productos sin stock`,
+                className: "border border-blue-200 bg-blue-50"
+            });
+        }
+
+        return {
+            success: true,
+            message: `Se removieron ${outOfStockItems.length} productos sin stock`
+        };
+    };
+
+    const adjustQuantitiesToStock = (): CartOperationResult => {
+        const validation = state.validateCart();
+        const quantityIssues = validation.issues.filter(issue => issue.issue === 'QUANTITY_EXCEEDS_STOCK');
+
+        let adjustedCount = 0;
+        quantityIssues.forEach(issue => {
+            const result = state.updateQuantity(issue.productId, issue.availableStock);
+            if (result.success) {
+                adjustedCount++;
+            }
+        });
+
+        if (adjustedCount > 0) {
+            toast({
+                title: "Cantidades ajustadas",
+                description: `Se ajustaron las cantidades de ${adjustedCount} productos según el stock disponible`,
+                className: "border border-blue-200 bg-blue-50"
+            });
+        }
+
+        return {
+            success: true,
+            message: `Se ajustaron ${adjustedCount} productos`
+        };
     };
 
     const getCartSummary = (): CartSummary => {
@@ -39,11 +254,21 @@ export const useCartWithUtils = (user: string) => {
     };
 
     return {
+        // Estado original
         ...state,
+
+        // Métodos con utilidades
         incrementQuantity,
         decrementQuantity,
+        addItemToCart,
         addMultipleItems,
+        addItemWithQuantity,
+        validateCartWithToast,
+        removeOutOfStockItems,
+        adjustQuantitiesToStock,
         getCartSummary,
+
+        // Store reference
         useCartStore: cartStore
     };
 };

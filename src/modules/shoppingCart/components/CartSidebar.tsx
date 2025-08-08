@@ -56,11 +56,11 @@ const CartSidebar = ({
     useEffect(() => {
         if (open) {
             enableScope('cart-sidebar');
-            disableScope("esc-scope");
+            disableScope("esc-key");
         } else {
             disableScope('cart-sidebar');
             setTimeout(() => {
-                enableScope("esc-scope");
+                enableScope("esc-key");
             }, 100);
         }
     }, [open, enableScope, disableScope]);

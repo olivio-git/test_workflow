@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react"
 import {
     Search,
     Filter,
-    Edit,
-    Trash2,
     Settings,
     Eye,
     ShoppingCart,
     Loader2,
+    RefreshCcw,
+    MoreVertical,
+    Edit,
 } from "lucide-react"
 import { Button } from "@/components/atoms/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
@@ -29,6 +30,11 @@ import authSDK from "@/services/sdk-simple-auth"
 import { useNavigate } from "react-router"
 import ProductFilters from "../components/productList/productFilters"
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
+import TooltipButton from "@/components/common/TooltipButton"
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation"
+import { TooltipWrapper } from "@/components/common/TooltipWrapper "
+import { Kbd } from "@/components/atoms/kbd"
+import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
 
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
@@ -42,15 +48,22 @@ const ProductListScreen = () => {
         resetFilters,
     } = useProductFilters(Number(selectedBranchId) || 1); // suponiendo sucursal 1 por sesión
 
-    const { data: productData, isLoading, error, isFetching, isError } = useProductsPaginated(filters);
+    const {
+        data: productData,
+        isLoading,
+        error,
+        isFetching,
+        isError,
+        refetch: refetchProducts,
+        isRefetching: isRefetchingProducts,
+    } = useProductsPaginated(filters);
 
-    const { addItem } = useCartWithUtils(user?.name ?? '')
+    const { addItemToCart } = useCartWithUtils(user?.name ?? '')
     const [sorting, setSorting] = useState<SortingState>([])
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
     const [columnVisibility, setColumnVisibility] = useState({})
 
-    const [viewMode, setViewMode] = useState<"list" | "grid">("list")
     const [selectedProducts, setSelectedProducts] = useState<number[]>([])
 
     const COLUMN_VISIBILITY_KEY = `product-columns-${user?.name}`;
@@ -100,6 +113,11 @@ const ProductListScreen = () => {
         navigate(`/dashboard/productos/${productId}`);
     }
 
+    const handleAddItemCart = (product: ProductGet) => {
+        const productForCart = CartProductSchema.parse(product)
+        addItemToCart(productForCart)
+    }
+
     const columns = useMemo<ColumnDef<ProductGet>[]>(() => [
         {
             id: "Select",
@@ -137,11 +155,64 @@ const ProductListScreen = () => {
             enableHiding: false,
             cell: ({ row, getValue }) => (
                 <div
-                    onClick={() => handleProductDetail(row.original.id)}
-                    className="space-y-1 cursor-pointer group hover:bg-blue-50 p-1 rounded">
-                    <div className="font-medium text-gray-900 leading-tight group-hover:underline">{getValue<string>()}</div>
-                    <div className=" text-gray-500 font-mono">
-                        UPC: {row.original.codigo_upc}
+                    className="group rounded flex items-center gap-1">
+
+                    <div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="size-8"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (['ArrowUp', 'ArrowDown'].includes(e.key)) {
+                                            e.stopPropagation();
+                                        }
+                                    }}
+                                >
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                onCloseAutoFocus={(e) => {
+                                    e.preventDefault();
+                                }}
+                                align="start"
+                                className="w-48">
+                                <DropdownMenuItem
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    onClick={() => handleProductDetail(row.original.id)}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Ver detalles
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    onClick={() => handleAddItemCart(row.original)}>
+                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                    Agregar al carrito
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    onClick={() => { }}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Editar producto
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <div className="flex flex-col">
+                        <TooltipWrapper
+                            tooltip={
+                                <p>Presiona <Kbd>enter</Kbd> para ver los detalles del producto</p>
+                            }
+                        >
+                            <h3 className="font-medium text-gray-900 leading-tigh group-hover:underline truncate">{getValue<string>()}</h3>
+                        </TooltipWrapper>
+                        <span className=" text-gray-500 font-mono">
+                            UPC: {row.original.codigo_upc}
+                        </span>
                     </div>
                 </div>
             ),
@@ -165,7 +236,7 @@ const ProductListScreen = () => {
             cell: ({ row, getValue }) => {
                 const precioAlt = row.original.precio_venta_alt;
                 return (
-                    <div className="space-y-1">
+                    <div className="space-y-1 flex items-end flex-col">
                         <div className="font-bold text-green-600">${getValue<number>().toFixed(2)}</div>
                         {/* {precioAlt < precio && ( */}
                         <div className="flex items-center gap-1">
@@ -297,36 +368,6 @@ const ProductListScreen = () => {
                 </div>
             ),
         },
-        {
-            id: "Actions",
-            header: "Acciones",
-            cell: ({ row }) => (
-                <div className="flex items-center justify-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleProductDetail(row.original.id)}
-                        aria-label="Ver Detalle"
-                        className="size-8 cursor-pointer"
-                    >
-                        <Eye className="size-4" />
-                    </Button>
-                    <Button
-                        variant="default"
-                        size="icon"
-                        onClick={() => addItem(row.original)}
-                        aria-label="Añadir Producto al Carrito"
-                        className="size-8 cursor-pointer"
-                    >
-                        <ShoppingCart className="size-4" />
-                    </Button>
-                </div>
-            ),
-            enableSorting: false,
-            enableHiding: true,
-            size: 100,
-            minSize: 100,
-        },
     ], [])
     // Filter and sort products
     const table = useReactTable<ProductGet>({
@@ -347,6 +388,26 @@ const ProductListScreen = () => {
         enableColumnResizing: true,
         enableRowSelection: true,
     })
+
+    const {
+        selectedIndex,
+        setSelectedIndex,
+        isFocused,
+        tableRef,
+        handleTableClick,
+    } = useKeyboardNavigation({
+        products,
+        onAddToCart: addItemToCart,
+        onViewDetails: handleProductDetail,
+        onRemoveFromCart: () => { },
+    });
+    const handleRowClick = (index: number) => {
+        setSelectedIndex(index);
+    };
+
+    const handleRowDoubleClick = (product: ProductGet) => {
+        addItemToCart(product);
+    };
 
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
@@ -372,39 +433,28 @@ const ProductListScreen = () => {
         updateFilter("pagina", 1);
     };
 
+    const handleRefetchProducts = () => {
+        refetchProducts();
+    }
+
     return (
         <div
             className="min-h-screen max-w-full">
             <div className="bg-white rounded-lg shadow-sm">
                 {/* Header */}
                 <div className="p-2 border-b border-gray-200">
-                    {/* <h1 className="text-2xl font-bold">Productos</h1> */}
+                    <h1 className="text-lg font-bold text-gray-900">Productos</h1>
                     <div className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
                         <div className="flex items-center gap-2 md:gap-4 grow">
-                            {/* <div className="flex items-center gap-2">
-                                <Button
-                                    variant={viewMode === "list" ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setViewMode("list")}
-                                >
-                                    <List className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant={viewMode === "grid" ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setViewMode("grid")}
-                                >
-                                    <Grid3X3 className="h-4 w-4" />
-                                </Button>
-                            </div> */}
 
                             <div className="relative w-full">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                 <Input
-                                    placeholder="Buscar productos..."
+                                    placeholder="Buscar por descripcion..."
                                     value={filters.descripcion ?? ""}
                                     onChange={(e) => updateFilter("descripcion", e.target.value)}
                                     className="pl-10 w-full"
+                                    autoFocus
                                 />
                             </div>
                         </div>
@@ -424,6 +474,18 @@ const ProductListScreen = () => {
                                     Scroll Infinito
                                 </Label>
                             </div>
+
+                            <TooltipButton
+                                onClick={handleRefetchProducts}
+                                buttonProps={{
+                                    className: 'w-8',
+                                    disabled: isRefetchingProducts || isFetching,
+                                }}
+                                tooltip={"Recargar productos"}
+                            >
+                                <RefreshCcw className={`size-4 ${isRefetchingProducts || isFetching ? 'animate-spin' : ''}`} />
+                            </TooltipButton>
+
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" size="sm">
@@ -455,7 +517,7 @@ const ProductListScreen = () => {
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            <Button variant="outline" className="hover:bg-gray-50" size="sm" onClick={resetFilters}>
+                            <Button variant="outline" size="sm" onClick={resetFilters}>
                                 <Filter className="h-4 w-4 mr-2" />
                                 Reset Filters
                             </Button>
@@ -498,96 +560,50 @@ const ProductListScreen = () => {
                     </div>
                 </div>
 
-                {viewMode === "list" ? (
-                    <div
-                        className="overflow-x-hidden">
-                        {isInfiniteScroll ? (
-                            <InfiniteScroll
-                                dataLength={products.length}
-                                next={() => setPage((filters.pagina || 1) + 1)}
-                                hasMore={products.length < (productData?.meta.total || 0)}
-                                loader={
-                                    <div className="flex items-center justify-center gap-2 text-center p-6 text-xs sm:text-sm text-gray-500 bg-gray-50">
-                                        <Loader2 className="size-4 animate-spin" />
-                                        Cargando más productos...
-                                    </div>
-                                }
-                                scrollableTarget="main-scroll-container"
-                            >
-                                <CustomizableTable
-                                    table={table}
-                                    isError={isError}
-                                    errorMessage="Ocurrió un error al cargar los productos"
-                                    isLoading={isLoading}
-                                    noDataMessage="No se encontraron productos"
-                                />
-                            </InfiniteScroll>
-                        ) : (
+                <div
+                    onClick={handleTableClick}
+                    className="overflow-x-hidden">
+                    {isInfiniteScroll ? (
+                        <InfiniteScroll
+                            dataLength={products.length}
+                            next={() => setPage((filters.pagina || 1) + 1)}
+                            hasMore={products.length < (productData?.meta.total || 0)}
+                            loader={
+                                <div className="flex items-center justify-center gap-2 text-center p-6 text-xs sm:text-sm text-gray-500 bg-gray-50">
+                                    <Loader2 className="size-4 animate-spin" />
+                                    Cargando más productos...
+                                </div>
+                            }
+                            scrollableTarget="main-scroll-container"
+                        >
                             <CustomizableTable
                                 table={table}
                                 isError={isError}
-                                isFetching={isFetching}
-                                isLoading={isLoading}
                                 errorMessage="Ocurrió un error al cargar los productos"
-                                rows={filters.pagina_registros}
+                                isLoading={isLoading}
                                 noDataMessage="No se encontraron productos"
                             />
-                        )}
+                        </InfiniteScroll>
+                    ) : (
+                        <CustomizableTable
+                            table={table}
+                            isError={isError}
+                            isFetching={isFetching}
+                            isLoading={isLoading}
+                            errorMessage="Ocurrió un error al cargar los productos"
+                            rows={filters.pagina_registros}
+                            noDataMessage="No se encontraron productos"
+                            selectedRowIndex={selectedIndex}
+                            onRowClick={handleRowClick}
+                            onRowDoubleClick={handleRowDoubleClick}
+                            tableRef={tableRef}
+                            focused={isFocused}
+                            keyboardNavigationEnabled={true}
+                        />
+                    )}
 
-                    </div>
-                ) : (
-                    <div className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {productData?.data.map((product: any) => (
-                                <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                    <div className="flex items-start justify-between mb-3">
-                                        <Checkbox
-                                            className="border border-gray-400"
-                                            checked={selectedProducts.includes(product.id)}
-                                            onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
-                                        />
-                                        <div
-                                            className={`px-2 py-1 rounded-full text-xs ${product.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                                        >
-                                            {product.status}
-                                        </div>
-                                    </div>
+                </div>
 
-                                    <img
-                                        src={product.image}
-                                        alt={product.name}
-                                        width={200}
-                                        height={150}
-                                        className="w-full h-32 object-cover rounded-md mb-3"
-                                    />
-
-                                    <h3 className="font-medium text-sm mb-1 line-clamp-2">{product.name}</h3>
-                                    <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
-                                    <p className="text-lg font-bold text-blue-600 mb-2">${product.price}</p>
-
-                                    <div className="flex justify-between text-xs text-gray-500 mb-3">
-                                        <span>Stock: {product.products}</span>
-                                        <span>Views: {product.views}</span>
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" className="flex-1 text-blue-600 border-blue-600 bg-transparent">
-                                            <Edit className="h-3 w-3 mr-1" />
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="text-red-600 border-red-600 bg-transparent"
-                                        >
-                                            <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
                 {/* Pagination */}
                 {
                     !isInfiniteScroll && (productData?.data?.length ?? 0) > 0 && (

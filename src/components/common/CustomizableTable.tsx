@@ -23,6 +23,12 @@ interface Props<T> {
     rows?: number
     errorMessage?: string
     noDataMessage?: string
+    selectedRowIndex?: number;
+    onRowClick?: (index: number) => void;
+    onRowDoubleClick?: (row: T) => void;
+    tableRef?: React.RefObject<HTMLTableElement | null>;
+    focused?: boolean;
+    keyboardNavigationEnabled?: boolean;
 }
 
 const CustomizableTable = <T,>({
@@ -33,11 +39,21 @@ const CustomizableTable = <T,>({
     isError,
     rows,
     errorMessage,
-    noDataMessage
+    noDataMessage,
+    selectedRowIndex,
+    onRowClick,
+    onRowDoubleClick,
+    tableRef,
+    focused,
+    keyboardNavigationEnabled = false,
 }: Props<T>) => {
 
     return (
-        <AtomTable className="w-full table-fixed text-xs">
+        <AtomTable
+            ref={tableRef}
+            className="w-full table-fixed text-xs"
+            tabIndex={keyboardNavigationEnabled ? 0 : -1}
+        >
             <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
@@ -119,15 +135,25 @@ const CustomizableTable = <T,>({
                 ) : (
                     <>
                         {
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id} className="p-1 truncate">
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
+                            table.getRowModel().rows.map((row, index) => {
+                                const isSelected = selectedRowIndex === index;
+                                return (
+                                    <TableRow key={row.id}
+                                        data-row-index={index}
+                                        className={`
+                                        ${isSelected && focused ? 'bg-blue-100 hover:bg-blue-100' : ''}
+                                    `}
+                                        onClick={() => onRowClick?.(index)}
+                                        onDoubleClick={() => onRowDoubleClick?.(row.original)}
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id} className="p-1 truncate">
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                )
+                            })
                         }
                         {/* Renderizar fila personalizada si se provee */}
                         {renderBottomRow && renderBottomRow()}

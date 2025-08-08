@@ -18,14 +18,31 @@ export const createCartStore = (user: string) => {
                     addItem: (product) => {
                         const existing = get().items.find((i) => i.product.id === product.id);
                         const basePrice = product.precio_venta;
-                        const quantity = 1;
-                        const subtotal = calculateSubtotalByItem(basePrice, quantity);
+
+                        // Validar stock disponible
+                        if (!product.stock_actual || product.stock_actual <= 0) {
+                            return {
+                                success: false,
+                                error: 'NO_STOCK',
+                                message: `${product.descripcion} no tiene stock disponible`
+                            };
+                        }
 
                         if (existing) {
-                            const updatedQuantity = existing.quantity + 1;
+                            const newQuantity = existing.quantity + 1;
+
+                            // Validar que no exceda el stock
+                            if (newQuantity > product.stock_actual) {
+                                return {
+                                    success: false,
+                                    error: 'INSUFFICIENT_STOCK',
+                                    message: `Solo hay ${product.stock_actual} unidades disponibles de ${product.descripcion}`
+                                };
+                            }
+
                             const updatedSubtotal = calculateSubtotalByItem(
                                 existing.customPrice ?? basePrice,
-                                updatedQuantity
+                                newQuantity
                             );
 
                             set({
@@ -33,13 +50,15 @@ export const createCartStore = (user: string) => {
                                     i.product.id === product.id
                                         ? {
                                             ...i,
-                                            quantity: updatedQuantity,
+                                            quantity: newQuantity,
                                             customSubtotal: updatedSubtotal,
                                         }
                                         : i
                                 ),
                             });
                         } else {
+                            const quantity = 1;
+                            const subtotal = calculateSubtotalByItem(basePrice, quantity);
                             const newItem: CartItem = {
                                 product,
                                 quantity,
@@ -49,7 +68,12 @@ export const createCartStore = (user: string) => {
 
                             set({ items: [...get().items, newItem] });
                         }
+
                         get().recalculateDiscount();
+                        return {
+                            success: true,
+                            message: `${product.descripcion} agregado al carrito`
+                        };
                     },
 
                     removeItem: (productId) => {
@@ -58,7 +82,25 @@ export const createCartStore = (user: string) => {
                     },
 
                     updateQuantity: (productId, quantity) => {
-                        if (quantity < 1) return;
+                        if (quantity < 1) return { success: false, message: 'La cantidad debe ser de 1 o mas productos' };
+                        const item = get().items.find(i => i.product.id === productId);
+                        if (!item) {
+                            return {
+                                success: false,
+                                error: 'ITEM_NOT_FOUND',
+                                message: 'Producto no encontrado en el carrito'
+                            };
+                        }
+
+                        // Validar stock
+                        if (quantity > item.product.stock_actual) {
+                            return {
+                                success: false,
+                                error: 'INSUFFICIENT_STOCK',
+                                message: `Solo hay ${item.product.stock_actual} unidades disponibles de ${item.product.descripcion}`
+                            };
+                        }
+
                         set({
                             items: get().items.map((i) =>
                                 i.product.id === productId
@@ -73,7 +115,12 @@ export const createCartStore = (user: string) => {
                                     : i
                             ),
                         });
+
                         get().recalculateDiscount();
+                        return {
+                            success: true,
+                            message: 'Cantidad actualizada correctamente'
+                        };
                     },
 
                     updateCustomPrice: (productId, price) => {
@@ -203,6 +250,47 @@ export const createCartStore = (user: string) => {
                                 discountPercent: newPercent
                             });
                         }
+                    },
+                    validateCart: () => {
+                        const issues = get().items.filter(item => {
+                            return !item.product.stock_actual ||
+                                item.product.stock_actual <= 0 ||
+                                item.quantity > item.product.stock_actual;
+                        });
+
+                        return {
+                            isValid: issues.length === 0,
+                            issues: issues.map(item => ({
+                                productId: item.product.id,
+                                productName: item.product.descripcion,
+                                currentQuantity: item.quantity,
+                                availableStock: item.product.stock_actual || 0,
+                                issue: !item.product.stock_actual || item.product.stock_actual <= 0
+                                    ? 'NO_STOCK'
+                                    : 'QUANTITY_EXCEEDS_STOCK'
+                            }))
+                        };
+                    },
+                    canAddProduct: (productId: number, quantityToAdd: number = 1) => {
+                        const product = get().items.find(i => i.product.id === productId)?.product;
+                        if (!product) return { canAdd: false, reason: 'PRODUCT_NOT_FOUND' };
+
+                        const currentQuantity = get().getItemQuantity(productId);
+                        const totalQuantity = currentQuantity + quantityToAdd;
+
+                        if (!product.stock_actual || product.stock_actual <= 0) {
+                            return { canAdd: false, reason: 'NO_STOCK' };
+                        }
+
+                        if (totalQuantity > product.stock_actual) {
+                            return {
+                                canAdd: false,
+                                reason: 'INSUFFICIENT_STOCK',
+                                available: product.stock_actual - currentQuantity
+                            };
+                        }
+
+                        return { canAdd: true };
                     },
                 }),
                 {

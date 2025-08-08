@@ -187,13 +187,13 @@ export const EditableField: React.FC<EditableFieldProps> = ({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className={cn(
-            error && 'border-red-500 focus:border-red-500',
+            error && 'border-red-500 focus:border-red-500 ring-red-500',
             inputClassName
           )}
           {...(type === 'number' && numberProps)}
         />
         {error && (
-          <div className="absolute top-full left-0 mt-1 text-xs text-red-500">
+          <div className="mt-1 text-xs text-red-500">
             {error}
           </div>
         )}
