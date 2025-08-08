@@ -5,11 +5,15 @@ interface ErrorDataProps {
     onRetry?: () => void;
     errorMessage?: string;
     isRetrying?: boolean;
+    buttonText?: string
+    showButtonIcon?: boolean
 }
 const ErrorDataComponent: React.FC<ErrorDataProps> = ({
     onRetry,
     errorMessage,
-    isRetrying = false
+    isRetrying = false,
+    buttonText = 'Intentar nuevamente',
+    showButtonIcon = true
 }) => {
     return (
         <div className="flex flex-col items-center justify-center space-y-6 px-12 py-16 mx-auto bg-red-50 rounded-3xl border border-red-100">
@@ -32,13 +36,13 @@ const ErrorDataComponent: React.FC<ErrorDataProps> = ({
                 >
                     {isRetrying ? (
                         <>
-                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            {showButtonIcon && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
                             Cargando...
                         </>
                     ) : (
                         <>
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Intentar nuevamente
+                            {showButtonIcon && <RefreshCw className="h-4 w-4 mr-2" />}
+                            {buttonText}
                         </>
                     )}
                 </Button>

@@ -2,7 +2,7 @@ import { Badge } from "@/components/atoms/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { TabsContent } from "@/components/atoms/tabs";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
-import { ArrowDownRight, ArrowUpRight, TrendingDown, TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import type { ProductSalesItem, ProductSalesStats } from "../../types/ProductSalesStats";
 import CustomizableTable from "@/components/common/CustomizableTable";
 import { TableCell, TableRow } from "@/components/atoms/table";

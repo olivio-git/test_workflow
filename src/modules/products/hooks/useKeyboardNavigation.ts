@@ -22,6 +22,21 @@ export const useKeyboardNavigation = ({
   const tableRef = useRef<HTMLTableElement>(null);
   const selectedProduct = products[selectedIndex];
 
+  useEffect(() => {
+    if (!isFocused) return
+    if (tableRef.current) {
+      const selectedRow = tableRef.current.querySelector(
+        `[data-row-index="${selectedIndex}"]`
+      ) as HTMLElement | null;
+
+      if (selectedRow) {
+        selectedRow.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest', // mantiene el scroll lo más cerca posible sin saltar
+        });
+      }
+    }
+  }, [selectedIndex, isFocused]);
   // Resetear índice cuando cambien los productos
   useEffect(() => {
     if (products.length > 0 && selectedIndex >= products.length) {
@@ -32,23 +47,23 @@ export const useKeyboardNavigation = ({
   // Función para obtener elementos focuseables en la fila seleccionada
   const getFocusableElementsInSelectedRow = useCallback((): HTMLElement[] => {
     if (!tableRef.current) return [];
-    
+
     const selectedRow = tableRef.current.querySelector(`[data-row-index="${selectedIndex}"]`);
     if (!selectedRow) return [];
 
     const focusableElements = selectedRow.querySelectorAll(
       'button, input, textarea, select, a, [tabindex]:not([tabindex="-1"])'
     );
-    
+
     return Array.from(focusableElements) as HTMLElement[];
   }, [selectedIndex]);
 
   // Función para verificar si debemos bloquear las hotkeys
   const isInRestrictedContext = (): boolean => {
     const activeElement = document.activeElement as HTMLElement;
-    
+
     if (!activeElement) return false;
-    
+
     // Bloquear si estamos en inputs, textareas, o elementos editables
     return (
       activeElement.tagName === 'INPUT' ||
@@ -61,7 +76,7 @@ export const useKeyboardNavigation = ({
   };
 
   // Activar navegación por teclado (siempre disponible)
-  useHotkeys('f2', () => {
+  useHotkeys('alt+t', () => {
     setIsFocused(true);
     setIsNavigatingWithinRow(false);
     setCurrentElementIndex(-1);
@@ -105,9 +120,9 @@ export const useKeyboardNavigation = ({
   useHotkeys('tab', (e) => {
     if (!isInRestrictedContext() && isFocused) {
       e.preventDefault();
-      
+
       const focusableElements = getFocusableElementsInSelectedRow();
-      
+
       if (focusableElements.length === 0) return;
 
       if (!isNavigatingWithinRow) {
@@ -189,18 +204,18 @@ export const useKeyboardNavigation = ({
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      
+
       if (tableRef.current && tableRef.current.contains(target)) {
         // Clic dentro de la tabla
         setIsFocused(true);
-        
+
         // Si hicimos clic en un elemento dentro de una fila, actualizar selectedIndex
         const clickedRow = target.closest('[data-row-index]') as HTMLElement;
         if (clickedRow) {
           const rowIndex = parseInt(clickedRow.getAttribute('data-row-index') || '0');
           setSelectedIndex(rowIndex);
         }
-        
+
         // Si hicimos clic en un elemento focuseable, entrar en modo navegación dentro de fila
         const focusableElement = target.closest('button, input, textarea, select, a') as HTMLElement;
         if (focusableElement && clickedRow) {

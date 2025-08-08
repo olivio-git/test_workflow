@@ -33,7 +33,7 @@ import { useBranchStore } from "@/states/branchStore";
 import type { SaleResponsible } from "../types/saleResponsible";
 import { useHotkeys } from "react-hotkeys-hook";
 import TooltipButton from "@/components/common/TooltipButton";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema";
 
@@ -227,7 +227,7 @@ const CreateSale = () => {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            const plazoDate = new Date(plazoPago);
+            const plazoDate = parse(plazoPago, "yyyy-MM-dd", new Date());
             plazoDate.setHours(0, 0, 0, 0);
 
             if (plazoDate <= today) {
@@ -428,6 +428,7 @@ const CreateSale = () => {
                                                 type="date"
                                                 {...register("fecha")}
                                                 className="w-full"
+                                                autoFocus
                                             />
                                             {errors.fecha && <p className="text-red-500 text-sm mt-1">{errors.fecha.message}</p>}
                                         </div>
