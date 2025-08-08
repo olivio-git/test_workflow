@@ -11,7 +11,7 @@ import { HotkeysProvider } from "react-hotkeys-hook";
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
-  <HotkeysProvider initiallyActiveScopes={["default", "esc-scope"]}>
+  <HotkeysProvider initiallyActiveScopes={["default", "esc-key"]}>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>

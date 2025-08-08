@@ -1,5 +1,6 @@
 import { Button, type ButtonProps } from "../atoms/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../atoms/tooltip";
+import { cn } from "@/lib/utils";
 
 type TooltipButtonProps = {
     tooltip: React.ReactNode;
@@ -21,7 +22,11 @@ const TooltipButton: React.FC<TooltipButtonProps> = ({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer"
+                    className={cn(
+                        "cursor-pointer disabled:cursor-not-allowed",
+                        buttonProps?.className
+                    )}
+                    disabled={buttonProps?.disabled}
                     onClick={onClick}
                     {...buttonProps}
                 >

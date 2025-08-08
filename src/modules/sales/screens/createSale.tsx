@@ -13,7 +13,7 @@ import type { ProductGet } from "@/modules/products/types/ProductGet";
 import authSDK from "@/services/sdk-simple-auth";
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils";
 import { useCreateSale } from "../hooks/useCreateSale";
-import { FormProvider, useForm, useWatch, Controller } from "react-hook-form";
+import { FormProvider, useForm, Controller } from "react-hook-form";
 import { SaleSchema } from "../schemas/sales.schema";
 import type { Sale, SaleDetail } from "../types/sale";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,18 +33,12 @@ import { useBranchStore } from "@/states/branchStore";
 import type { SaleResponsible } from "../types/saleResponsible";
 import { useHotkeys } from "react-hotkeys-hook";
 import TooltipButton from "@/components/common/TooltipButton";
-
-export interface Product {
-    id: string;
-    codigo: string;
-    descripcion: string;
-    cantidad: number;
-    precioUnitario: number;
-    subtotal: number;
-    marca: string;
-}
+import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
+import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema";
 
 const CreateSale = () => {
+    const queryClient = useQueryClient();
     const navigate = useNavigate();
     const user = authSDK.getCurrentUser()
     const { selectedBranchId } = useBranchStore()
@@ -76,7 +70,7 @@ const CreateSale = () => {
     const methods = useForm<Sale>({
         resolver: zodResolver(SaleSchema),
         defaultValues: {
-            fecha: new Date().toISOString().slice(0, 10),
+            fecha: format(new Date(), "yyyy-MM-dd"),
             nro_comprobante: "",
             nro_comprobante2: "",
             id_cliente: undefined,
@@ -104,6 +98,8 @@ const CreateSale = () => {
         handleSubmit,
         setValue,
         getValues,
+        setError,
+        clearErrors,
         formState: { errors }
     } = methods
 
@@ -122,7 +118,10 @@ const CreateSale = () => {
         setDiscountAmount,
         setDiscountPercent,
         clearCart,
-        addItem
+        addItemToCart,
+        addItemWithQuantity,
+        addMultipleItems,
+        validateCartWithToast
     } = useCartWithUtils(user?.name || '')
     const subtotal = getCartSubtotal();
     const total = getCartTotal();
@@ -141,68 +140,219 @@ const CreateSale = () => {
 
         if (detalles.length > 0) {
             setValue("detalles", detalles as [SaleDetail, ...SaleDetail[]]);
+            clearErrors("detalles");
+        } else {
+            // setValue("detalles", []);
         }
     }, [items, discountAmount, discountPercent, setValue]);
 
-    const handleCheckout = () => {
-        toast({
-            title: "Venta Existosa",
-            description: `Venta realizada con exito`,
-            className: "border border-gray-200"
-        });
-        clearCart()
-        reset({
-            fecha: new Date().toISOString().slice(0, 10),
-        })
+    const validateBeforeSubmit = (): boolean => {
+        let isValid = true;
+
+        if (items.length === 0) {
+            setError("detalles", {
+                type: "manual",
+                message: "Debes agregar al menos un producto para realizar una venta"
+            });
+            toast({
+                title: "Carrito vacío",
+                description: "Debes agregar al menos un producto para realizar una venta",
+                variant: "destructive"
+            });
+            isValid = false;
+        }
+
+        const validation = validateCartWithToast();
+        if (!validation.isValid) {
+            setError("detalles", {
+                type: "manual",
+                message: "Hay productos con problemas de stock en el carrito"
+            });
+            isValid = false;
+        }
+
+        const formData = getValues();
+
+        if (!formData.id_cliente) {
+            setError("id_cliente", {
+                type: "manual",
+                message: "Debes seleccionar un cliente"
+            });
+            toast({
+                title: "Cliente requerido",
+                description: "Debes seleccionar un cliente para la venta",
+                variant: "destructive"
+            });
+            isValid = false;
+        }
+
+        if (!formData.tipo_venta) {
+            setError("tipo_venta", {
+                type: "manual",
+                message: "Debes seleccionar un tipo de venta"
+            });
+            isValid = false;
+        }
+
+        if (!formData.forma_venta) {
+            setError("forma_venta", {
+                type: "manual",
+                message: "Debes seleccionar una forma de venta"
+            });
+            isValid = false;
+        }
+
+        if (formData.tipo_venta === "VC" && !formData.plazo_pago) {
+            setError("plazo_pago", {
+                type: "manual",
+                message: "Debes especificar la fecha de plazo para venta a crédito"
+            });
+            toast({
+                title: "Plazo requerido",
+                description: "Las ventas a crédito requieren una fecha de plazo",
+                variant: "destructive"
+            });
+            isValid = false;
+        }
+
+        return isValid;
     };
 
-    const tipoVenta = useWatch({
-        control,
-        name: "tipo_venta",
-    });
-
-    // Limpiar plazo_pago si el tipo de venta no es a crédito
+    // VALIDACIÓN DE FECHA DE PLAZO
     useEffect(() => {
-        if (tipoVenta !== "VENTA A CREDITO") {
+        const tipoVenta = watch("tipo_venta");
+        const plazoPago = watch("plazo_pago");
+
+        if (tipoVenta === "VC" && plazoPago) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const plazoDate = new Date(plazoPago);
+            plazoDate.setHours(0, 0, 0, 0);
+
+            if (plazoDate <= today) {
+                setError("plazo_pago", {
+                    type: "manual",
+                    message: "La fecha de plazo debe ser posterior a hoy"
+                });
+                toast({
+                    title: "Fecha inválida",
+                    description: "La fecha de plazo debe ser posterior a hoy",
+                    variant: "destructive"
+                });
+                resetField("plazo_pago");
+            } else {
+                clearErrors("plazo_pago");
+            }
+
+            // Validar que no sea más de X días (ej: 365 días)
+            // const maxDays = 365;
+            // const maxDate = new Date(today);
+            // maxDate.setDate(maxDate.getDate() + maxDays);
+
+            // if (plazoDate > maxDate) {
+            //     toast({
+            //         title: "Plazo muy extenso",
+            //         description: `El plazo no puede ser mayor a ${maxDays} días`,
+            //         variant: "destructive"
+            //     });
+            //     resetField("plazo_pago");
+            // }
+        }
+        if (tipoVenta !== "VC") {
             resetField("plazo_pago");
         }
-    }, [tipoVenta, resetField]);
+    }, [watch("tipo_venta"), watch("plazo_pago"), resetField]);
+
+    const handleCheckout = () => {
+        clearCart();
+
+        const currentValues = getValues();
+        reset({
+            fecha: format(new Date(), "yyyy-MM-dd"),
+            nro_comprobante: "",
+            nro_comprobante2: "",
+            id_cliente: currentValues.id_cliente,
+            tipo_venta: currentValues.tipo_venta,
+            forma_venta: currentValues.forma_venta,
+            comentario: "",
+            plazo_pago: "",
+            vehiculo: "",
+            nro_motor: "",
+            cliente_nombre: currentValues.cliente_nombre,
+            cliente_nit: currentValues.cliente_nit,
+            usuario: currentValues.usuario,
+            sucursal: currentValues.sucursal,
+            id_responsable: currentValues.id_responsable,
+            detalles: []
+        });
+    };
 
     const handleAddProductItem = (product: ProductGet) => {
-        console.log('Agregando producto:', product);
+        const productForCart = CartProductSchema.parse(product)
+        addItemToCart(productForCart)
+    };
 
-        addItem(product);
+    const handleAddMultipleProducts = (products: ProductGet[]) => {
+        addMultipleItems(products);
+    };
 
-        // Opcional: Mostrar toast de confirmación
-        toast({
-            title: "Producto agregado",
-            description: `${product.descripcion} agregado al carrito`,
-            className: "border border-green-200 bg-green-50"
-        });
-    }
+    const handleAddWithQuantity = (product: ProductGet, quantity: number) => {
+        addItemWithQuantity(product, quantity);
+    };
 
     // FUNCIÓN onSubmit corregida
     const onSubmit = (data: Sale) => {
-        createSale(data);
+        if (!validateBeforeSubmit()) {
+            return;
+        }
 
-        // Mostrar toast de éxito
-        handleCheckout();
-        console.log(data)
+        createSale(data, {
+            onSuccess: (response) => {
+                // console.log('Venta creada:', response);
+                toast({
+                    title: "Venta Exitosa",
+                    description: `Venta realizada con éxito`,
+                    className: "border border-green-200 bg-green-50"
+                });
+                handleCheckout();
+
+                queryClient.invalidateQueries({ queryKey: ["sales"] });
+                queryClient.invalidateQueries({ queryKey: ["products"] });
+            },
+            onError: (error: any) => {
+                toast({
+                    title: "Error en la venta",
+                    description: error.message || "No se pudo procesar la venta. Intenta nuevamente.",
+                    variant: "destructive"
+                });
+            }
+        });
     };
 
-    // FUNCIÓN para manejar errores del formulario
     const onError = (errors: any) => {
-        const values = getValues()
-        console.log(values)
-        if (values.detalles && values.detalles.length <= 0) {
+        if (errors.id_cliente || errors.tipo_venta || errors.forma_venta || errors.id_responsable) {
             toast({
-                title: "Ha ocurrido un error",
-                description: `Para realizar una venta debes agregar al menos un producto`,
-                className: "border border-red-200"
+                title: "Error de validación",
+                description: "Revisa los campos obligatorios del formulario",
+                variant: "destructive"
+            });
+            return;
+        }
+        const firstErrorKey = Object.keys(errors)[0];
+        const firstError = errors[firstErrorKey];
+
+        if (firstError?.message) {
+            toast({
+                title: "Error en formulario",
+                description: firstError.message,
+                variant: "destructive"
             });
         }
-        console.log("Errores del formulario:", errors);
-        console.log(values)
+
+        if (errors.detalles) {
+            validateBeforeSubmit();
+        }
     };
 
     const handleGoBack = () => {
@@ -234,9 +384,15 @@ const CreateSale = () => {
         }
     }, [saleCustomersData, setValue]);
 
+    const canProceedWithSale = (): boolean => {
+        if (items.length === 0) return false;
+        const validation = validateCartWithToast();
+        return validation.isValid;
+    };
+
     // Shortcuts
     useHotkeys('escape', handleGoBack, {
-        scopes: ["esc-scope"],
+        scopes: ["esc-key"],
         enabled: true
     });
 
@@ -466,7 +622,7 @@ const CreateSale = () => {
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-3 mb-1">
                                                                 <Badge variant="secondary" className="text-xs">
-                                                                    {product.product.categoria}
+                                                                    {product.product.codigo_oem}
                                                                 </Badge>
                                                                 <span className="text-xs text-gray-500">{product.product.marca}</span>
                                                             </div>
@@ -552,6 +708,7 @@ const CreateSale = () => {
                                 total={total}
                                 watch={watch}
                                 responsibleName={responsible?.nombre || ''}
+                                hasProducts={items.length > 0}
                             />
                         </div>
                     </div>
