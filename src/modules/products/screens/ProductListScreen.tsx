@@ -46,7 +46,7 @@ const ProductListScreen = () => {
         updateFilter,
         setPage,
         resetFilters,
-    } = useProductFilters(Number(selectedBranchId) || 1); // suponiendo sucursal 1 por sesión
+    } = useProductFilters(Number(selectedBranchId) || 1);
 
     const {
         data: productData,
@@ -67,6 +67,10 @@ const ProductListScreen = () => {
     const [selectedProducts, setSelectedProducts] = useState<number[]>([])
 
     const COLUMN_VISIBILITY_KEY = `product-columns-${user?.name}`;
+
+    useEffect(() => {
+        updateFilter("sucursal", Number(selectedBranchId))
+    }, [selectedBranchId])
 
     useEffect(() => {
         const savedVisibility = localStorage.getItem(COLUMN_VISIBILITY_KEY);
@@ -260,13 +264,11 @@ const ProductListScreen = () => {
                 const stockMin = row.original.stock_minimo || 1;
                 return (
                     <Badge
-                    variant={getStockColor(stock, stockMin)}
-                        className={`flex gap-1 flex-wrap justify-center px-2 py-1 rounded`}
+                        variant={getStockColor(stock, stockMin)}
+                        className={`flex flex-col justify-center rounded`}
                     >
-                        <div className="flex items-center gap-1">
-                            <span className="font-medium">{getValue<number>().toFixed(0)}</span>
-                        </div>
-                        <span>{row.original.unidad_medida}</span>
+                        <span className="font-bold">{getValue<number>().toFixed(0)}</span>
+                        <span className="text-[10px] uppercase">{row.original.unidad_medida}</span>
                     </Badge>
                 );
             },
@@ -279,7 +281,7 @@ const ProductListScreen = () => {
             cell: ({ getValue }) => (
                 <div className="text-center">
                     <div className="text-sm font-medium">{getValue<number>().toFixed(0)}</div>
-                    <div className=" text-gray-500">disponible</div>
+                    <div className=" text-gray-500">Disponible</div>
                 </div>
             ),
         },
@@ -329,7 +331,7 @@ const ProductListScreen = () => {
                         <div className={`text-sm font-medium ${value > 0 ? "text-blue-600" : "text-gray-400"}`}>
                             {getValue<number>().toFixed(0)}
                         </div>
-                        <div className=" text-gray-500">pedidos</div>
+                        <div className=" text-gray-500">Pedidos</div>
                     </div>
                 );
             },

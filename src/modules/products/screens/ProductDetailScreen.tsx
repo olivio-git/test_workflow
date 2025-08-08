@@ -33,6 +33,18 @@ import { useHotkeys } from "react-hotkeys-hook"
 const ProductDetailScreen = () => {
     const navigate = useNavigate()
     const { id: productId } = useParams()
+    if (!(Number(productId))) {
+        return (
+            <ErrorDataComponent
+                errorMessage="No se pudo cargar el producto."
+                showButtonIcon={false}
+                buttonText="Ir a lista de productos"
+                onRetry={() => {
+                    navigate("/dashboard/productos")
+                }}
+            />
+        )
+    }
     const { selectedBranchId } = useBranchStore()
     const user = authSDK.getCurrentUser()
     const [sucursalSeleccionada, setSucursalSeleccionada] = useState<number>(Number(selectedBranchId))
@@ -108,6 +120,10 @@ const ProductDetailScreen = () => {
         producto: Number(productId),
         sucursal: sucursalSeleccionada,
     })
+
+    useEffect(() => {
+        setSucursalSeleccionada(Number(selectedBranchId))
+    }, [selectedBranchId])
 
     useEffect(() => {
         // console.log("Product data loaded:", product)
