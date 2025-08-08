@@ -107,7 +107,7 @@ const ProductOverview: React.FC<ProductOverviewProps> = ({
                 <div className="flex items-center justify-center">
                     <Badge
                         variant={
-                            row.original.saldo > 30 ? "default" : row.original.saldo > 10 ? "secondary" : "destructive"
+                            row.original.saldo > 20 ? "success" : row.original.saldo > 10 ? "warning" : "danger"
                         }
                         className="font-semibold"
                     >
@@ -121,7 +121,7 @@ const ProductOverview: React.FC<ProductOverviewProps> = ({
             header: "Tipo",
             cell: ({ getValue }) => (
                 <div className="flex items-center justify-center">
-                    <Badge variant="outline" className="text-xs bg-gray-100 text-gray-700 border-gray-300">
+                    <Badge variant="info" className="text-xs">
                         {getValue<number>()}
                     </Badge>
                 </div>
@@ -161,8 +161,8 @@ const ProductOverview: React.FC<ProductOverviewProps> = ({
         <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Main Content */}
-                <div className={`lg:${compraReciente ? 'col-span-3' : 'col-span-2'} space-y-4`}>
-                    <div className={`grid grid-cols-1 ${compraReciente ? 'md:grid-cols-5' : ''} gap-4`}>
+                <div className={`lg:${compraReciente ? 'col-span-3 space-y-4' : 'col-span-2'}`}>
+                    <div className={`grid grid-cols-1 ${compraReciente ? 'md:grid-cols-5' : ''} gap-y-4 md:gap-y-0 md:gap-4`}>
                         {/* Compra más reciente - Diseño simple */}
                         {
                             compraReciente && (

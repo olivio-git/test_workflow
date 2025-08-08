@@ -5,7 +5,7 @@ export const ProductCategoriaSchema = z.object({
     categoria: z.string(),
     id_estado: z.string(),
     codigo_interno: z.number(),
-    version: z.number(),
+    version: z.number().nullable(),
 });
 
 export const ProductSubcategoriaSchema = z.object({
@@ -62,7 +62,7 @@ export const ProductDetailSchema = z.object({
     precio_venta_alt: z.preprocess((v) => Number(v), z.number()),
 
     id_categoria: z.number(),
-    categoria: ProductCategoriaSchema,
+    categoria: ProductCategoriaSchema.nullable(),
 
     id_subcategora: z.number(),
     subcategoria: ProductSubcategoriaSchema,

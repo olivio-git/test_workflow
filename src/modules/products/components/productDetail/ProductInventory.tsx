@@ -45,7 +45,7 @@ const ProductInventory: React.FC<ProductInventoryProps> = ({
                 <div className="flex items-center justify-center">
                     <Badge
                         variant={
-                            row.original.saldo > 15 ? "default" : row.original.saldo > 5 ? "secondary" : "destructive"
+                            row.original.saldo > 15 ? "success" : row.original.saldo > 5 ? "warning" : "danger"
                         }
                         className="font-semibold"
                     >

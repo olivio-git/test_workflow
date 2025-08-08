@@ -105,9 +105,9 @@ const ProductListScreen = () => {
     // Función para determinar el color del stock
     const getStockColor = (stock: number, stock_min: number) => {
         const stockMin: number = stock_min || 10
-        if (stock <= stockMin) return "text-red-600 bg-red-50"
-        if (stock <= (stockMin + 10)) return "text-yellow-600 bg-yellow-50"
-        return "text-green-600 bg-green-50"
+        if (stock <= stockMin) return "danger"
+        if (stock <= (stockMin + 10)) return "warning"
+        return "success"
     }
     const handleProductDetail = (productId: number) => {
         navigate(`/dashboard/productos/${productId}`);
@@ -259,14 +259,15 @@ const ProductListScreen = () => {
                 const stock = getValue<number>();
                 const stockMin = row.original.stock_minimo || 1;
                 return (
-                    <div
-                        className={`flex gap-1 flex-wrap justify-center px-2 py-1 rounded ${getStockColor(stock, stockMin)}`}
+                    <Badge
+                    variant={getStockColor(stock, stockMin)}
+                        className={`flex gap-1 flex-wrap justify-center px-2 py-1 rounded`}
                     >
                         <div className="flex items-center gap-1">
                             <span className="font-medium">{getValue<number>().toFixed(0)}</span>
                         </div>
-                        <span className="">{row.original.unidad_medida}</span>
-                    </div>
+                        <span>{row.original.unidad_medida}</span>
+                    </Badge>
                 );
             },
         },

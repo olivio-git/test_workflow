@@ -35,6 +35,7 @@ const ProductDetailScreen = () => {
     const { id: productId } = useParams()
     const { selectedBranchId } = useBranchStore()
     const user = authSDK.getCurrentUser()
+    const [sucursalSeleccionada, setSucursalSeleccionada] = useState<number>(Number(selectedBranchId))
 
     const {
         addItemToCart
@@ -73,7 +74,7 @@ const ProductDetailScreen = () => {
         isFetching: isFetchingTwoYearSalesData
     } = useProductSalesStats({
         producto: Number(productId),
-        sucursal: selectedBranchId ? Number(selectedBranchId) : 0,
+        sucursal: sucursalSeleccionada,
         gestion_1: gestiones.gestion_1,
         gestion_2: gestiones.gestion_2,
     })
@@ -85,7 +86,7 @@ const ProductDetailScreen = () => {
         isLoading: isLoadingStockLocalData
     } = useProductStock({
         producto: Number(productId),
-        sucursal: selectedBranchId ? Number(selectedBranchId) : 0,
+        sucursal: sucursalSeleccionada,
         resto_only: 0
     })
 
@@ -95,7 +96,7 @@ const ProductDetailScreen = () => {
         isLoading: isLoadingStockSucursalesData,
     } = useProductStock({
         producto: Number(productId),
-        sucursal: selectedBranchId ? Number(selectedBranchId) : 0,
+        sucursal: sucursalSeleccionada,
         resto_only: 1
     })
 
@@ -105,10 +106,9 @@ const ProductDetailScreen = () => {
         isLoading: isLoadingProviderOrders,
     } = useProductProviderOrders({
         producto: Number(productId),
-        sucursal: selectedBranchId ? Number(selectedBranchId) : 0,
+        sucursal: sucursalSeleccionada,
     })
 
-    const [sucursalActiva, setSucursalActiva] = useState("T01")
     useEffect(() => {
         // console.log("Product data loaded:", product)
         console.log("Stovk Data:", twoYearSalesData)
@@ -173,39 +173,39 @@ const ProductDetailScreen = () => {
                                         <CornerUpLeft />
                                     </TooltipButton>
                                     <div>
-                                        <h1 className="text-xl lg:text-2xl font-bold text-gray-900 leading-tight">{product?.descripcion}</h1>
+                                        <h1 className="text-lg lg:text-xl font-bold text-gray-900 leading-tight">{product?.descripcion}</h1>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Navigation Tabs */}
                             <Tabs defaultValue="overview" className="space-y-4">
-                                <div className="flex flex-col lg:flex-row lg:items-center justify-between">
-                                    <TabsList className="bg-white border border-gray-200 gap-2">
+                                <div className="flex flex-wrap-reverse gap-2 justify-between">
+                                    <TabsList className="bg-white border border-gray-200 gap-2 h-10">
                                         <TabsTrigger
                                             value="overview"
-                                            className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors"
+                                            className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors h-8"
                                         >
                                             <Activity className="h-4 w-4 mr-2" />
                                             Resumen
                                         </TabsTrigger>
                                         <TabsTrigger
                                             value="inventory"
-                                            className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors"
+                                            className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors h-8"
                                         >
                                             <Box className="h-4 w-4 mr-2" />
                                             Inventario
                                         </TabsTrigger>
                                         <TabsTrigger
                                             value="sales"
-                                            className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors"
+                                            className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors h-8"
                                         >
                                             <BarChart3 className="h-4 w-4 mr-2" />
                                             Ventas
                                         </TabsTrigger>
                                         <TabsTrigger
                                             value="logistics"
-                                            className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors"
+                                            className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors h-8"
                                         >
                                             <Truck className="h-4 w-4 mr-2" />
                                             Logística
@@ -214,33 +214,34 @@ const ProductDetailScreen = () => {
 
                                     <div className="flex items-center gap-2">
                                         {/* Branch Selector */}
-                                        <div className="flex items-center gap-2 bg-white rounded-md px-1 border border-gray-200">
+                                        <div className="flex items-center gap-2 bg-white rounded-md px-1 h-10 border border-gray-200">
                                             <MapPin className="h-4 w-4 text-gray-500 ml-2" />
                                             <span className="text-sm font-medium text-gray-700">Sucursal:</span>
-                                            {["T01", "T02", "T03"].map((sucursal) => (
-                                                <Button
-                                                    key={sucursal}
-                                                    variant={sucursalActiva === sucursal ? "default" : "ghost"}
-                                                    size="sm"
-                                                    className={`rounded-lg transition-all ${sucursalActiva === sucursal
-                                                        ? "bg-gray-900 hover:bg-gray-800 text-white"
-                                                        : "hover:bg-gray-100 text-gray-700"
-                                                        }`}
-                                                    onClick={() => setSucursalActiva(sucursal)}
+                                            {user?.sucursales && user?.sucursales.map((sucursal) => (
+                                                <TooltipButton
+                                                    key={sucursal.id}
+                                                    buttonProps={{
+                                                        variant: sucursalSeleccionada === sucursal.id ? "default" : "ghost",
+                                                        size: "sm"
+                                                    }}
+                                                    onClick={() => setSucursalSeleccionada(sucursal.id)}
+                                                    tooltip={
+                                                        <span>{sucursal.sucursal}</span>
+                                                    }
                                                 >
-                                                    {sucursal}
-                                                </Button>
+                                                    {sucursal.sigla}
+                                                </TooltipButton>
                                             ))}
+                                            <Button
+                                                size={'sm'}
+                                                className="cursor-pointer"
+                                                onClick={handleAddItemCart}
+                                                autoFocus
+                                            >
+                                                <ShoppingCart className="size-4" />
+                                                Agregar al carrito
+                                            </Button>
                                         </div>
-                                        <Button
-                                            size={'sm'}
-                                            className="cursor-pointer"
-                                            onClick={handleAddItemCart}
-                                            autoFocus
-                                        >
-                                            <ShoppingCart className="size-4" />
-                                            Agregar al carrito
-                                        </Button>
                                     </div>
                                 </div>
 
