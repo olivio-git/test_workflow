@@ -35,6 +35,7 @@ import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation"
 import { TooltipWrapper } from "@/components/common/TooltipWrapper "
 import { Kbd } from "@/components/atoms/kbd"
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
+import { useDebounce } from "use-debounce"
 
 const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
 
@@ -66,6 +67,12 @@ const ProductListScreen = () => {
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
     const [columnVisibility, setColumnVisibility] = useState({})
+    const [searchDescription, setSearchDescription] = useState("");
+    const [debouncedSearchDescription] = useDebounce(searchDescription, 500);
+
+    useEffect(() => {
+        updateFilter("descripcion", debouncedSearchDescription);
+    }, [debouncedSearchDescription]);
 
     useEffect(() => {
         updateFilter("sucursal", Number(selectedBranchId))
@@ -110,14 +117,7 @@ const ProductListScreen = () => {
         } else {
             setProducts(productData.data);
         }
-    }, [productData?.data, isInfiniteScroll, filters.pagina, error, isFetching]);
-
-    useEffect(() => {
-        if (!isInfiniteScroll) return;
-
-        setProducts([]);
-        setPage(1);
-    }, [isInfiniteScroll, filters.descripcion, filters.categoria, filters.subcategoria, filters.codigo_oem, setPage]);
+    }, [productData?.data, isInfiniteScroll, filters.pagina]);
 
     // Función para determinar el color del stock
     const getStockColor = (stock: number, stock_min: number) => {
@@ -244,7 +244,7 @@ const ProductListScreen = () => {
             minSize: 150,
             cell: ({ getValue }) => (
                 <div className="flex items-center justify-center">
-                    <Badge className="font-mono rounded font-normal" variant="secondary">{getValue<string>()}</Badge>
+                    <Badge className="font-mono rounded font-normal w-full" variant="secondary">{getValue<string>()}</Badge>
                 </div>
             ),
         },
@@ -258,14 +258,9 @@ const ProductListScreen = () => {
                 return (
                     <div className="space-y-1 flex items-end flex-col">
                         <div className="font-bold text-green-600">${getValue<number>().toFixed(2)}</div>
-                        {/* {precioAlt < precio && ( */}
                         <div className="flex items-center gap-1">
                             <span className=" text-gray-500">Alt: ${precioAlt.toFixed(2)}</span>
-                            {/* <Badge variant="destructive" className="text-xs px-1 py-0">
-                                    {descuento}%
-                                </Badge> */}
                         </div>
-                        {/* )} */}
                     </div>
                 );
             },
@@ -488,8 +483,8 @@ const ProductListScreen = () => {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                 <Input
                                     placeholder="Buscar por descripcion..."
-                                    value={filters.descripcion ?? ""}
-                                    onChange={(e) => updateFilter("descripcion", e.target.value)}
+                                    value={searchDescription}
+                                    onChange={(e) => setSearchDescription(e.target.value)}
                                     className="pl-10 w-full"
                                 />
                             </div>
@@ -501,9 +496,8 @@ const ProductListScreen = () => {
                                     id="infinite-scroll"
                                     checked={isInfiniteScroll}
                                     onCheckedChange={(checked) => {
-                                        setIsInfiniteScroll(checked);
-                                        setPage(1);
-                                        setProducts([])
+                                        setIsInfiniteScroll(checked)
+                                        setPage(1)
                                     }}
                                 />
                                 <Label htmlFor="infinite-scroll">
@@ -634,7 +628,14 @@ const ProductListScreen = () => {
                                 isError={isError}
                                 errorMessage="Ocurrió un error al cargar los productos"
                                 isLoading={isLoading}
+                                rows={filters.pagina_registros}
                                 noDataMessage="No se encontraron productos"
+                                selectedRowIndex={selectedIndex}
+                                onRowClick={handleRowClick}
+                                onRowDoubleClick={handleRowDoubleClick}
+                                tableRef={tableRef}
+                                focused={isFocused}
+                                keyboardNavigationEnabled={true}
                             />
                         </InfiniteScroll>
                     ) : (
