@@ -1,7 +1,7 @@
 import { useCartStore } from "./useCartStore";
 import type { CartProduct, CartSummary } from "../types/cart.types";
 import { useStore } from "zustand";
-import { toast } from "@/hooks/use-toast";
+import { showErrorToast, showInfoToast, showSuccessToast, showWarningToast } from "@/hooks/use-toast-enhanced";
 
 export interface CartOperationResult {
     success: boolean;
@@ -22,9 +22,9 @@ export interface BulkAddResult {
     message: string;
 }
 
-export const useCartWithUtils = (user: string) => {
+export const useCartWithUtils = (user: string, branch: string) => {
     if (!user) user = "guest"
-    const cartStore = useCartStore(user);
+    const cartStore = useCartStore(`${user}-${branch}`);
     const state = useStore(cartStore, (state) => state)
 
     const incrementQuantity = (productId: number) => {
@@ -45,16 +45,16 @@ export const useCartWithUtils = (user: string) => {
         const result = state.addItem(product);
 
         if (result.success) {
-            toast({
+            showSuccessToast({
                 title: "Producto agregado",
                 description: result.message,
-                className: "border border-green-200 bg-green-50"
-            });
+                duration: 5000,
+            })
         } else {
-            toast({
+            showErrorToast({
                 title: "No se pudo agregar producto",
                 description: result.message,
-                variant: "destructive"
+                duration: 5000,
             });
         }
 
@@ -91,10 +91,10 @@ export const useCartWithUtils = (user: string) => {
 
         // Toast con resumen
         if (totalAdded > 0) {
-            toast({
+            showSuccessToast({
                 title: "Productos agregados",
                 description: bulkResult.message,
-                className: "border border-green-200 bg-green-50"
+                duration: 5000,
             });
         }
 
@@ -104,10 +104,10 @@ export const useCartWithUtils = (user: string) => {
                 ? failedProducts[0].message
                 : `${totalFailed} productos no se pudieron agregar por problemas de stock`;
 
-            toast({
+            showErrorToast({
                 title: "Algunos productos no se agregaron",
                 description: errorMessage,
-                variant: "destructive"
+                duration: 5000,
             });
         }
 
@@ -125,10 +125,10 @@ export const useCartWithUtils = (user: string) => {
                 message: `${product.descripcion} no tiene stock disponible`
             };
 
-            toast({
+            showErrorToast({
                 title: "Sin stock",
                 description: result.message,
-                variant: "destructive"
+                duration: 5000,
             });
 
             return result;
@@ -142,10 +142,10 @@ export const useCartWithUtils = (user: string) => {
                 message: `Solo hay ${available} unidades adicionales disponibles de ${product.descripcion}`
             };
 
-            toast({
+            showErrorToast({
                 title: "Stock insuficiente",
                 description: result.message,
-                variant: "destructive"
+                duration: 5000,
             });
 
             return result;
@@ -166,13 +166,21 @@ export const useCartWithUtils = (user: string) => {
             message: `Se agregaron ${addedCount} de ${quantity} unidades de ${product.descripcion}`
         };
 
-        toast({
-            title: addedCount === quantity ? "Productos agregados" : "Agregado parcial",
-            description: result.message,
-            className: addedCount === quantity
-                ? "border border-green-200 bg-green-50"
-                : "border border-yellow-200 bg-yellow-50"
-        });
+        {
+            addedCount === quantity ? (
+                showSuccessToast({
+                    title: "Productos agregados",
+                    description: result.message,
+                    duration: 5000
+                })
+            ) : (
+                showWarningToast({
+                    title: "Agregado parcial",
+                    description: result.message,
+                    duration: 5000
+                })
+            )
+        }
 
         return result;
     };
@@ -185,10 +193,10 @@ export const useCartWithUtils = (user: string) => {
                 `${issue.productName}: ${issue.issue === 'NO_STOCK' ? 'Sin stock' : `Cantidad ${issue.currentQuantity} > Stock ${issue.availableStock}`}`
             );
 
-            toast({
+            showErrorToast({
                 title: "Problemas en el carrito",
                 description: issueMessages.join(', '),
-                variant: "destructive"
+                duration: 5000
             });
         }
 
@@ -204,10 +212,10 @@ export const useCartWithUtils = (user: string) => {
         });
 
         if (outOfStockItems.length > 0) {
-            toast({
+            showInfoToast({
                 title: "Productos removidos",
                 description: `Se removieron ${outOfStockItems.length} productos sin stock`,
-                className: "border border-blue-200 bg-blue-50"
+                duration: 5000
             });
         }
 
@@ -230,10 +238,10 @@ export const useCartWithUtils = (user: string) => {
         });
 
         if (adjustedCount > 0) {
-            toast({
+            showInfoToast({
                 title: "Cantidades ajustadas",
                 description: `Se ajustaron las cantidades de ${adjustedCount} productos según el stock disponible`,
-                className: "border border-blue-200 bg-blue-50"
+                duration: 5000
             });
         }
 

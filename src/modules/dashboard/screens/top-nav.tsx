@@ -13,6 +13,7 @@ import authSDK from "@/services/sdk-simple-auth";
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils";
 import { TooltipWrapper } from "@/components/common/TooltipWrapper ";
 import ShortcutKey from "@/components/common/ShortcutKey";
+import { useBranchStore } from "@/states/branchStore";
 
 interface TopNavProps {
   isSidebarMenuOpen: boolean;
@@ -55,6 +56,7 @@ const TopNav: React.FC<TopNavProps> = ({
   onOpenCartChange
 }) => {
   const user = authSDK.getCurrentUser()
+  const { selectedBranchId } = useBranchStore()
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const routes = protectedRoutes.filter((route) => route.type === "protected");
@@ -64,7 +66,7 @@ const TopNav: React.FC<TopNavProps> = ({
   const parentRoute = findParentRoute(routes, location.pathname);
   const {
     getCartCount: cartLength
-  } = useCartWithUtils(user?.name || '')
+  } = useCartWithUtils(user?.name || '', selectedBranchId ?? '')
   useHotkeys(
     "ctrl+k",
     (e) => {

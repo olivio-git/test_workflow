@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
     Search,
     Filter,
@@ -36,11 +36,14 @@ import { TooltipWrapper } from "@/components/common/TooltipWrapper "
 import { Kbd } from "@/components/atoms/kbd"
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
 
+const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
+
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
     const { selectedBranchId } = useBranchStore()
     const navigate = useNavigate()
     const user = authSDK.getCurrentUser()
+    const [showFilters, setShowFilters] = useState<boolean>(true)
     const {
         filters,
         updateFilter,
@@ -58,53 +61,63 @@ const ProductListScreen = () => {
         isRefetching: isRefetchingProducts,
     } = useProductsPaginated(filters);
 
-    const { addItemToCart } = useCartWithUtils(user?.name ?? '')
+    const { addItemToCart, addMultipleItems } = useCartWithUtils(user?.name ?? '', selectedBranchId ?? '')
     const [sorting, setSorting] = useState<SortingState>([])
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
     const [columnVisibility, setColumnVisibility] = useState({})
-
-    const [selectedProducts, setSelectedProducts] = useState<number[]>([])
-
-    const COLUMN_VISIBILITY_KEY = `product-columns-${user?.name}`;
 
     useEffect(() => {
         updateFilter("sucursal", Number(selectedBranchId))
     }, [selectedBranchId])
 
     useEffect(() => {
+        if (!user?.name) return;
+        const COLUMN_VISIBILITY_KEY = getColumnVisibilityKey(user.name);
         const savedVisibility = localStorage.getItem(COLUMN_VISIBILITY_KEY);
         if (savedVisibility) {
             try {
-                setColumnVisibility(JSON.parse(savedVisibility));
-            } catch {
+                const parsed = JSON.parse(savedVisibility);
+                setColumnVisibility(parsed);
+            } catch (error) {
+                console.error('Error parsing column visibility:', error);
                 localStorage.removeItem(COLUMN_VISIBILITY_KEY);
             }
         }
-    }, [user]);
+    }, [user?.name]);
 
     useEffect(() => {
-        localStorage.setItem(COLUMN_VISIBILITY_KEY, JSON.stringify(columnVisibility));
-    }, [columnVisibility, user]);
-
+        if (!user?.name || Object.keys(columnVisibility).length === 0) return;
+        const COLUMN_VISIBILITY_KEY = getColumnVisibilityKey(user.name);
+        try {
+            localStorage.setItem(COLUMN_VISIBILITY_KEY, JSON.stringify(columnVisibility));
+        } catch (error) {
+            console.error('Error saving column visibility:', error);
+        }
+    }, [columnVisibility, user?.name]);
 
     useEffect(() => {
         if (!productData?.data || error || isFetching) return;
-        if (productData?.data) {
-            if (isInfiniteScroll && filters.pagina && filters.pagina > 1) {
-                setProducts((prev) => [...prev, ...productData.data]);
-            } else {
-                setProducts(productData.data);
-            }
+
+        if (isInfiniteScroll && filters.pagina && filters.pagina > 1) {
+            setProducts((prev) => {
+                // Evitar duplicados
+                const newProducts = productData.data.filter(
+                    newProduct => !prev.some(existingProduct => existingProduct.id === newProduct.id)
+                );
+                return [...prev, ...newProducts];
+            });
+        } else {
+            setProducts(productData.data);
         }
-    }, [productData, isInfiniteScroll, filters.pagina]);
+    }, [productData?.data, isInfiniteScroll, filters.pagina, error, isFetching]);
 
     useEffect(() => {
-        if (isInfiniteScroll) {
-            setProducts([]);
-            setPage(1);
-        }
-    }, [filters.descripcion, filters.categoria, filters.subcategoria, filters.codigo_oem]);
+        if (!isInfiniteScroll) return;
+
+        setProducts([]);
+        setPage(1);
+    }, [isInfiniteScroll, filters.descripcion, filters.categoria, filters.subcategoria, filters.codigo_oem, setPage]);
 
     // Función para determinar el color del stock
     const getStockColor = (stock: number, stock_min: number) => {
@@ -159,14 +172,14 @@ const ProductListScreen = () => {
             enableHiding: false,
             cell: ({ row, getValue }) => (
                 <div
-                    className="group rounded flex items-center gap-1">
+                    className="flex items-center gap-1">
 
                     <div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    className="size-8"
+                                    className="size-6 px-0"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                     }}
@@ -176,7 +189,7 @@ const ProductListScreen = () => {
                                         }
                                     }}
                                 >
-                                    <MoreVertical className="h-4 w-4" />
+                                    <MoreVertical className="size-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
@@ -208,11 +221,14 @@ const ProductListScreen = () => {
                     </div>
                     <div className="flex flex-col">
                         <TooltipWrapper
+                            tooltipContentProps={{
+                                align: 'start'
+                            }}
                             tooltip={
                                 <p>Presiona <Kbd>enter</Kbd> para ver los detalles del producto</p>
                             }
                         >
-                            <h3 className="font-medium text-gray-900 leading-tigh group-hover:underline truncate">{getValue<string>()}</h3>
+                            <h3 className="font-medium text-gray-900 leading-tigh hover:underline truncate">{getValue<string>()}</h3>
                         </TooltipWrapper>
                         <span className=" text-gray-500 font-mono">
                             UPC: {row.original.codigo_upc}
@@ -412,21 +428,35 @@ const ProductListScreen = () => {
         addItemToCart(product);
     };
 
-    const handleSelectAll = (checked: boolean) => {
-        if (checked) {
-            // setSelectedProducts(filteredAndSortedProducts.map((p) => p.id))
-        } else {
-            setSelectedProducts([])
+    const hasProductSelected = Object.keys(rowSelection).length;
+    const handleAddSelectedToCart = useCallback(() => {
+        if (!table || !table.getSelectedRowModel) {
+            console.warn("Tabla no inicializada correctamente");
+            return;
         }
-    }
 
-    const handleSelectProduct = (productId: number, checked: boolean) => {
-        if (checked) {
-            setSelectedProducts([...selectedProducts, productId])
-        } else {
-            setSelectedProducts(selectedProducts.filter((id) => id !== productId))
+        const selectedProducts = table.getSelectedRowModel().rows.map(row => row.original);
+
+        if (selectedProducts.length === 0) {
+            console.warn("No hay productos seleccionados para agregar al carrito.");
+            return;
         }
-    }
+
+        try {
+            const productsForCart = selectedProducts.map(product => CartProductSchema.parse(product));
+            addMultipleItems(productsForCart);
+
+            setTimeout(() => {
+                if (table && table.resetRowSelection) {
+                    table.resetRowSelection();
+                }
+            }, 0);
+        } catch (error) {
+            console.error("Error al procesar productos para el carrito:", error);
+        }
+    }, [table, addMultipleItems]);
+
+
     const onPageChange = (page: number) => {
         setPage(page);
     };
@@ -438,6 +468,10 @@ const ProductListScreen = () => {
 
     const handleRefetchProducts = () => {
         refetchProducts();
+    }
+
+    const toggleShowFilters = () => {
+        setShowFilters(!showFilters)
     }
 
     return (
@@ -457,7 +491,6 @@ const ProductListScreen = () => {
                                     value={filters.descripcion ?? ""}
                                     onChange={(e) => updateFilter("descripcion", e.target.value)}
                                     className="pl-10 w-full"
-                                    autoFocus
                                 />
                             </div>
                         </div>
@@ -489,49 +522,28 @@ const ProductListScreen = () => {
                                 <RefreshCcw className={`size-4 ${isRefetchingProducts || isFetching ? 'animate-spin' : ''}`} />
                             </TooltipButton>
 
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                        <Settings className="w-4 h-4 mr-2" />
-                                        Columnas
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56 max-h-96 overflow-y-auto border border-gray-200">
-                                    {table
-                                        .getAllColumns()
-                                        .filter((column) => column.getCanHide())
-                                        .map((column) => (
-                                            <DropdownMenuItem
-                                                key={column.id}
-                                                className="flex items-center space-x-2 cursor-pointer"
-                                                onSelect={(e) => e.preventDefault()}
-                                                onClick={() => column.toggleVisibility(!column.getIsVisible())}
-                                            >
-                                                <Checkbox
-                                                    className="border border-gray-400"
-                                                    checked={column.getIsVisible()}
-                                                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                                                />
-                                                <span className="flex-1">
-                                                    {typeof column.columnDef.header === "string" ? column.columnDef.header : column.id}
-                                                </span>
-                                            </DropdownMenuItem>
-                                        ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
                             <Button variant="outline" size="sm" onClick={resetFilters}>
                                 <Filter className="h-4 w-4 mr-2" />
                                 Reset Filters
+                            </Button>
+                            <Button size={'sm'} onClick={toggleShowFilters}>
+                                {
+                                    showFilters ?
+                                        "Ocultar filtros" :
+                                        "Mostrar filtros"
+                                }
                             </Button>
                         </div>
                     </div>
                 </div>
                 {/* Búsquedas individuales */}
-                <ProductFilters
-                    filters={filters}
-                    updateFilter={updateFilter}
-                />
+                {
+                    showFilters &&
+                    <ProductFilters
+                        filters={filters}
+                        updateFilter={updateFilter}
+                    />
+                }
                 {/* Results Info */}
                 <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
                     {
@@ -544,9 +556,7 @@ const ProductListScreen = () => {
                             - ${(filters.pagina ?? 1) * (filters.pagina_registros ?? 1)} de ${productData?.meta.total} productos`
                             : <span>Cargando...</span>
                     }
-                    {selectedProducts.length > 0 && (
-                        <span className="ml-4 text-blue-600">{selectedProducts.length} selected</span>
-                    )}
+
                     <div className="flex items-center gap-2">
                         <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
                         <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
@@ -560,6 +570,46 @@ const ProductListScreen = () => {
                                 <SelectItem value={"100"}>100</SelectItem>
                             </SelectContent>
                         </Select>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                    <Settings className="w-4 h-4 mr-2" />
+                                    Columnas
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 max-h-96 overflow-y-auto border border-gray-200">
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => (
+                                        <DropdownMenuItem
+                                            key={column.id}
+                                            className="flex items-center space-x-2 cursor-pointer"
+                                            onSelect={(e) => e.preventDefault()}
+                                            onClick={() => column.toggleVisibility(!column.getIsVisible())}
+                                        >
+                                            <Checkbox
+                                                className="border border-gray-400"
+                                                checked={column.getIsVisible()}
+                                                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                            />
+                                            <span className="flex-1">
+                                                {typeof column.columnDef.header === "string" ? column.columnDef.header : column.id}
+                                            </span>
+                                        </DropdownMenuItem>
+                                    ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        {
+                            table && hasProductSelected > 0 && (
+                                <Button size={'sm'} className="relative" onClick={handleAddSelectedToCart}>
+                                    Agregar al carrito
+                                    <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-[10px]">
+                                        {hasProductSelected}
+                                    </Badge>
+                                </Button>
+                            )
+                        }
                     </div>
                 </div>
 

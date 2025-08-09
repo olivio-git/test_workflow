@@ -11,6 +11,7 @@ import { useNavigate } from "react-router"
 import { useCartWithUtils } from "../hooks/useCartWithUtils"
 import authSDK from "@/services/sdk-simple-auth"
 import { useHotkeys, useHotkeysContext } from "react-hotkeys-hook";
+import { useBranchStore } from "@/states/branchStore"
 
 const CartSidebar = ({
     open,
@@ -21,6 +22,7 @@ const CartSidebar = ({
 }) => {
     const user = authSDK.getCurrentUser()
     const { enableScope, disableScope } = useHotkeysContext();
+    const { selectedBranchId } = useBranchStore()
 
     const [expandedView, setExpandedView] = useState(false)
     const navigate = useNavigate()
@@ -36,7 +38,7 @@ const CartSidebar = ({
         updateCustomSubtotal,
         setDiscountAmount,
         setDiscountPercent,
-    } = useCartWithUtils(user?.name || '')
+    } = useCartWithUtils(user?.name || '', selectedBranchId ?? '')
 
     useHotkeys('escape',
         (event) => {

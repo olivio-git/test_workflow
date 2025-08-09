@@ -34,7 +34,7 @@
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground)); 
+  --color-primary-foreground: hsl(var(--primary-foreground));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-destructive: hsl(var(--destructive));
@@ -47,7 +47,35 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
-  
+
+  /* Toast Info */
+  --color-toast-info-bg: radial-gradient(ellipse at left, hsl(214 100% 97%) 0%, hsl(214 50% 98%) 50%, hsl(0 0% 100%) 100%);
+  --color-toast-info-foreground: hsl(220 13% 18%);
+  --color-toast-info-border: hsl(214 32% 91%);
+  --color-toast-info-icon: hsl(214 84% 56%);
+  --color-toast-info-icon-bg: hsl(214 100% 97%);
+
+  /* Toast Success */
+  --color-toast-success-bg: radial-gradient(ellipse at left, hsl(142 70% 96%) 0%, hsl(142 30% 98%) 50%, hsl(0 0% 100%) 100%);
+  --color-toast-success-foreground: hsl(220 13% 18%);
+  --color-toast-success-border: hsl(142 34% 85%);
+  --color-toast-success-icon: hsl(142 71% 45%);
+  --color-toast-success-icon-bg: hsl(142 68% 95%);
+
+  /* Toast Warning */
+  --color-toast-warning-bg: radial-gradient(ellipse at left, hsl(48 100% 95%) 0%, hsl(48 50% 97%) 50%, hsl(0 0% 100%) 100%);
+  --color-toast-warning-foreground: hsl(220 13% 18%);
+  --color-toast-warning-border: hsl(48 95% 76%);
+  --color-toast-warning-icon: hsl(25 95% 53%);
+  --color-toast-warning-icon-bg: hsl(48 100% 93%);
+
+  /* Toast Error */
+  --color-toast-error-bg: radial-gradient(ellipse at left, hsl(0 100% 97%) 0%, hsl(0 50% 98%) 50%, hsl(0 0% 100%) 100%);
+  --color-toast-error-foreground: hsl(220 13% 18%);
+  --color-toast-error-border: hsl(0 93% 94%);
+  --color-toast-error-icon: hsl(0 84% 60%);
+  --color-toast-error-icon-bg: hsl(0 100% 97%);
+
   /* Radius personalizado */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -56,23 +84,43 @@
 
 /* Animaciones personalizadas */
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes slide-in {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 
 @keyframes slide-out {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 /* Utilidades personalizadas */
@@ -80,15 +128,15 @@
   .animate-fade-in {
     animation: fade-in 0.2s ease-out;
   }
-  
+
   .animate-fade-out {
     animation: fade-out 0.2s ease-out;
   }
-  
+
   .animate-slide-in {
     animation: slide-in 0.2s ease-out;
   }
-  
+
   .animate-slide-out {
     animation: slide-out 0.2s ease-out;
   }

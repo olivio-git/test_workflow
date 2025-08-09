@@ -51,7 +51,7 @@ const ProductDetailScreen = () => {
 
     const {
         addItemToCart
-    } = useCartWithUtils(user?.name || '')
+    } = useCartWithUtils(user?.name || '', selectedBranchId ?? '')
 
     const [gestiones, setGestiones] = useState<{ gestion_1: number; gestion_2: number }>({
         gestion_1: new Date().getFullYear() - 1,
@@ -125,11 +125,6 @@ const ProductDetailScreen = () => {
         setSucursalSeleccionada(Number(selectedBranchId))
     }, [selectedBranchId])
 
-    useEffect(() => {
-        // console.log("Product data loaded:", product)
-        console.log("Stovk Data:", twoYearSalesData)
-    }, [twoYearSalesData, product])
-
     const handleChangeGestion1 = (value: string) => {
         setGestiones(prev => ({
             ...prev,
@@ -161,14 +156,7 @@ const ProductDetailScreen = () => {
         scopes: ["esc-key"],
         enabled: true
     });
-    //     components/
-    // │   └── detail/
-    // │       ├── ProductOverview.tsx
-    // │       ├── ProductInventory.tsx
-    // │       ├── ProductSales.tsx
-    // │       ├── ProductLogistics.tsx
-    // │       ├── ProductHeader.tsx
-    // │       └── ProductBranchSelector.tsx
+
     return (
         <>
             {
@@ -180,6 +168,9 @@ const ProductDetailScreen = () => {
                             <div className="bg-white border border-gray-200 rounded-lg p-6">
                                 <div className="flex items-center gap-3">
                                     <TooltipButton
+                                        tooltipContentProps={{
+                                            align: 'start'
+                                        }}
                                         onClick={handleGoBack}
                                         tooltip={<p>Presiona <Kbd>esc</Kbd> para volver a la lista de productos</p>}
                                         buttonProps={{
@@ -249,6 +240,7 @@ const ProductDetailScreen = () => {
                                                 </TooltipButton>
                                             ))}
                                             <Button
+                                                disabled={!productForCart?.data || productForCart.data[0].stock_actual <= 0}
                                                 size={'sm'}
                                                 className="cursor-pointer"
                                                 onClick={handleAddItemCart}
