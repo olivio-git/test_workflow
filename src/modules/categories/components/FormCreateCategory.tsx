@@ -5,9 +5,9 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/atoms/accordion";
-import { useToast } from "@/hooks/use-toast";
 import { useInfiniteQuery, useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { apiConstructor } from "../services/api";
+import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
 
 // Interfaces
 interface Category {
@@ -17,7 +17,7 @@ interface Category {
     id: number;
     subcategoria: string;
   }>;
-} 
+}
 // Hook personalizado para debounce
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -43,7 +43,7 @@ const categoriesService = {
   getCategories: async ({ pageParam = 1, categoria = "" }) => {
     // URL directa con percent-encoding para evitar problemas
     let url = `/categories?pagina=${pageParam}&pagina_registros=20`;
-    
+
     if (categoria.trim()) {
       url += `&categoria=${encodeURIComponent(categoria.trim())}`;
     }
@@ -56,9 +56,9 @@ const categoriesService = {
         url,
         method: "GET"
       });
-      
+
       console.log("📦 Response del apiConstructor:", response);
-      
+
       // Si apiConstructor ya devuelve solo los datos, reconstruir la estructura
       if (Array.isArray(response)) {
         // Si response es directamente el array de categorías
@@ -67,15 +67,15 @@ const categoriesService = {
           meta: { total: response.length, current_page: pageParam, last_page: 1 }
         };
       }
-      
+
       // Si response ya tiene la estructura completa
       if (response && response.data) {
         return response;
       }
-      
+
       // Fallback
       return { data: [], meta: { total: 0, current_page: 1, last_page: 1 } };
-      
+
     } catch (error) {
       console.error("❌ Error en getCategorias:", error);
       throw error;
@@ -89,9 +89,9 @@ const categoriesService = {
         url: "/categories?pagina=1&pagina_registros=50",
         method: "GET"
       });
-      
+
       console.log("📦 Simple Response del apiConstructor:", response);
-      
+
       // Manejar diferentes estructuras de respuesta
       if (Array.isArray(response)) {
         return {
@@ -99,7 +99,7 @@ const categoriesService = {
           meta: { total: response.length }
         };
       }
-      
+
       return response;
     } catch (error) {
       console.error("❌ Error en getCategoriesSimple:", error);
@@ -143,7 +143,6 @@ const categoriesService = {
 };
 
 const FormCreateCategory = () => {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -178,9 +177,9 @@ const FormCreateCategory = () => {
     refetch
   } = useInfiniteQuery({
     queryKey: ["categories", debouncedSearchTerm],
-    queryFn: ({ pageParam }) => categoriesService.getCategories({ 
-      pageParam, 
-      categoria: debouncedSearchTerm 
+    queryFn: ({ pageParam }) => categoriesService.getCategories({
+      pageParam,
+      categoria: debouncedSearchTerm
     }),
     initialPageParam: 1,
     enabled: !SIMPLE_MODE, // Solo habilitar si no estamos en modo simple
@@ -214,16 +213,17 @@ const FormCreateCategory = () => {
       } else {
         queryClient.invalidateQueries({ queryKey: ["categories"] });
       }
-      toast({
+      showSuccessToast({
         title: "Categoría creada",
         description: `La categoría fue creada exitosamente.`,
+        duration: 5000
       });
     },
     onError: (error: any) => {
-      toast({
+      showErrorToast({
         title: "Error al crear",
         description: error.message || "No se pudo crear la categoría.",
-        variant: "destructive",
+        duration: 5000
       });
     }
   });
@@ -240,16 +240,17 @@ const FormCreateCategory = () => {
       } else {
         queryClient.invalidateQueries({ queryKey: ["categories"] });
       }
-      toast({
+      showSuccessToast({
         title: "Subcategoría creada",
         description: "La subcategoría fue creada exitosamente.",
+        duration: 5000
       });
     },
     onError: (error: any) => {
-      toast({
+      showErrorToast({
         title: "Error al crear subcategoría",
         description: error.message || "No se pudo crear la subcategoría.",
-        variant: "destructive",
+        duration: 5000
       });
     }
   });
@@ -264,23 +265,24 @@ const FormCreateCategory = () => {
       } else {
         queryClient.invalidateQueries({ queryKey: ["categories"] });
       }
-      toast({
+      showSuccessToast({
         title: "Categoría eliminada",
         description: "La categoría ha sido eliminada exitosamente.",
+        duration: 5000
       });
     },
     onError: (error: any) => {
-      toast({
+      showErrorToast({
         title: "Error al eliminar",
         description: error.message || "No se pudo eliminar la categoría.",
-        variant: "destructive",
+        duration: 5000
       });
     }
   });
 
   // Mutation para actualizar categoría
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ id, categoria }: { id: number; categoria: string }) => 
+    mutationFn: ({ id, categoria }: { id: number; categoria: string }) =>
       categoriesService.updateCategory(id, categoria),
     onSuccess: () => {
       setEditingId(null);
@@ -291,16 +293,17 @@ const FormCreateCategory = () => {
       } else {
         queryClient.invalidateQueries({ queryKey: ["categories"] });
       }
-      toast({
+      showSuccessToast({
         title: "Categoría actualizada",
         description: "La categoría ha sido actualizada exitosamente.",
+        duration: 5000
       });
     },
     onError: (error: any) => {
-      toast({
+      showErrorToast({
         title: "Error al actualizar",
         description: error.message || "No se pudo actualizar la categoría.",
-        variant: "destructive",
+        duration: 5000
       });
     }
   });
@@ -319,7 +322,7 @@ const FormCreateCategory = () => {
     } else {
       // Modo infinite scroll
       if (!data || !data.pages) return [];
-      
+
       return data.pages.flatMap(page => {
         // Manejo flexible de la estructura de respuesta
         if (page && page.data && Array.isArray(page.data)) {
@@ -343,7 +346,7 @@ const FormCreateCategory = () => {
       return allCategories.length;
     } else {
       if (!data?.pages || !data.pages[0]) return 0;
-      
+
       const firstPage = data.pages[0];
       if (firstPage.meta && firstPage.meta.total) {
         return firstPage.meta.total;
@@ -351,7 +354,7 @@ const FormCreateCategory = () => {
       return allCategories.length;
     }
   }, [data, simpleQuery.data, allCategories]);
-  
+
   const totalSubcategories = useMemo(() => {
     return allCategories.reduce((total: number, cat: Category) => {
       if (cat && cat.subcategorias && Array.isArray(cat.subcategorias)) {
@@ -410,30 +413,30 @@ const FormCreateCategory = () => {
 
   // Debug para loading states
   useEffect(() => {
-    console.log("🔄 Estados:", { 
+    console.log("🔄 Estados:", {
       mode: SIMPLE_MODE ? 'SIMPLE' : 'INFINITE',
-      isLoading: isLoadingUnified, 
-      isFetchingNextPage, 
-      hasNextPage 
+      isLoading: isLoadingUnified,
+      isFetchingNextPage,
+      hasNextPage
     });
   }, [isLoadingUnified, isFetchingNextPage, hasNextPage]);
 
   // Handlers para formularios
   const handleCreateCategory = () => {
     if (!newCategory.trim()) {
-      toast({
+      showErrorToast({
         title: "Error de validación",
         description: "El nombre de la categoría es requerido",
-        variant: "destructive",
+        duration: 5000
       });
       return;
     }
 
     if (newCategory.length < 3) {
-      toast({
-        title: "Error de validación", 
+      showErrorToast({
+        title: "Error de validación",
         description: "La categoría debe tener al menos 3 caracteres",
-        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -445,10 +448,10 @@ const FormCreateCategory = () => {
     if (!newSubName.trim() || addingSubId === null) return;
 
     if (newSubName.length < 3) {
-      toast({
+      showErrorToast({
         title: "Error de validación",
         description: "La subcategoría debe tener al menos 3 caracteres",
-        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -468,10 +471,10 @@ const FormCreateCategory = () => {
     if (!editingName.trim() || editingId === null) return;
 
     if (editingName.length < 3) {
-      toast({
+      showErrorToast({
         title: "Error de validación",
         description: "La categoría debe tener al menos 3 caracteres",
-        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -568,7 +571,7 @@ const FormCreateCategory = () => {
             <span><strong>{totalSubcategories}</strong> subcategorías</span>
           </div>
         </div>
-        
+
         <div className="flex gap-3 items-center">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 w-4 h-4 text-gray-400 -translate-y-1/2" />
@@ -592,7 +595,7 @@ const FormCreateCategory = () => {
       </div>
 
       {/* Lista de categorías con scroll infinito */}
-      <div 
+      <div
         ref={scrollContainerRef}
         className="bg-white border border-gray-200 rounded-lg max-h-[600px] overflow-y-auto"
       >
@@ -649,7 +652,7 @@ const FormCreateCategory = () => {
                   )}
                 </div>
               </AccordionTrigger>
-              
+
               <AccordionContent className="px-4 pb-4">
                 {/* Subcategorías existentes */}
                 {cat.subcategorias && cat.subcategorias.length > 0 && (
@@ -657,9 +660,9 @@ const FormCreateCategory = () => {
                     <p className="text-sm font-medium text-gray-700 mb-2">Subcategorías:</p>
                     <div className="flex flex-wrap gap-2">
                       {cat.subcategorias.map((sub: { id: number; subcategoria: string }) => (
-                        <Badge 
-                          key={sub.id} 
-                          variant="outline" 
+                        <Badge
+                          key={sub.id}
+                          variant="outline"
                           className="text-sm bg-gray-50 hover:bg-gray-100"
                         >
                           {sub.subcategoria}
@@ -679,16 +682,16 @@ const FormCreateCategory = () => {
                       className="h-8 flex-1"
                       onKeyDown={(e) => e.key === 'Enter' && handleSubmitSubcategory()}
                     />
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={handleSubmitSubcategory}
                       disabled={!newSubName.trim() || createSubcategoryMutation.isPending}
                       className="h-8 px-3"
                     >
                       <Save className="w-3 h-3" />
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => setAddingSubId(null)}
                       className="h-8 px-3"
@@ -708,7 +711,7 @@ const FormCreateCategory = () => {
                     Agregar subcategoría
                   </button>
                 )}
-                
+
                 {/* Acciones */}
                 <div className="flex justify-end gap-2">
                   {editingId !== cat.id && (

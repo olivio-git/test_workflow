@@ -97,7 +97,7 @@ const CustomizableTable = <T,>({
             </TableHeader>
             <TableBody className="divide-y divide-gray-200">
                 {isLoading || isFetching ? (
-                    [...Array(rows || 25)].map((_, rowIndex) => (
+                    [...Array(rows || 10)].map((_, rowIndex) => (
                         <TableRow key={`skeleton-row-${rowIndex}`}>
                             {table.getVisibleFlatColumns().map((column, colIndex) => (
                                 <TableCell

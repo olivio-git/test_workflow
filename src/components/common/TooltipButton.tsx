@@ -1,3 +1,4 @@
+import type { TooltipContentProps } from "@radix-ui/react-tooltip";
 import { Button, type ButtonProps } from "../atoms/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../atoms/tooltip";
 import { cn } from "@/lib/utils";
@@ -6,6 +7,7 @@ type TooltipButtonProps = {
     tooltip: React.ReactNode;
     onClick?: () => void;
     children: React.ReactNode;
+    tooltipContentProps?: TooltipContentProps
     buttonProps?: ButtonProps;
 };
 
@@ -13,7 +15,8 @@ const TooltipButton: React.FC<TooltipButtonProps> = ({
     tooltip,
     onClick,
     children,
-    buttonProps
+    buttonProps,
+    tooltipContentProps
 }) => {
     return (
         <Tooltip>
@@ -33,7 +36,7 @@ const TooltipButton: React.FC<TooltipButtonProps> = ({
                     {children}
                 </Button>
             </TooltipTrigger>
-            <TooltipContent>{tooltip}</TooltipContent>
+            <TooltipContent {...tooltipContentProps}>{tooltip}</TooltipContent>
         </Tooltip>
     );
 };

@@ -5,10 +5,10 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/atoms/accordion";
-import { useToast } from "@/hooks/use-toast";
-import { useInfiniteQuery, useQueryClient, useMutation, useQuery } from "@tanstack/react-query"; 
+import { useInfiniteQuery, useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import useDebounce from "../hooks/useDebounce";
 import categoriesService from "../services/categoriesService";
+import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
 
 interface Category {
   id: number;
@@ -17,14 +17,13 @@ interface Category {
     id: number;
     subcategoria: string;
   }>;
-} 
+}
 
 
 const SIMPLE_MODE = false;
 
 
 const TableCreateCategory = () => {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -58,9 +57,9 @@ const TableCreateCategory = () => {
     refetch
   } = useInfiniteQuery({
     queryKey: ["categories", debouncedSearchTerm],
-    queryFn: ({ pageParam }) => categoriesService.getCategories({ 
-      pageParam, 
-      categoria: debouncedSearchTerm 
+    queryFn: ({ pageParam }) => categoriesService.getCategories({
+      pageParam,
+      categoria: debouncedSearchTerm
     }),
     initialPageParam: 1,
     enabled: !SIMPLE_MODE,
@@ -89,16 +88,17 @@ const TableCreateCategory = () => {
       } else {
         queryClient.invalidateQueries({ queryKey: ["categories"] });
       }
-      toast({
+      showSuccessToast({
         title: "Categoría creada",
         description: `La categoría fue creada exitosamente.`,
+        duration: 5000
       });
     },
     onError: (error: any) => {
-      toast({
+      showErrorToast({
         title: "Error al crear",
         description: error.message || "No se pudo crear la categoría.",
-        variant: "destructive",
+        duration: 5000
       });
     }
   });
@@ -113,16 +113,17 @@ const TableCreateCategory = () => {
       } else {
         queryClient.invalidateQueries({ queryKey: ["categories"] });
       }
-      toast({
+      showSuccessToast({
         title: "Subcategoría creada",
         description: "La subcategoría fue creada exitosamente.",
+        duration: 5000
       });
     },
     onError: (error: any) => {
-      toast({
+      showErrorToast({
         title: "Error al crear subcategoría",
         description: error.message || "No se pudo crear la subcategoría.",
-        variant: "destructive",
+        duration: 5000
       });
     }
   });
@@ -146,7 +147,7 @@ const TableCreateCategory = () => {
 
   // Mutation para actualizar categoría
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ id, categoria }: { id: number; categoria: string }) => 
+    mutationFn: ({ id, categoria }: { id: number; categoria: string }) =>
       categoriesService.updateCategory(id, categoria),
     onSuccess: () => {
       setEditingId(null);
@@ -174,7 +175,7 @@ const TableCreateCategory = () => {
       return [];
     } else {
       if (!data || !data.pages) return [];
-      
+
       return data.pages.flatMap(page => {
         if (page && page.data && Array.isArray(page.data)) {
           return page.data;
@@ -195,7 +196,7 @@ const TableCreateCategory = () => {
       return allCategories.length;
     } else {
       if (!data?.pages || !data.pages[0]) return 0;
-      
+
       const firstPage = data.pages[0];
       if (firstPage.meta && firstPage.meta.total) {
         return firstPage.meta.total;
@@ -203,7 +204,7 @@ const TableCreateCategory = () => {
       return allCategories.length;
     }
   }, [data, simpleQuery.data, allCategories]);
-  
+
   const totalSubcategories = useMemo(() => {
     return allCategories.reduce((total: number, cat: Category) => {
       if (cat && cat.subcategorias && Array.isArray(cat.subcategorias)) {
@@ -237,7 +238,7 @@ const TableCreateCategory = () => {
       return () => container.removeEventListener("scroll", handleScroll);
     }
   }, [handleScroll]);
- 
+
   useEffect(() => {
     if (isErrorUnified) {
       console.error("❌ Error en la query:", SIMPLE_MODE ? simpleQuery.error : isError);
@@ -246,19 +247,19 @@ const TableCreateCategory = () => {
 
   const handleCreateCategory = () => {
     if (!newCategory.trim()) {
-      toast({
+      showErrorToast({
         title: "Error de validación",
         description: "El nombre de la categoría es requerido",
-        variant: "destructive",
+        duration: 5000
       });
       return;
     }
 
     if (newCategory.length < 3) {
-      toast({
-        title: "Error de validación", 
+      showErrorToast({
+        title: "Error de validación",
         description: "La categoría debe tener al menos 3 caracteres",
-        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -270,10 +271,10 @@ const TableCreateCategory = () => {
     if (!newSubName.trim() || addingSubId === null) return;
 
     if (newSubName.length < 3) {
-      toast({
+      showErrorToast({
         title: "Error de validación",
         description: "La subcategoría debe tener al menos 3 caracteres",
-        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -293,10 +294,10 @@ const TableCreateCategory = () => {
     if (!editingName.trim() || editingId === null) return;
 
     if (editingName.length < 3) {
-      toast({
+      showErrorToast({
         title: "Error de validación",
         description: "La categoría debe tener al menos 3 caracteres",
-        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -390,7 +391,7 @@ const TableCreateCategory = () => {
             <span><strong>{totalSubcategories}</strong> subcategorías</span>
           </div>
         </div>
-        
+
         <div className="flex gap-3 items-center">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 w-4 h-4 text-gray-400 -translate-y-1/2" />
@@ -413,12 +414,12 @@ const TableCreateCategory = () => {
         </div>
       </div>
 
-      <div 
+      <div
         ref={scrollContainerRef}
         className="bg-white border border-gray-200 rounded-lg max-h-[500px] overflow-y-auto"
       >
         <Accordion type="single" collapsible className="w-full">
-          {allCategories.length > 0 ? allCategories.map((cat: Category,index:number) => (
+          {allCategories.length > 0 ? allCategories.map((cat: Category, index: number) => (
             <AccordionItem
               key={index}
               value={`cat-${cat.id}`}
@@ -470,16 +471,16 @@ const TableCreateCategory = () => {
                   )}
                 </div>
               </AccordionTrigger>
-              
+
               <AccordionContent className="px-4 pb-4">
                 {cat.subcategorias && cat.subcategorias.length > 0 && (
                   <div className="mb-4">
                     <p className="text-sm font-medium text-gray-700 mb-2">Subcategorías:</p>
                     <div className="flex flex-wrap gap-2">
                       {cat.subcategorias.map((sub: { id: number; subcategoria: string }) => (
-                        <Badge 
-                          key={sub.id} 
-                          variant="outline" 
+                        <Badge
+                          key={sub.id}
+                          variant="outline"
                           className="text-sm bg-gray-50 border border-gray-200 hover:bg-gray-100"
                         >
                           {sub.subcategoria}
@@ -498,16 +499,16 @@ const TableCreateCategory = () => {
                       className="h-8 flex-1"
                       onKeyDown={(e) => e.key === 'Enter' && handleSubmitSubcategory()}
                     />
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={handleSubmitSubcategory}
                       disabled={!newSubName.trim() || createSubcategoryMutation.isPending}
                       className="h-8 px-3"
                     >
                       <Save className="w-3 h-3" />
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => setAddingSubId(null)}
                       className="h-8 px-3"
@@ -527,7 +528,7 @@ const TableCreateCategory = () => {
                     Agregar subcategoría
                   </button>
                 )}
-                
+
                 <div className="flex justify-end gap-2">
                   {editingId !== cat.id && (
                     <Button

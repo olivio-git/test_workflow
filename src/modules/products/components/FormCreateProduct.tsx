@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react"; 
+import { useState, useEffect } from "react";
 import { Package, Wand2, Save } from "lucide-react";
 import { Label } from "@/components/atoms/label";
-import { Input } from "@/components/atoms/input";  
+import { Input } from "@/components/atoms/input";
 import { Button } from "@/components/atoms/button";
 import { useQuery } from "@tanstack/react-query";
 import { apiConstructor } from "../services/api";
-import { toast } from "@/hooks/use-toast";
 import { ComboboxSelect } from "@/components/common/SelectCombobox";
+import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
 
 interface Category {
   id: number;
@@ -42,12 +42,12 @@ interface FormTouched {
   [key: string]: boolean;
 }
 
-const FormCreateProduct: React.FC = () => { 
+const FormCreateProduct: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<FormTouched>({});
   const [allCategorys, setAllCategorys] = useState<Category[] | null>(null);
-  
+
   const { data: categorys } = useQuery({
     queryKey: ["categorys"],
     queryFn: () =>
@@ -68,7 +68,7 @@ const FormCreateProduct: React.FC = () => {
       apiConstructor({ url: "/products/commons/vehicle-brands", method: "GET" }),
     staleTime: 5 * 60 * 1000,
   });
-  
+
   const { data: procedencia } = useQuery({
     queryKey: ["procedencia"],
     queryFn: () => apiConstructor({ url: "/products/commons/origins", method: "GET" }),
@@ -240,19 +240,19 @@ const FormCreateProduct: React.FC = () => {
   // Función para singularizar la categoría
   const singularizeCategory = (categoryId: any) => {
     if (!categoryId || categoryId === 0) return "";
-    
+
     const category = allCategorys?.find((cat) => cat.id === parseInt(categoryId));
     if (!category) return "";
-    
+
     const categoryName = category.categoria;
-    
+
     // Reglas básicas de singularización
     if (categoryName.endsWith('es')) {
       return categoryName.slice(0, -2); // Amortiguadores -> Amortiguador
     } else if (categoryName.endsWith('s')) {
       return categoryName.slice(0, -1); // Filtros -> Filtro
     }
-    
+
     return categoryName;
   };
 
@@ -315,7 +315,7 @@ const FormCreateProduct: React.FC = () => {
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
-  const handleSubmit = async (): Promise<void> => { 
+  const handleSubmit = async (): Promise<void> => {
     const allTouched: FormTouched = {};
     Object.keys(formData).forEach((field) => {
       allTouched[field] = true;
@@ -323,10 +323,10 @@ const FormCreateProduct: React.FC = () => {
     setTouched(allTouched);
 
     if (!validateAllFields()) {
-      toast({
+      showErrorToast({
         title: "Errores en el formulario",
         description: "Por favor corrige los errores antes de continuar",
-        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -334,18 +334,17 @@ const FormCreateProduct: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await apiConstructor({ url: '/products', data: formData, method: "POST" });
-      toast({
+      showSuccessToast({
         title: "Producto creado",
         description: `El producto ${formData.descripcion} ha sido creado exitosamente. Código: ${response?.codigo_interno}`,
-        variant:"destructive",
-        color: "green",
-      }); 
+        duration: 5000
+      });
       resetForm();
     } catch (error) {
-      toast({
+      showErrorToast({
         title: "Error",
         description: "No se pudo crear el producto",
-        variant: "destructive",
+        duration: 5000
       });
     } finally {
       setIsLoading(false);
@@ -650,7 +649,7 @@ const FormCreateProduct: React.FC = () => {
               )}
             </div>
           </div>
-          
+
           <div className="h-16 flex flex-col">
             <Label className="text-xs font-medium text-gray-600 mb-1">
               Código OEM
@@ -731,7 +730,7 @@ const FormCreateProduct: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       <div className="p-3 bg-white border border-gray-200 rounded-lg sm:p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-xs text-gray-500">* Campos requeridos</span>

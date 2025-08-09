@@ -7,7 +7,6 @@ import { Input } from "@/components/atoms/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
 import { Badge } from "@/components/atoms/badge";
-import { toast } from "@/hooks/use-toast";
 import ProductSelectorModal from "@/modules/products/components/ProductSelectorModal";
 import type { ProductGet } from "@/modules/products/types/ProductGet";
 import authSDK from "@/services/sdk-simple-auth";
@@ -36,6 +35,7 @@ import TooltipButton from "@/components/common/TooltipButton";
 import { format, parse } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema";
+import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
 
 const CreateSale = () => {
     const queryClient = useQueryClient();
@@ -122,7 +122,7 @@ const CreateSale = () => {
         addItemWithQuantity,
         addMultipleItems,
         validateCartWithToast
-    } = useCartWithUtils(user?.name || '')
+    } = useCartWithUtils(user?.name || '', selectedBranchId ?? '')
     const subtotal = getCartSubtotal();
     const total = getCartTotal();
 
@@ -154,10 +154,10 @@ const CreateSale = () => {
                 type: "manual",
                 message: "Debes agregar al menos un producto para realizar una venta"
             });
-            toast({
+            showErrorToast({
                 title: "Carrito vacío",
                 description: "Debes agregar al menos un producto para realizar una venta",
-                variant: "destructive"
+                duration:5000
             });
             isValid = false;
         }
@@ -178,10 +178,10 @@ const CreateSale = () => {
                 type: "manual",
                 message: "Debes seleccionar un cliente"
             });
-            toast({
+            showErrorToast({
                 title: "Cliente requerido",
                 description: "Debes seleccionar un cliente para la venta",
-                variant: "destructive"
+                duration:5000
             });
             isValid = false;
         }
@@ -207,10 +207,10 @@ const CreateSale = () => {
                 type: "manual",
                 message: "Debes especificar la fecha de plazo para venta a crédito"
             });
-            toast({
+            showErrorToast({
                 title: "Plazo requerido",
                 description: "Las ventas a crédito requieren una fecha de plazo",
-                variant: "destructive"
+                duration:5000
             });
             isValid = false;
         }
@@ -235,10 +235,10 @@ const CreateSale = () => {
                     type: "manual",
                     message: "La fecha de plazo debe ser posterior a hoy"
                 });
-                toast({
+                showErrorToast({
                     title: "Fecha inválida",
                     description: "La fecha de plazo debe ser posterior a hoy",
-                    variant: "destructive"
+                   duration:5000
                 });
                 resetField("plazo_pago");
             } else {
@@ -308,12 +308,12 @@ const CreateSale = () => {
         }
 
         createSale(data, {
-            onSuccess: (response) => {
+            onSuccess: () => {
                 // console.log('Venta creada:', response);
-                toast({
+                showSuccessToast({
                     title: "Venta Exitosa",
                     description: `Venta realizada con éxito`,
-                    className: "border border-green-200 bg-green-50"
+                    duration:5000
                 });
                 handleCheckout();
 
@@ -321,10 +321,10 @@ const CreateSale = () => {
                 queryClient.invalidateQueries({ queryKey: ["products"] });
             },
             onError: (error: any) => {
-                toast({
+                showErrorToast({
                     title: "Error en la venta",
                     description: error.message || "No se pudo procesar la venta. Intenta nuevamente.",
-                    variant: "destructive"
+                    duration:5000
                 });
             }
         });
@@ -332,10 +332,10 @@ const CreateSale = () => {
 
     const onError = (errors: any) => {
         if (errors.id_cliente || errors.tipo_venta || errors.forma_venta || errors.id_responsable) {
-            toast({
+            showErrorToast({
                 title: "Error de validación",
                 description: "Revisa los campos obligatorios del formulario",
-                variant: "destructive"
+                duration:5000
             });
             return;
         }
@@ -343,10 +343,10 @@ const CreateSale = () => {
         const firstError = errors[firstErrorKey];
 
         if (firstError?.message) {
-            toast({
+            showErrorToast({
                 title: "Error en formulario",
                 description: firstError.message,
-                variant: "destructive"
+                duration:5000
             });
         }
 
@@ -403,6 +403,9 @@ const CreateSale = () => {
                     {/* Header */}
                     <div className="flex gap-2 items-center mb-2">
                         <TooltipButton
+                            tooltipContentProps={{
+                                align: 'start'
+                            }}
                             onClick={handleGoBack}
                             tooltip={<p>Presiona <Kbd>esc</Kbd> para volver a la lista de productos</p>}
                         >
