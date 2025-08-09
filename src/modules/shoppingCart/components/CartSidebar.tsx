@@ -3,7 +3,7 @@ import { Button } from "@/components/atoms/button"
 import { Separator } from "@/components/atoms/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/atoms/sheet"
 import { cn } from "@/lib/utils"
-import { CreditCard, Maximize2, Receipt, ShoppingCart } from "lucide-react"
+import { BrushCleaning, CreditCard, Maximize2, Receipt, ShoppingCart } from "lucide-react"
 import CartItemComponent from "./cartItemComponent"
 import { Label } from "@/components/atoms/label"
 import { Input } from "@/components/atoms/input"
@@ -38,6 +38,7 @@ const CartSidebar = ({
         updateCustomSubtotal,
         setDiscountAmount,
         setDiscountPercent,
+        clearCart,
     } = useCartWithUtils(user?.name || '', selectedBranchId ?? '')
 
     useHotkeys('escape',
@@ -94,9 +95,20 @@ const CartSidebar = ({
                         </div>
                         {
                             cart.length > 0 && (
-                                <Button className="size-8 mr-4 cursor-pointer" variant="outline" size="sm" onClick={() => setExpandedView(!expandedView)}>
-                                    <Maximize2 className="w-4 h-4" />
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        className="cursor-pointer"
+                                        size={'sm'}
+                                        onClick={clearCart}
+                                        variant={'destructive'}
+                                    >
+                                        <BrushCleaning />
+                                        Limpiar Carrito
+                                    </Button>
+                                    <Button className="size-8 mr-4 cursor-pointer" variant="outline" size="sm" onClick={() => setExpandedView(!expandedView)}>
+                                        <Maximize2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
                             )
                         }
                     </SheetTitle>
