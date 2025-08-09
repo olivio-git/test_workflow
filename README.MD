@@ -1,3 +1,24 @@
+# Uso de Toasts
+### Ahora debes usar los toasts importando el hook así:
+
+```tsx
+import {
+  showInfoToast,
+  showSuccessToast,
+  showWarningToast,
+  showErrorToast
+} from "@/hooks/use-toast-enhanced"
+```
+### Y usarlos en tu componente así:
+
+```tsx
+showSuccessToast({
+  title: "Success",
+  description: "Your action was completed successfully!",
+  duration: 5000
+})
+```
+
 # filtros
 ## Mostrar: status :: solo si tiene
 ## Sort: por coumna existente :: solo si tiene :: + atajo de teclado
