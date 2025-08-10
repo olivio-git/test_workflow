@@ -61,6 +61,20 @@ export const useCartWithUtils = (user: string, branch: string) => {
         return result;
     };
 
+    const updateQuantity = (productId: number, quantity: number): CartOperationResult => {
+        const result = state.updateQuantity(productId, quantity);
+
+        if (!result.success) {
+            showErrorToast({
+                title: "Error al actualizar cantidad",
+                description: result.message,
+                duration: 5000
+            });
+        }
+
+        return result;
+    };
+
     const addMultipleItems = (products: CartProduct[]): BulkAddResult => {
         let totalAdded = 0;
         let totalFailed = 0;
@@ -275,6 +289,7 @@ export const useCartWithUtils = (user: string, branch: string) => {
         removeOutOfStockItems,
         adjustQuantitiesToStock,
         getCartSummary,
+        updateQuantity,
 
         // Store reference
         useCartStore: cartStore

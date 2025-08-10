@@ -72,7 +72,6 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                                     onSubmit={(value) => setDiscountPercent(value as number)}
                                     className="w-full"
                                     buttonClassName="w-full"
-                                    variant="outline"
                                     showEditIcon={false}
                                 />
                             </div>
@@ -85,7 +84,6 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                                     onSubmit={(value) => setDiscountAmount(value as number)}
                                     className="w-full"
                                     buttonClassName="w-full"
-                                    variant="outline"
                                     showEditIcon={false}
                                 />
                             </div>

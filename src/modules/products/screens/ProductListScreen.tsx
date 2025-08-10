@@ -36,6 +36,7 @@ import { TooltipWrapper } from "@/components/common/TooltipWrapper "
 import { Kbd } from "@/components/atoms/kbd"
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
 import { useDebounce } from "use-debounce"
+import { formatCell } from "@/utils/formatCell"
 
 const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
 
@@ -231,7 +232,7 @@ const ProductListScreen = () => {
                             <h3 className="font-medium text-gray-900 leading-tigh hover:underline truncate">{getValue<string>()}</h3>
                         </TooltipWrapper>
                         <span className=" text-gray-500 font-mono">
-                            UPC: {row.original.codigo_upc}
+                            UPC: {formatCell(row.original.codigo_upc)}
                         </span>
                     </div>
                 </div>
@@ -244,7 +245,7 @@ const ProductListScreen = () => {
             minSize: 150,
             cell: ({ getValue }) => (
                 <div className="flex items-center justify-center">
-                    <Badge className="font-mono rounded font-normal w-full" variant="secondary">{getValue<string>()}</Badge>
+                    <Badge className="font-mono rounded font-normal w-full" variant="secondary">{formatCell(getValue<string>())}</Badge>
                 </div>
             ),
         },
@@ -259,7 +260,7 @@ const ProductListScreen = () => {
                     <div className="space-y-1 flex items-end flex-col">
                         <div className="font-bold text-green-600">${getValue<number>().toFixed(2)}</div>
                         <div className="flex items-center gap-1">
-                            <span className=" text-gray-500">Alt: ${precioAlt.toFixed(2)}</span>
+                            <span className=" text-gray-500">Alt: ${formatCell(precioAlt.toFixed(2))}</span>
                         </div>
                     </div>
                 );
@@ -321,12 +322,8 @@ const ProductListScreen = () => {
             minSize: 120,
             cell: ({ row, getValue }) => (
                 <div className="space-y-1">
-                    <div className="font-medium">{getValue<string>()}</div>
-                    {
-                        row.original.modelo && (
-                            <div className="text-gray-500 font-mono">Modelo: {row.original.modelo}</div>
-                        )
-                    }
+                    <div className="font-medium">{formatCell(getValue<string>())}</div>
+                    <div className="text-gray-500 font-mono">Modelo: {formatCell(row.original.modelo)}</div>
                 </div>
             ),
         },
@@ -355,7 +352,6 @@ const ProductListScreen = () => {
             cell: ({ getValue }) => (
                 <div className="text-center">
                     <div className="text-sm font-medium text-green-600">{getValue<number>()}</div>
-                    {/* <div className=" text-gray-500">reservado</div> */}
                 </div>
             ),
         },
@@ -370,6 +366,16 @@ const ProductListScreen = () => {
             header: "Medida",
             size: 100,
             minSize: 80,
+            cell: ({ getValue }) => {
+                const value = getValue<string>()
+                const formatValue = formatCell(value)
+                return (
+                    <div className={`${!value ? 'italic text-gray-400' : ''}`}>
+                        {formatValue}
+                    </div>
+                )
+            },
+
         },
         {
             accessorKey: "sucursal",

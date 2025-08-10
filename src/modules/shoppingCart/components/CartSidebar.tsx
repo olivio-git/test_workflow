@@ -6,12 +6,13 @@ import { cn } from "@/lib/utils"
 import { BrushCleaning, CreditCard, Maximize2, Receipt, ShoppingCart } from "lucide-react"
 import CartItemComponent from "./cartItemComponent"
 import { Label } from "@/components/atoms/label"
-import { Input } from "@/components/atoms/input"
 import { useNavigate } from "react-router"
 import { useCartWithUtils } from "../hooks/useCartWithUtils"
 import authSDK from "@/services/sdk-simple-auth"
 import { useHotkeys, useHotkeysContext } from "react-hotkeys-hook";
 import { useBranchStore } from "@/states/branchStore"
+import { EditablePercentage } from "./EditablePercentage"
+import { EditablePrice } from "./editablePrice"
 
 const CartSidebar = ({
     open,
@@ -70,20 +71,7 @@ const CartSidebar = ({
 
     const subtotal = getCartSubtotal();
     const total = getCartTotal();
-    const [editingGlobalAmount, setEditingGlobalAmount] = useState(false);
-    const [editingGlobalPercent, setEditingGlobalPercent] = useState(false);
 
-    const handleGlobalAmountSubmit = (value: string) => {
-        const amount = parseFloat(value);
-        setDiscountAmount(isNaN(amount) ? 0 : amount);
-        setEditingGlobalAmount(false);
-    };
-
-    const handleGlobalPercentSubmit = (value: string) => {
-        const percent = parseFloat(value);
-        setDiscountPercent(isNaN(percent) ? 0 : percent);
-        setEditingGlobalPercent(false);
-    };
     return (
         <Sheet open={open} onOpenChange={onOpenChange} >
             <SheetContent className={cn("w-[400px] sm:w-[600px] sm:max-w-7xl", expandedView && "sm:w-[800px] lg:w-[1000px]")}>
@@ -128,7 +116,7 @@ const CartSidebar = ({
                             <div className="space-y-2 grow overflow-y-auto">
                                 {cart.map((item) => (
                                     <CartItemComponent
-                                        key={item.product.id}
+                                        key={`item-${item.product.id}`}
                                         item={item}
                                         removeItem={removeItem}
                                         updateQuantity={updateQuantity}
@@ -150,55 +138,26 @@ const CartSidebar = ({
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1">
                                                     <Label className="text-xs text-gray-500">Desc. Porcentaje (%)</Label>
-                                                    {editingGlobalPercent ? (
-                                                        <Input
-                                                            value={discountPercent?.toString()}
-                                                            onChange={(e) => setDiscountPercent(parseFloat(e.target.value) || 0)}
-                                                            onBlur={(e) => handleGlobalPercentSubmit(e.target.value)}
-                                                            onKeyDown={(e) => e.key === 'Enter' && handleGlobalPercentSubmit(e.currentTarget.value)}
-                                                            className="h-8 text-sm"
-                                                            type="number"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.1"
-                                                            autoFocus
-                                                        />
-                                                    ) : (
-                                                        <Button
-                                                            onClick={() => setEditingGlobalPercent(true)}
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
-                                                        >
-                                                            {discountPercent?.toFixed(2) ?? 0}%
-                                                        </Button>
-                                                    )}
+                                                    <EditablePercentage
+                                                        key={discountPercent}
+                                                        value={discountPercent}
+                                                        onSubmit={(value) => setDiscountPercent(value as number)}
+                                                        className="w-full"
+                                                        buttonClassName="w-full"
+                                                        showEditIcon={false}
+                                                    />
                                                 </div>
 
                                                 <div className="space-y-1">
                                                     <Label className="text-xs text-gray-500">Desc. Monto ($)</Label>
-                                                    {editingGlobalAmount ? (
-                                                        <Input
-                                                            value={discountAmount?.toString()}
-                                                            onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                                                            onBlur={(e) => handleGlobalAmountSubmit(e.target.value)}
-                                                            onKeyDown={(e) => e.key === 'Enter' && handleGlobalAmountSubmit(e.currentTarget.value)}
-                                                            className="h-8 text-sm"
-                                                            type="number"
-                                                            min="0"
-                                                            step="0.01"
-                                                            autoFocus
-                                                        />
-                                                    ) : (
-                                                        <Button
-                                                            onClick={() => setEditingGlobalAmount(true)}
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8 w-full justify-start text-sm bg-transparent cursor-pointer"
-                                                        >
-                                                            ${discountAmount?.toFixed(2) ?? 0.00}
-                                                        </Button>
-                                                    )}
+                                                    <EditablePrice
+                                                        key={discountAmount}
+                                                        value={discountAmount}
+                                                        onSubmit={(value) => setDiscountAmount(value as number)}
+                                                        className="w-full"
+                                                        buttonClassName="w-full"
+                                                        showEditIcon={false}
+                                                    />
                                                 </div>
                                             </div>
 

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/atoms/button';
 import { Input } from '@/components/atoms/input';
 import { Edit3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,12 +21,6 @@ export interface EditableFieldProps {
   inputClassName?: string;
   disabled?: boolean;
   showEditIcon?: boolean;
-  variant?: 'ghost' | 'outline' | 'secondary';
-  size?: 'sm' | 'default' | 'lg';
-  /** Prefijo para mostrar (ej: $, €) */
-  prefix?: string;
-  /** Sufijo para mostrar (ej: %, kg) */
-  suffix?: string;
   onEditStart?: () => void;
   onEditCancel?: () => void;
   onEditConfirm?: (value: string | number) => void;
@@ -52,10 +45,6 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   inputClassName,
   disabled = false,
   showEditIcon = true,
-  variant = 'ghost',
-  size = 'sm',
-  prefix,
-  suffix,
   onEditStart,
   onEditCancel,
   onEditConfirm,
@@ -74,11 +63,11 @@ export const EditableField: React.FC<EditableFieldProps> = ({
     if (formatter) {
       return formatter(val);
     }
-    
+
     if (type === 'number' && typeof val === 'number') {
       return val.toFixed(numberProps?.step ? 2 : 0);
     }
-    
+
     return val.toString();
   };
 
@@ -86,12 +75,12 @@ export const EditableField: React.FC<EditableFieldProps> = ({
     if (parser) {
       return parser(val);
     }
-    
+
     if (type === 'number') {
       const parsed = parseFloat(val);
       return isNaN(parsed) ? value : parsed;
     }
-    
+
     return val;
   };
 
@@ -99,21 +88,21 @@ export const EditableField: React.FC<EditableFieldProps> = ({
     if (validate) {
       return validate(val);
     }
-    
+
     if (type === 'number') {
       const parsed = parseFloat(val);
       if (isNaN(parsed)) return false;
-      
+
       if (numberProps?.min !== undefined && parsed < numberProps.min) return false;
       if (numberProps?.max !== undefined && parsed > numberProps.max) return false;
     }
-    
+
     return true;
   };
 
   const startEditing = () => {
     if (disabled) return;
-    
+
     setIsEditing(true);
     setTempValue(value.toString());
     setError('');
@@ -132,7 +121,7 @@ export const EditableField: React.FC<EditableFieldProps> = ({
       setError('Valor inválido');
       return;
     }
-    
+
     const parsedValue = parseValue(tempValue);
     setIsEditing(false);
     setError('');
@@ -154,7 +143,7 @@ export const EditableField: React.FC<EditableFieldProps> = ({
       e.preventDefault();
       confirmEditing();
     }
-    
+
     if (cancelOnEscape && e.key === 'Escape') {
       e.preventDefault();
       cancelEditing();
@@ -172,52 +161,51 @@ export const EditableField: React.FC<EditableFieldProps> = ({
     setError(''); // Limpiar error al escribir
   };
 
-  const displayValue = getDisplayValue(value);
-  const fullDisplayValue = `${prefix || ''}${displayValue}${suffix || ''}`;
+  const handleInputClick = () => {
+    if (!isEditing && editOnFocus) {
+      startEditing();
+    }
+  };
 
-  if (isEditing) {
-    return (
-      <div className={cn('relative', className)}>
-        <Input
-          ref={inputRef}
-          type={type}
-          value={tempValue}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className={cn(
-            error && 'border-red-500 focus:border-red-500 ring-red-500',
-            inputClassName
-          )}
-          {...(type === 'number' && numberProps)}
-        />
-        {error && (
-          <div className="mt-1 text-xs text-red-500">
-            {error}
-          </div>
-        )}
-      </div>
-    );
-  }
+  const handleInputFocus = () => {
+    if (!isEditing && editOnFocus) {
+      startEditing();
+    }
+  };
+
+  const displayValue = getDisplayValue(value);
 
   return (
-    <Button
-      variant={variant}
-      size={size}
-      onClick={startEditing}
-      disabled={disabled}
-      onFocus={editOnFocus ? startEditing : undefined}
-      className={cn(
-        buttonClassName
+    <div className={cn('relative w-full', className, buttonClassName)}>
+      <Input
+        ref={inputRef}
+        type={type}
+        value={isEditing ? tempValue : displayValue}
+        onChange={isEditing ? handleChange : undefined}
+        onBlur={isEditing ? handleBlur : undefined}
+        onKeyDown={isEditing ? handleKeyDown : undefined}
+        onClick={handleInputClick}
+        onFocus={handleInputFocus}
+        placeholder={placeholder}
+        disabled={disabled}
+        readOnly={!isEditing}
+        className={cn(
+          'cursor-pointer',
+          !isEditing && 'hover:bg-accent',
+          isEditing && 'cursor-text',
+          error && 'border-red-500 focus:border-red-500 ring-red-500',
+          inputClassName
+        )}
+        {...(type === 'number' && numberProps)}
+      />
+      {showEditIcon && !disabled && !isEditing && (
+        <Edit3 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
       )}
-    >
-      <span className="flex-1 text-left">
-        {fullDisplayValue}
-      </span>
-      {showEditIcon && !disabled && (
-        <Edit3 className="h-3 w-3 text-gray-400 ml-1" />
+      {error && (
+        <div className="mt-1 text-xs text-red-500">
+          {error}
+        </div>
       )}
-    </Button>
+    </div>
   );
 };

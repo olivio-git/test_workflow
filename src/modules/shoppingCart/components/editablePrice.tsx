@@ -4,7 +4,6 @@ export const EditablePrice: React.FC<Omit<EditableFieldProps, 'type' | 'formatte
     <EditableField
         {...props}
         type="number"
-        prefix="$"
         formatter={(value) => typeof value === 'number' ? value.toFixed(2) : parseFloat(value.toString()).toFixed(2)}
         numberProps={{ min: 0, step: 0.01, ...props.numberProps }}
     />
