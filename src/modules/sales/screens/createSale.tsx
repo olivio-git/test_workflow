@@ -36,6 +36,7 @@ import { format, parse } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema";
 import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
+import CartItemComponent from "@/modules/shoppingCart/components/cartItemComponent";
 
 const CreateSale = () => {
     const queryClient = useQueryClient();
@@ -157,7 +158,7 @@ const CreateSale = () => {
             showErrorToast({
                 title: "Carrito vacío",
                 description: "Debes agregar al menos un producto para realizar una venta",
-                duration:5000
+                duration: 5000
             });
             isValid = false;
         }
@@ -181,7 +182,7 @@ const CreateSale = () => {
             showErrorToast({
                 title: "Cliente requerido",
                 description: "Debes seleccionar un cliente para la venta",
-                duration:5000
+                duration: 5000
             });
             isValid = false;
         }
@@ -210,7 +211,7 @@ const CreateSale = () => {
             showErrorToast({
                 title: "Plazo requerido",
                 description: "Las ventas a crédito requieren una fecha de plazo",
-                duration:5000
+                duration: 5000
             });
             isValid = false;
         }
@@ -238,7 +239,7 @@ const CreateSale = () => {
                 showErrorToast({
                     title: "Fecha inválida",
                     description: "La fecha de plazo debe ser posterior a hoy",
-                   duration:5000
+                    duration: 5000
                 });
                 resetField("plazo_pago");
             } else {
@@ -313,7 +314,7 @@ const CreateSale = () => {
                 showSuccessToast({
                     title: "Venta Exitosa",
                     description: `Venta realizada con éxito`,
-                    duration:5000
+                    duration: 5000
                 });
                 handleCheckout();
 
@@ -324,7 +325,7 @@ const CreateSale = () => {
                 showErrorToast({
                     title: "Error en la venta",
                     description: error.message || "No se pudo procesar la venta. Intenta nuevamente.",
-                    duration:5000
+                    duration: 5000
                 });
             }
         });
@@ -335,7 +336,7 @@ const CreateSale = () => {
             showErrorToast({
                 title: "Error de validación",
                 description: "Revisa los campos obligatorios del formulario",
-                duration:5000
+                duration: 5000
             });
             return;
         }
@@ -346,7 +347,7 @@ const CreateSale = () => {
             showErrorToast({
                 title: "Error en formulario",
                 description: firstError.message,
-                duration:5000
+                duration: 5000
             });
         }
 
@@ -617,74 +618,16 @@ const CreateSale = () => {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-2">
-                                        {items.map((product) => {
-                                            const basePrice = product.customPrice
-                                            const itemSubtotal = product.customSubtotal
-                                            return (
-                                                <div key={product.product.id} className="border-gray-200 rounded-lg p-3 border">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-3 mb-1">
-                                                                <Badge variant="secondary" className="text-xs">
-                                                                    {product.product.codigo_oem}
-                                                                </Badge>
-                                                                <span className="text-xs text-gray-500">{product.product.marca}</span>
-                                                            </div>
-                                                            <h4 className="text-sm font-medium text-gray-900 mb-1">{product.product.descripcion}</h4>
-
-                                                            <div className="grid grid-cols-3 gap-3">
-                                                                <div>
-                                                                    <Label className="text-xs text-gray-600 mb-1">Cantidad</Label>
-                                                                    <EditableQuantity
-                                                                        value={product.quantity}
-                                                                        className="w-full"
-                                                                        buttonClassName="w-full"
-                                                                        // updateQuantity(product.product.id, parseInt(e.target.value) || product.quantity)
-                                                                        onSubmit={(value) => updateQuantity(product.product.id, value as number)}
-                                                                        validate={(val) => {
-                                                                            const num = parseInt(val);
-                                                                            return !isNaN(num) && num > 0;
-                                                                        }}
-                                                                    />
-                                                                </div>
-
-                                                                <div>
-                                                                    <Label className="text-xs text-gray-600 mb-1">Precio Unit.</Label>
-                                                                    <EditablePrice
-                                                                        value={basePrice}
-                                                                        onSubmit={(value) => updateCustomPrice(product.product.id, value as number)}
-                                                                        className="w-full"
-                                                                        buttonClassName="w-full"
-                                                                        numberProps={{ min: 0, step: 0.01 }}
-                                                                    />
-                                                                </div>
-
-                                                                <div>
-                                                                    <Label className="text-xs text-gray-600 mb-1">Subtotal</Label>
-                                                                    <EditablePrice
-                                                                        value={itemSubtotal}
-                                                                        onSubmit={(value) => updateCustomSubtotal(product.product.id, value as number)}
-                                                                        className="w-full"
-                                                                        buttonClassName="hover:bg-green-50 text-green-600 hover:text-green-600 w-full"
-                                                                        numberProps={{ min: 0, step: 0.01 }}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => removeItem(product.product.id)}
-                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            )
-                                        })}
+                                        {items.map((item) => (
+                                            <CartItemComponent
+                                                key={item.product.id}
+                                                item={item}
+                                                removeItem={removeItem}
+                                                updateQuantity={updateQuantity}
+                                                updateCustomPrice={updateCustomPrice}
+                                                updateCustomSubtotal={updateCustomSubtotal}
+                                            />
+                                        ))}
 
                                         {items.length === 0 && (
                                             <div className="text-center py-8 text-gray-500">
