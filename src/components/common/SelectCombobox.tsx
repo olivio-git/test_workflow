@@ -135,7 +135,7 @@ export function ComboboxSelect({
                     >
                         <ComboboxOptions
                             static
-                            className="absolute z-50 mt-1 max-h-72 w-full overflow-auto rounded-md bg-popover p-1 text-base shadow-lg border border-gray-200 focus:outline-none sm:text-sm"
+                            className="absolute z-50 mt-1 max-h-72 w-full overflow-auto rounded-md bg-popover p-1 text-sm shadow-lg border border-gray-200 focus:outline-none sm:text-sm"
                         >
                             {filteredOptions.length === 0 ? (
                                 <div className="relative cursor-default select-none px-4 py-2 text-muted-foreground text-center">
@@ -163,7 +163,7 @@ export function ComboboxSelect({
                                             <>
                                                 <span className={cn(
                                                     'block truncate',
-                                                    selected ? 'font-semibold' : 'font-normal'
+                                                    selected ? 'font-medium' : 'font-normal'
                                                 )}>
                                                     {option[optionTag]}
                                                 </span>

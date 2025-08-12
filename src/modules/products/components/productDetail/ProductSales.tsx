@@ -2,7 +2,7 @@ import { Badge } from "@/components/atoms/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { TabsContent } from "@/components/atoms/tabs";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
-import { ArrowDownRight, ArrowUpRight, TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import type { ProductSalesItem, ProductSalesStats } from "../../types/ProductSalesStats";
 import CustomizableTable from "@/components/common/CustomizableTable";
 import { TableCell, TableRow } from "@/components/atoms/table";
@@ -41,10 +41,26 @@ const ProductSales: React.FC<ProductSalesProps> = ({
         {
             accessorKey: "gestion_1",
             header: `Gestion ${gestion_1}`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        {value.toLocaleString()}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "gestion_2",
             header: `Gestion ${gestion_2}`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        {value.toLocaleString()}
+                    </div>
+                );
+            }
         },
         {
             id: "diferencia",
@@ -52,15 +68,15 @@ const ProductSales: React.FC<ProductSalesProps> = ({
             cell: ({ row }) => {
                 const diferencia = row.original.gestion_2 - row.original.gestion_1;
                 return (
-                    <div className="flex items-center justify-center">
-                        {diferencia >= 0 ? (
-                            <ArrowUpRight className="h-3 w-3 text-green-600" />
-                        ) : (
-                            <ArrowDownRight className="h-3 w-3 text-red-600" />
-                        )}
-                        <Badge variant={diferencia >= 0 ? "default" : "destructive"}>
+                    <div className="flex items-center justify-end gap-1">
+                        <Badge variant={diferencia === 0 ? "secondary" : diferencia > 0 ? "success" : "danger"}>
                             {Math.abs(diferencia)}
                         </Badge>
+                        {diferencia >= 0 ? (
+                            <TrendingUp className="h-3 w-3 text-green-600" />
+                        ) : (
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                        )}
                     </div>
                 )
             }
@@ -73,7 +89,7 @@ const ProductSales: React.FC<ProductSalesProps> = ({
                 return (
                     <div className="flex items-center justify-end gap-1">
                         <Badge
-                            variant={porcentajeCambio >= 0 ? "default" : "destructive"}
+                            variant={porcentajeCambio === 0 ? "secondary" : porcentajeCambio > 0 ? "success" : "danger"}
                             className="font-semibold"
                         >
                             {porcentajeCambio >= 0 ? "+" : ""}
@@ -113,7 +129,7 @@ const ProductSales: React.FC<ProductSalesProps> = ({
                                 value={gestion_2.toString()}
                                 onValueChange={handleChangeGestion2}
                             />
-                            <Badge variant={diferenciaTotalVentas >= 0 ? "default" : "destructive"}>
+                            <Badge variant={diferenciaTotalVentas >= 0 ? "default" : "danger"}>
                                 {diferenciaTotalVentas >= 0 ? "+" : ""}
                                 {diferenciaTotalVentas} vs año anterior
                             </Badge>
@@ -128,35 +144,36 @@ const ProductSales: React.FC<ProductSalesProps> = ({
                             isError={isErrorData}
                             isFetching={isFetchingData}
                             renderBottomRow={() => (
+                                !isErrorData && !isLoadingData && !isFetchingData &&
                                 <TableRow className="bg-gray-50 font-bold">
                                     <TableCell className="font-bold p-1">TOTAL</TableCell>
-                                    <TableCell className="font-bold p-1 text-gray-900">
+                                    <TableCell className="font-bold p-1 text-gray-900 text-end">
                                         {totalVentasAnterior.toLocaleString()}
                                     </TableCell>
-                                    <TableCell className="font-bold p-1  text-gray-600">
+                                    <TableCell className="font-bold p-1  text-gray-600 text-end">
                                         {totalVentasActual.toLocaleString()}
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center justify-center gap-1 p-1">
-                                            {diferenciaTotalVentas >= 0 ? (
-                                                <ArrowUpRight className="h-4 w-4 text-green-600" />
-                                            ) : (
-                                                <ArrowDownRight className="h-4 w-4 text-red-600" />
-                                            )}
+                                    <TableCell className="px-0">
+                                        <div className="flex items-center justify-end gap-1 p-1">
                                             <Badge
-                                                variant={diferenciaTotalVentas >= 0 ? "default" : "destructive"}
+                                                variant={diferenciaTotalVentas > 0 ? "success" : diferenciaTotalVentas === 0 ? "secondary" : "danger"}
                                                 className="font-bold"
                                             >
                                                 {Math.abs(diferenciaTotalVentas)}
                                             </Badge>
+                                            {diferenciaTotalVentas >= 0 ? (
+                                                <TrendingUp className="h-4 w-4 text-green-600" />
+                                            ) : (
+                                                <TrendingDown className="h-4 w-4 text-red-600" />
+                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right p-1">
-                                        <Badge variant={diferenciaTotalVentas >= 0 ? "default" : "destructive"} className="font-bold">
+                                        <Badge variant={diferenciaTotalVentas > 0 ? "success" : diferenciaTotalVentas === 0 ? "secondary" : "danger"} className="font-bold">
                                             {diferenciaTotalVentas >= 0 ? "+" : ""}
                                             {totalVentasAnterior > 0
                                                 ? ((diferenciaTotalVentas / totalVentasAnterior) * 100).toFixed(2)
-                                                : 0.00}
+                                                : 0.00.toFixed(2)}
                                             %
                                         </Badge>
                                     </TableCell>

@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
     Search,
     Filter,
-    Edit,
-    Trash2,
     Settings,
     Eye,
     ShoppingCart,
     Loader2,
+    RefreshCcw,
+    MoreVertical,
+    Edit,
 } from "lucide-react"
 import { Button } from "@/components/atoms/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
@@ -29,75 +30,110 @@ import authSDK from "@/services/sdk-simple-auth"
 import { useNavigate } from "react-router"
 import ProductFilters from "../components/productList/productFilters"
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
+import TooltipButton from "@/components/common/TooltipButton"
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation"
+import { TooltipWrapper } from "@/components/common/TooltipWrapper "
+import { Kbd } from "@/components/atoms/kbd"
+import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
+import { useDebounce } from "use-debounce"
+import { formatCell } from "@/utils/formatCell"
+
+const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
 
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
     const { selectedBranchId } = useBranchStore()
     const navigate = useNavigate()
     const user = authSDK.getCurrentUser()
+    const [showFilters, setShowFilters] = useState<boolean>(true)
     const {
         filters,
         updateFilter,
         setPage,
         resetFilters,
-    } = useProductFilters(Number(selectedBranchId) || 1); // suponiendo sucursal 1 por sesión
+    } = useProductFilters(Number(selectedBranchId) || 1);
 
-    const { data: productData, isLoading, error, isFetching, isError } = useProductsPaginated(filters);
+    const {
+        data: productData,
+        isLoading,
+        error,
+        isFetching,
+        isError,
+        refetch: refetchProducts,
+        isRefetching: isRefetchingProducts,
+    } = useProductsPaginated(filters);
 
-    const { addItem } = useCartWithUtils(user?.name ?? '')
+    const { addItemToCart, addMultipleItems } = useCartWithUtils(user?.name ?? '', selectedBranchId ?? '')
     const [sorting, setSorting] = useState<SortingState>([])
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
     const [columnVisibility, setColumnVisibility] = useState({})
-
-    const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-    const [selectedProducts, setSelectedProducts] = useState<number[]>([])
-
-    const COLUMN_VISIBILITY_KEY = `product-columns-${user?.name}`;
+    const [searchDescription, setSearchDescription] = useState("");
+    const [debouncedSearchDescription] = useDebounce(searchDescription, 500);
 
     useEffect(() => {
+        updateFilter("descripcion", debouncedSearchDescription);
+    }, [debouncedSearchDescription]);
+
+    useEffect(() => {
+        updateFilter("sucursal", Number(selectedBranchId))
+    }, [selectedBranchId])
+
+    useEffect(() => {
+        if (!user?.name) return;
+        const COLUMN_VISIBILITY_KEY = getColumnVisibilityKey(user.name);
         const savedVisibility = localStorage.getItem(COLUMN_VISIBILITY_KEY);
         if (savedVisibility) {
             try {
-                setColumnVisibility(JSON.parse(savedVisibility));
-            } catch {
+                const parsed = JSON.parse(savedVisibility);
+                setColumnVisibility(parsed);
+            } catch (error) {
+                console.error('Error parsing column visibility:', error);
                 localStorage.removeItem(COLUMN_VISIBILITY_KEY);
             }
         }
-    }, [user]);
+    }, [user?.name]);
 
     useEffect(() => {
-        localStorage.setItem(COLUMN_VISIBILITY_KEY, JSON.stringify(columnVisibility));
-    }, [columnVisibility, user]);
-
+        if (!user?.name || Object.keys(columnVisibility).length === 0) return;
+        const COLUMN_VISIBILITY_KEY = getColumnVisibilityKey(user.name);
+        try {
+            localStorage.setItem(COLUMN_VISIBILITY_KEY, JSON.stringify(columnVisibility));
+        } catch (error) {
+            console.error('Error saving column visibility:', error);
+        }
+    }, [columnVisibility, user?.name]);
 
     useEffect(() => {
         if (!productData?.data || error || isFetching) return;
-        if (productData?.data) {
-            if (isInfiniteScroll && filters.pagina && filters.pagina > 1) {
-                setProducts((prev) => [...prev, ...productData.data]);
-            } else {
-                setProducts(productData.data);
-            }
-        }
-    }, [productData, isInfiniteScroll, filters.pagina]);
 
-    useEffect(() => {
-        if (isInfiniteScroll) {
-            setProducts([]);
-            setPage(1);
+        if (isInfiniteScroll && filters.pagina && filters.pagina > 1) {
+            setProducts((prev) => {
+                // Evitar duplicados
+                const newProducts = productData.data.filter(
+                    newProduct => !prev.some(existingProduct => existingProduct.id === newProduct.id)
+                );
+                return [...prev, ...newProducts];
+            });
+        } else {
+            setProducts(productData.data);
         }
-    }, [filters.descripcion, filters.categoria, filters.subcategoria, filters.codigo_oem]);
+    }, [productData?.data, isInfiniteScroll, filters.pagina]);
 
     // Función para determinar el color del stock
     const getStockColor = (stock: number, stock_min: number) => {
         const stockMin: number = stock_min || 10
-        if (stock <= stockMin) return "text-red-600 bg-red-50"
-        if (stock <= (stockMin + 10)) return "text-yellow-600 bg-yellow-50"
-        return "text-green-600 bg-green-50"
+        if (stock <= stockMin) return "danger"
+        if (stock <= (stockMin + 10)) return "warning"
+        return "success"
     }
     const handleProductDetail = (productId: number) => {
         navigate(`/dashboard/productos/${productId}`);
+    }
+
+    const handleAddItemCart = (product: ProductGet) => {
+        const productForCart = CartProductSchema.parse(product)
+        addItemToCart(productForCart)
     }
 
     const columns = useMemo<ColumnDef<ProductGet>[]>(() => [
@@ -137,11 +173,67 @@ const ProductListScreen = () => {
             enableHiding: false,
             cell: ({ row, getValue }) => (
                 <div
-                    onClick={() => handleProductDetail(row.original.id)}
-                    className="space-y-1 cursor-pointer group hover:bg-blue-50 p-1 rounded">
-                    <div className="font-medium text-gray-900 leading-tight group-hover:underline">{getValue<string>()}</div>
-                    <div className=" text-gray-500 font-mono">
-                        UPC: {row.original.codigo_upc}
+                    className="flex items-center gap-1">
+
+                    <div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="size-6 px-0"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (['ArrowUp', 'ArrowDown'].includes(e.key)) {
+                                            e.stopPropagation();
+                                        }
+                                    }}
+                                >
+                                    <MoreVertical className="size-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                onCloseAutoFocus={(e) => {
+                                    e.preventDefault();
+                                }}
+                                align="start"
+                                className="w-48">
+                                <DropdownMenuItem
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    onClick={() => handleProductDetail(row.original.id)}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Ver detalles
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    onClick={() => handleAddItemCart(row.original)}>
+                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                    Agregar al carrito
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    onClick={() => { }}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Editar producto
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <div className="flex flex-col">
+                        <TooltipWrapper
+                            tooltipContentProps={{
+                                align: 'start'
+                            }}
+                            tooltip={
+                                <p>Presiona <Kbd>enter</Kbd> para ver los detalles del producto</p>
+                            }
+                        >
+                            <h3 className="font-medium text-gray-900 leading-tigh hover:underline truncate">{getValue<string>()}</h3>
+                        </TooltipWrapper>
+                        <span className=" text-gray-500 font-mono">
+                            UPC: {formatCell(row.original.codigo_upc)}
+                        </span>
                     </div>
                 </div>
             ),
@@ -153,7 +245,7 @@ const ProductListScreen = () => {
             minSize: 150,
             cell: ({ getValue }) => (
                 <div className="flex items-center justify-center">
-                    <Badge className="font-mono rounded font-normal" variant="secondary">{getValue<string>()}</Badge>
+                    <Badge className="font-mono rounded font-normal w-full" variant="secondary">{formatCell(getValue<string>())}</Badge>
                 </div>
             ),
         },
@@ -165,16 +257,11 @@ const ProductListScreen = () => {
             cell: ({ row, getValue }) => {
                 const precioAlt = row.original.precio_venta_alt;
                 return (
-                    <div className="space-y-1">
+                    <div className="space-y-1 flex items-end flex-col">
                         <div className="font-bold text-green-600">${getValue<number>().toFixed(2)}</div>
-                        {/* {precioAlt < precio && ( */}
                         <div className="flex items-center gap-1">
-                            <span className=" text-gray-500">Alt: ${precioAlt.toFixed(2)}</span>
-                            {/* <Badge variant="destructive" className="text-xs px-1 py-0">
-                                    {descuento}%
-                                </Badge> */}
+                            <span className=" text-gray-500">Alt: ${formatCell(precioAlt.toFixed(2))}</span>
                         </div>
-                        {/* )} */}
                     </div>
                 );
             },
@@ -188,14 +275,13 @@ const ProductListScreen = () => {
                 const stock = getValue<number>();
                 const stockMin = row.original.stock_minimo || 1;
                 return (
-                    <div
-                        className={`flex gap-1 flex-wrap justify-center px-2 py-1 rounded ${getStockColor(stock, stockMin)}`}
+                    <Badge
+                        variant={getStockColor(stock, stockMin)}
+                        className={`flex flex-col justify-center rounded`}
                     >
-                        <div className="flex items-center gap-1">
-                            <span className="font-medium">{getValue<number>().toFixed(0)}</span>
-                        </div>
-                        <span className="">{row.original.unidad_medida}</span>
-                    </div>
+                        <span className="font-bold">{getValue<number>().toFixed(0)}</span>
+                        <span className="text-[10px] uppercase">{row.original.unidad_medida}</span>
+                    </Badge>
                 );
             },
         },
@@ -207,7 +293,7 @@ const ProductListScreen = () => {
             cell: ({ getValue }) => (
                 <div className="text-center">
                     <div className="text-sm font-medium">{getValue<number>().toFixed(0)}</div>
-                    <div className=" text-gray-500">disponible</div>
+                    <div className=" text-gray-500">Disponible</div>
                 </div>
             ),
         },
@@ -236,12 +322,8 @@ const ProductListScreen = () => {
             minSize: 120,
             cell: ({ row, getValue }) => (
                 <div className="space-y-1">
-                    <div className="font-medium">{getValue<string>()}</div>
-                    {
-                        row.original.modelo && (
-                            <div className="text-gray-500 font-mono">Modelo: {row.original.modelo}</div>
-                        )
-                    }
+                    <div className="font-medium">{formatCell(getValue<string>())}</div>
+                    <div className="text-gray-500 font-mono">Modelo: {formatCell(row.original.modelo)}</div>
                 </div>
             ),
         },
@@ -257,7 +339,7 @@ const ProductListScreen = () => {
                         <div className={`text-sm font-medium ${value > 0 ? "text-blue-600" : "text-gray-400"}`}>
                             {getValue<number>().toFixed(0)}
                         </div>
-                        <div className=" text-gray-500">pedidos</div>
+                        <div className=" text-gray-500">Pedidos</div>
                     </div>
                 );
             },
@@ -270,7 +352,6 @@ const ProductListScreen = () => {
             cell: ({ getValue }) => (
                 <div className="text-center">
                     <div className="text-sm font-medium text-green-600">{getValue<number>()}</div>
-                    {/* <div className=" text-gray-500">reservado</div> */}
                 </div>
             ),
         },
@@ -285,6 +366,16 @@ const ProductListScreen = () => {
             header: "Medida",
             size: 100,
             minSize: 80,
+            cell: ({ getValue }) => {
+                const value = getValue<string>()
+                const formatValue = formatCell(value)
+                return (
+                    <div className={`${!value ? 'italic text-gray-400' : ''}`}>
+                        {formatValue}
+                    </div>
+                )
+            },
+
         },
         {
             accessorKey: "sucursal",
@@ -296,36 +387,6 @@ const ProductListScreen = () => {
                     <Badge className="rounded" variant="secondary">{getValue<string>()}</Badge>
                 </div>
             ),
-        },
-        {
-            id: "Actions",
-            header: "Acciones",
-            cell: ({ row }) => (
-                <div className="flex items-center justify-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleProductDetail(row.original.id)}
-                        aria-label="Ver Detalle"
-                        className="size-8 cursor-pointer"
-                    >
-                        <Eye className="size-4" />
-                    </Button>
-                    <Button
-                        variant="default"
-                        size="icon"
-                        onClick={() => addItem(row.original)}
-                        aria-label="Añadir Producto al Carrito"
-                        className="size-8 cursor-pointer"
-                    >
-                        <ShoppingCart className="size-4" />
-                    </Button>
-                </div>
-            ),
-            enableSorting: false,
-            enableHiding: true,
-            size: 100,
-            minSize: 100,
         },
     ], [])
     // Filter and sort products
@@ -348,21 +409,55 @@ const ProductListScreen = () => {
         enableRowSelection: true,
     })
 
-    const handleSelectAll = (checked: boolean) => {
-        if (checked) {
-            // setSelectedProducts(filteredAndSortedProducts.map((p) => p.id))
-        } else {
-            setSelectedProducts([])
-        }
-    }
+    const {
+        selectedIndex,
+        setSelectedIndex,
+        isFocused,
+        tableRef,
+        handleTableClick,
+    } = useKeyboardNavigation({
+        products,
+        onAddToCart: addItemToCart,
+        onViewDetails: handleProductDetail,
+        onRemoveFromCart: () => { },
+    });
+    const handleRowClick = (index: number) => {
+        setSelectedIndex(index);
+    };
 
-    const handleSelectProduct = (productId: number, checked: boolean) => {
-        if (checked) {
-            setSelectedProducts([...selectedProducts, productId])
-        } else {
-            setSelectedProducts(selectedProducts.filter((id) => id !== productId))
+    const handleRowDoubleClick = (product: ProductGet) => {
+        addItemToCart(product);
+    };
+
+    const hasProductSelected = Object.keys(rowSelection).length;
+    const handleAddSelectedToCart = useCallback(() => {
+        if (!table || !table.getSelectedRowModel) {
+            console.warn("Tabla no inicializada correctamente");
+            return;
         }
-    }
+
+        const selectedProducts = table.getSelectedRowModel().rows.map(row => row.original);
+
+        if (selectedProducts.length === 0) {
+            console.warn("No hay productos seleccionados para agregar al carrito.");
+            return;
+        }
+
+        try {
+            const productsForCart = selectedProducts.map(product => CartProductSchema.parse(product));
+            addMultipleItems(productsForCart);
+
+            setTimeout(() => {
+                if (table && table.resetRowSelection) {
+                    table.resetRowSelection();
+                }
+            }, 0);
+        } catch (error) {
+            console.error("Error al procesar productos para el carrito:", error);
+        }
+    }, [table, addMultipleItems]);
+
+
     const onPageChange = (page: number) => {
         setPage(page);
     };
@@ -372,38 +467,30 @@ const ProductListScreen = () => {
         updateFilter("pagina", 1);
     };
 
+    const handleRefetchProducts = () => {
+        refetchProducts();
+    }
+
+    const toggleShowFilters = () => {
+        setShowFilters(!showFilters)
+    }
+
     return (
         <div
             className="min-h-screen max-w-full">
             <div className="bg-white rounded-lg shadow-sm">
                 {/* Header */}
                 <div className="p-2 border-b border-gray-200">
-                    {/* <h1 className="text-2xl font-bold">Productos</h1> */}
+                    <h1 className="text-lg font-bold text-gray-900">Productos</h1>
                     <div className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
                         <div className="flex items-center gap-2 md:gap-4 grow">
-                            {/* <div className="flex items-center gap-2">
-                                <Button
-                                    variant={viewMode === "list" ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setViewMode("list")}
-                                >
-                                    <List className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant={viewMode === "grid" ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setViewMode("grid")}
-                                >
-                                    <Grid3X3 className="h-4 w-4" />
-                                </Button>
-                            </div> */}
 
                             <div className="relative w-full">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                 <Input
-                                    placeholder="Buscar productos..."
-                                    value={filters.descripcion ?? ""}
-                                    onChange={(e) => updateFilter("descripcion", e.target.value)}
+                                    placeholder="Buscar por descripcion..."
+                                    value={searchDescription}
+                                    onChange={(e) => setSearchDescription(e.target.value)}
                                     className="pl-10 w-full"
                                 />
                             </div>
@@ -415,70 +502,61 @@ const ProductListScreen = () => {
                                     id="infinite-scroll"
                                     checked={isInfiniteScroll}
                                     onCheckedChange={(checked) => {
-                                        setIsInfiniteScroll(checked);
-                                        setPage(1);
-                                        setProducts([])
+                                        setIsInfiniteScroll(checked)
+                                        setPage(1)
                                     }}
                                 />
                                 <Label htmlFor="infinite-scroll">
                                     Scroll Infinito
                                 </Label>
                             </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                        <Settings className="w-4 h-4 mr-2" />
-                                        Columnas
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56 max-h-96 overflow-y-auto border border-gray-200">
-                                    {table
-                                        .getAllColumns()
-                                        .filter((column) => column.getCanHide())
-                                        .map((column) => (
-                                            <DropdownMenuItem
-                                                key={column.id}
-                                                className="flex items-center space-x-2 cursor-pointer"
-                                                onSelect={(e) => e.preventDefault()}
-                                            >
-                                                <Checkbox
-                                                    className="border border-gray-400"
-                                                    checked={column.getIsVisible()}
-                                                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                                                />
-                                                <span className="flex-1">
-                                                    {typeof column.columnDef.header === "string" ? column.columnDef.header : column.id}
-                                                </span>
-                                            </DropdownMenuItem>
-                                        ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
 
-                            <Button variant="outline" className="hover:bg-gray-50" size="sm" onClick={resetFilters}>
+                            <TooltipButton
+                                onClick={handleRefetchProducts}
+                                buttonProps={{
+                                    className: 'w-8',
+                                    disabled: isRefetchingProducts || isFetching,
+                                }}
+                                tooltip={"Recargar productos"}
+                            >
+                                <RefreshCcw className={`size-4 ${isRefetchingProducts || isFetching ? 'animate-spin' : ''}`} />
+                            </TooltipButton>
+
+                            <Button variant="outline" size="sm" onClick={resetFilters}>
                                 <Filter className="h-4 w-4 mr-2" />
                                 Reset Filters
+                            </Button>
+                            <Button size={'sm'} onClick={toggleShowFilters}>
+                                {
+                                    showFilters ?
+                                        "Ocultar filtros" :
+                                        "Mostrar filtros"
+                                }
                             </Button>
                         </div>
                     </div>
                 </div>
                 {/* Búsquedas individuales */}
-                <ProductFilters
-                    filters={filters}
-                    updateFilter={updateFilter}
-                />
+                {
+                    showFilters &&
+                    <ProductFilters
+                        filters={filters}
+                        updateFilter={updateFilter}
+                    />
+                }
                 {/* Results Info */}
                 <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
                     {
-                        isInfiniteScroll ?
+                        products.length > 0 ?
+                            isInfiniteScroll ?
 
-                            `Mostrando ${products.length} de ${productData?.meta.total} productos`
-                            :
-                            `Mostrando ${((filters.pagina ?? 1) * (filters.pagina_registros ?? 1)) - ((filters.pagina_registros ?? 1) - 1)} 
+                                `Mostrando ${products.length} de ${productData?.meta.total} productos`
+                                :
+                                `Mostrando ${((filters.pagina ?? 1) * (filters.pagina_registros ?? 1)) - ((filters.pagina_registros ?? 1) - 1)} 
                             - ${(filters.pagina ?? 1) * (filters.pagina_registros ?? 1)} de ${productData?.meta.total} productos`
+                            : <span>Cargando...</span>
                     }
-                    {selectedProducts.length > 0 && (
-                        <span className="ml-4 text-blue-600">{selectedProducts.length} selected</span>
-                    )}
+
                     <div className="flex items-center gap-2">
                         <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
                         <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
@@ -492,99 +570,100 @@ const ProductListScreen = () => {
                                 <SelectItem value={"100"}>100</SelectItem>
                             </SelectContent>
                         </Select>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                    <Settings className="w-4 h-4 mr-2" />
+                                    Columnas
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 max-h-96 overflow-y-auto border border-gray-200">
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => (
+                                        <DropdownMenuItem
+                                            key={column.id}
+                                            className="flex items-center space-x-2 cursor-pointer"
+                                            onSelect={(e) => e.preventDefault()}
+                                            onClick={() => column.toggleVisibility(!column.getIsVisible())}
+                                        >
+                                            <Checkbox
+                                                className="border border-gray-400"
+                                                checked={column.getIsVisible()}
+                                                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                            />
+                                            <span className="flex-1">
+                                                {typeof column.columnDef.header === "string" ? column.columnDef.header : column.id}
+                                            </span>
+                                        </DropdownMenuItem>
+                                    ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        {
+                            table && hasProductSelected > 0 && (
+                                <Button size={'sm'} className="relative" onClick={handleAddSelectedToCart}>
+                                    Agregar al carrito
+                                    <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-[10px]">
+                                        {hasProductSelected}
+                                    </Badge>
+                                </Button>
+                            )
+                        }
                     </div>
                 </div>
 
-                {viewMode === "list" ? (
-                    <div
-                        className="overflow-x-hidden">
-                        {isInfiniteScroll ? (
-                            <InfiniteScroll
-                                dataLength={products.length}
-                                next={() => setPage((filters.pagina || 1) + 1)}
-                                hasMore={products.length < (productData?.meta.total || 0)}
-                                loader={
-                                    <div className="flex items-center justify-center gap-2 text-center p-6 text-xs sm:text-sm text-gray-500 bg-gray-50">
-                                        <Loader2 className="size-4 animate-spin" />
-                                        Cargando más productos...
-                                    </div>
-                                }
-                                scrollableTarget="main-scroll-container"
-                            >
-                                <CustomizableTable
-                                    table={table}
-                                    isError={isError}
-                                    errorMessage="Ocurrió un error al cargar los productos"
-                                    isLoading={isLoading}
-                                    noDataMessage="No se encontraron productos"
-                                />
-                            </InfiniteScroll>
-                        ) : (
+                <div
+                    onClick={handleTableClick}
+                    className="overflow-x-hidden">
+                    {isInfiniteScroll ? (
+                        <InfiniteScroll
+                            dataLength={products.length}
+                            next={() => setPage((filters.pagina || 1) + 1)}
+                            hasMore={products.length < (productData?.meta.total || 0)}
+                            loader={
+                                <div className="flex items-center justify-center gap-2 text-center p-6 text-xs sm:text-sm text-gray-500 bg-gray-50">
+                                    <Loader2 className="size-4 animate-spin" />
+                                    Cargando más productos...
+                                </div>
+                            }
+                            scrollableTarget="main-scroll-container"
+                        >
                             <CustomizableTable
                                 table={table}
                                 isError={isError}
-                                isFetching={isFetching}
-                                isLoading={isLoading}
                                 errorMessage="Ocurrió un error al cargar los productos"
+                                isLoading={isLoading}
                                 rows={filters.pagina_registros}
                                 noDataMessage="No se encontraron productos"
+                                selectedRowIndex={selectedIndex}
+                                onRowClick={handleRowClick}
+                                onRowDoubleClick={handleRowDoubleClick}
+                                tableRef={tableRef}
+                                focused={isFocused}
+                                keyboardNavigationEnabled={true}
                             />
-                        )}
+                        </InfiniteScroll>
+                    ) : (
+                        <CustomizableTable
+                            table={table}
+                            isError={isError}
+                            isFetching={isFetching}
+                            isLoading={isLoading}
+                            errorMessage="Ocurrió un error al cargar los productos"
+                            rows={filters.pagina_registros}
+                            noDataMessage="No se encontraron productos"
+                            selectedRowIndex={selectedIndex}
+                            onRowClick={handleRowClick}
+                            onRowDoubleClick={handleRowDoubleClick}
+                            tableRef={tableRef}
+                            focused={isFocused}
+                            keyboardNavigationEnabled={true}
+                        />
+                    )}
 
-                    </div>
-                ) : (
-                    <div className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {productData?.data.map((product: any) => (
-                                <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                    <div className="flex items-start justify-between mb-3">
-                                        <Checkbox
-                                            className="border border-gray-400"
-                                            checked={selectedProducts.includes(product.id)}
-                                            onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
-                                        />
-                                        <div
-                                            className={`px-2 py-1 rounded-full text-xs ${product.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                                        >
-                                            {product.status}
-                                        </div>
-                                    </div>
+                </div>
 
-                                    <img
-                                        src={product.image}
-                                        alt={product.name}
-                                        width={200}
-                                        height={150}
-                                        className="w-full h-32 object-cover rounded-md mb-3"
-                                    />
-
-                                    <h3 className="font-medium text-sm mb-1 line-clamp-2">{product.name}</h3>
-                                    <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
-                                    <p className="text-lg font-bold text-blue-600 mb-2">${product.price}</p>
-
-                                    <div className="flex justify-between text-xs text-gray-500 mb-3">
-                                        <span>Stock: {product.products}</span>
-                                        <span>Views: {product.views}</span>
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" className="flex-1 text-blue-600 border-blue-600 bg-transparent">
-                                            <Edit className="h-3 w-3 mr-1" />
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="text-red-600 border-red-600 bg-transparent"
-                                        >
-                                            <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
                 {/* Pagination */}
                 {
                     !isInfiniteScroll && (productData?.data?.length ?? 0) > 0 && (

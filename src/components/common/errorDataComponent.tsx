@@ -4,10 +4,16 @@ import { Button } from "../atoms/button";
 interface ErrorDataProps {
     onRetry?: () => void;
     errorMessage?: string;
+    isRetrying?: boolean;
+    buttonText?: string
+    showButtonIcon?: boolean
 }
 const ErrorDataComponent: React.FC<ErrorDataProps> = ({
     onRetry,
-    errorMessage
+    errorMessage,
+    isRetrying = false,
+    buttonText = 'Intentar nuevamente',
+    showButtonIcon = true
 }) => {
     return (
         <div className="flex flex-col items-center justify-center space-y-6 px-12 py-16 mx-auto bg-red-50 rounded-3xl border border-red-100">
@@ -25,10 +31,20 @@ const ErrorDataComponent: React.FC<ErrorDataProps> = ({
             {onRetry && (
                 <Button
                     onClick={onRetry}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full px-8 py-2"
+                    variant={'destructive'}
+                    disabled={isRetrying}
                 >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Intentar nuevamente
+                    {isRetrying ? (
+                        <>
+                            {showButtonIcon && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
+                            Cargando...
+                        </>
+                    ) : (
+                        <>
+                            {showButtonIcon && <RefreshCw className="h-4 w-4 mr-2" />}
+                            {buttonText}
+                        </>
+                    )}
                 </Button>
             )}
         </div>

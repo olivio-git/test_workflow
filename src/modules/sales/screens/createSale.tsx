@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ShoppingCart, Edit3, Save, Trash2, CornerUpLeft } from "lucide-react";
+import { ShoppingCart, Trash2, CornerUpLeft } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Label } from "@/components/atoms/label";
@@ -7,42 +7,76 @@ import { Input } from "@/components/atoms/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
 import { Badge } from "@/components/atoms/badge";
-import { toast } from "@/hooks/use-toast";
 import ProductSelectorModal from "@/modules/products/components/ProductSelectorModal";
 import type { ProductGet } from "@/modules/products/types/ProductGet";
 import authSDK from "@/services/sdk-simple-auth";
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils";
 import { useCreateSale } from "../hooks/useCreateSale";
-import { FormProvider, useForm, useWatch, Controller } from "react-hook-form";
+import { FormProvider, useForm, Controller } from "react-hook-form";
 import { SaleSchema } from "../schemas/sales.schema";
 import type { Sale, SaleDetail } from "../types/sale";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SalesSummary from "../components/salesSummary";
 import { Kbd } from "@/components/atoms/kbd";
-
-export interface Product {
-    id: string;
-    codigo: string;
-    descripcion: string;
-    cantidad: number;
-    precioUnitario: number;
-    subtotal: number;
-    marca: string;
-}
+import { useNavigate } from "react-router";
+import { useSaleTypes } from "../hooks/useSaleTypes";
+import { useSaleModalities } from "../hooks/useSaleModalities";
+import { useSetDefaultSelect } from "../hooks/useSetDefaultSelect";
+import { EditableQuantity } from "@/modules/shoppingCart/components/editableQuantity";
+import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice";
+import { useSaleResponsibles } from "../hooks/useSaleResponsibles";
+import { ComboboxSelect } from "@/components/common/SelectCombobox";
+import { useSaleCustomers } from "../hooks/useSaleCustomers";
+import { PaginatedCombobox } from "@/components/common/paginatedCombobox";
+import { useBranchStore } from "@/states/branchStore";
+import type { SaleResponsible } from "../types/saleResponsible";
+import { useHotkeys } from "react-hotkeys-hook";
+import TooltipButton from "@/components/common/TooltipButton";
+import { format, parse } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
+import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema";
+import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
+import CartItemComponent from "@/modules/shoppingCart/components/cartItemComponent";
 
 const CreateSale = () => {
+    const queryClient = useQueryClient();
+    const navigate = useNavigate();
     const user = authSDK.getCurrentUser()
-    const { mutate: createSale, isPending } = useCreateSale();
+    const { selectedBranchId } = useBranchStore()
+    const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
+    const [responsible, setResponsible] = useState<SaleResponsible | null>(null);
+
+    const {
+        data: saleTypesData,
+    } = useSaleTypes()
+
+    const {
+        data: saleModalitiesData,
+    } = useSaleModalities()
+
+    const {
+        data: saleResponsiblesData,
+    } = useSaleResponsibles()
+
+    const {
+        data: saleCustomersData,
+        isLoading: isSaleCustomersLoading
+    } = useSaleCustomers(customerSearchTerm)
+
+    const {
+        mutate: createSale,
+        isPending
+    } = useCreateSale();
 
     const methods = useForm<Sale>({
         resolver: zodResolver(SaleSchema),
         defaultValues: {
-            fecha: new Date().toISOString().slice(0, 10),
+            fecha: format(new Date(), "yyyy-MM-dd"),
             nro_comprobante: "",
             nro_comprobante2: "",
-            id_cliente: 0,
-            tipo_venta: "VC",
-            forma_venta: "MY",
+            id_cliente: undefined,
+            tipo_venta: "",
+            forma_venta: "",
             comentario: "",
             plazo_pago: "",
             vehiculo: "",
@@ -50,8 +84,8 @@ const CreateSale = () => {
             cliente_nombre: "",
             cliente_nit: "",
             usuario: 1,
-            sucursal: 1,
-            id_responsable: 1,
+            sucursal: Number(selectedBranchId) || 1,
+            id_responsable: Number(user?._id) || undefined,
             detalles: []
         }
     });
@@ -65,6 +99,8 @@ const CreateSale = () => {
         handleSubmit,
         setValue,
         getValues,
+        setError,
+        clearErrors,
         formState: { errors }
     } = methods
 
@@ -83,15 +119,16 @@ const CreateSale = () => {
         setDiscountAmount,
         setDiscountPercent,
         clearCart,
-        addItem
-    } = useCartWithUtils(user?.name || '')
+        addItemToCart,
+        addItemWithQuantity,
+        addMultipleItems,
+        validateCartWithToast
+    } = useCartWithUtils(user?.name || '', selectedBranchId ?? '')
     const subtotal = getCartSubtotal();
     const total = getCartTotal();
-    const [editingGlobalAmount, setEditingGlobalAmount] = useState(false);
-    const [editingGlobalPercent, setEditingGlobalPercent] = useState(false);
-    const [editingPrice, setEditingPrice] = useState<number | null>(null);
-    const [editingSubtotal, setEditingSubtotal] = useState<number | null>(null);
-    const [editingQuantity, setEditingQuantity] = useState<number | null>(null);
+
+    useSetDefaultSelect(saleTypesData, "tipo_venta", getValues, setValue);
+    useSetDefaultSelect(saleModalitiesData, "forma_venta", getValues, setValue);
 
     useEffect(() => {
         const detalles: SaleDetail[] = items.map(item => ({
@@ -104,107 +141,285 @@ const CreateSale = () => {
 
         if (detalles.length > 0) {
             setValue("detalles", detalles as [SaleDetail, ...SaleDetail[]]);
+            clearErrors("detalles");
+        } else {
+            // setValue("detalles", []);
         }
     }, [items, discountAmount, discountPercent, setValue]);
 
-    const handleGlobalAmountSubmit = (value: string) => {
-        const amount = parseFloat(value);
-        setDiscountAmount(isNaN(amount) ? 0 : amount);
-        setEditingGlobalAmount(false);
+    const validateBeforeSubmit = (): boolean => {
+        let isValid = true;
+
+        if (items.length === 0) {
+            setError("detalles", {
+                type: "manual",
+                message: "Debes agregar al menos un producto para realizar una venta"
+            });
+            showErrorToast({
+                title: "Carrito vacío",
+                description: "Debes agregar al menos un producto para realizar una venta",
+                duration: 5000
+            });
+            isValid = false;
+        }
+
+        const validation = validateCartWithToast();
+        if (!validation.isValid) {
+            setError("detalles", {
+                type: "manual",
+                message: "Hay productos con problemas de stock en el carrito"
+            });
+            isValid = false;
+        }
+
+        const formData = getValues();
+
+        if (!formData.id_cliente) {
+            setError("id_cliente", {
+                type: "manual",
+                message: "Debes seleccionar un cliente"
+            });
+            showErrorToast({
+                title: "Cliente requerido",
+                description: "Debes seleccionar un cliente para la venta",
+                duration: 5000
+            });
+            isValid = false;
+        }
+
+        if (!formData.tipo_venta) {
+            setError("tipo_venta", {
+                type: "manual",
+                message: "Debes seleccionar un tipo de venta"
+            });
+            isValid = false;
+        }
+
+        if (!formData.forma_venta) {
+            setError("forma_venta", {
+                type: "manual",
+                message: "Debes seleccionar una forma de venta"
+            });
+            isValid = false;
+        }
+
+        if (formData.tipo_venta === "VC" && !formData.plazo_pago) {
+            setError("plazo_pago", {
+                type: "manual",
+                message: "Debes especificar la fecha de plazo para venta a crédito"
+            });
+            showErrorToast({
+                title: "Plazo requerido",
+                description: "Las ventas a crédito requieren una fecha de plazo",
+                duration: 5000
+            });
+            isValid = false;
+        }
+
+        return isValid;
     };
 
-    const handleGlobalPercentSubmit = (value: string) => {
-        const percent = parseFloat(value);
-        setDiscountPercent(isNaN(percent) ? 0 : percent);
-        setEditingGlobalPercent(false);
-    };
-
-    const handleCheckout = () => {
-        toast({
-            title: "Venta Existosa",
-            description: `Venta realizada con exito`,
-            className: "border border-gray-200"
-        });
-        clearCart()
-        reset({
-            fecha: new Date().toISOString().slice(0, 10),
-        })
-    };
-
-    const tipoVenta = useWatch({
-        control,
-        name: "tipo_venta",
-    });
-
-    // Limpiar plazo_pago si el tipo de venta no es a crédito
+    // VALIDACIÓN DE FECHA DE PLAZO
     useEffect(() => {
-        if (tipoVenta !== "VENTA A CREDITO") {
+        const tipoVenta = watch("tipo_venta");
+        const plazoPago = watch("plazo_pago");
+
+        if (tipoVenta === "VC" && plazoPago) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const plazoDate = parse(plazoPago, "yyyy-MM-dd", new Date());
+            plazoDate.setHours(0, 0, 0, 0);
+
+            if (plazoDate <= today) {
+                setError("plazo_pago", {
+                    type: "manual",
+                    message: "La fecha de plazo debe ser posterior a hoy"
+                });
+                showErrorToast({
+                    title: "Fecha inválida",
+                    description: "La fecha de plazo debe ser posterior a hoy",
+                    duration: 5000
+                });
+                resetField("plazo_pago");
+            } else {
+                clearErrors("plazo_pago");
+            }
+
+            // Validar que no sea más de X días (ej: 365 días)
+            // const maxDays = 365;
+            // const maxDate = new Date(today);
+            // maxDate.setDate(maxDate.getDate() + maxDays);
+
+            // if (plazoDate > maxDate) {
+            //     toast({
+            //         title: "Plazo muy extenso",
+            //         description: `El plazo no puede ser mayor a ${maxDays} días`,
+            //         variant: "destructive"
+            //     });
+            //     resetField("plazo_pago");
+            // }
+        }
+        if (tipoVenta !== "VC") {
             resetField("plazo_pago");
         }
-    }, [tipoVenta, resetField]);
+    }, [watch("tipo_venta"), watch("plazo_pago"), resetField]);
+
+    const handleCheckout = () => {
+        clearCart();
+
+        const currentValues = getValues();
+        reset({
+            fecha: format(new Date(), "yyyy-MM-dd"),
+            nro_comprobante: "",
+            nro_comprobante2: "",
+            id_cliente: currentValues.id_cliente,
+            tipo_venta: currentValues.tipo_venta,
+            forma_venta: currentValues.forma_venta,
+            comentario: "",
+            plazo_pago: "",
+            vehiculo: "",
+            nro_motor: "",
+            cliente_nombre: currentValues.cliente_nombre,
+            cliente_nit: currentValues.cliente_nit,
+            usuario: currentValues.usuario,
+            sucursal: currentValues.sucursal,
+            id_responsable: currentValues.id_responsable,
+            detalles: []
+        });
+    };
 
     const handleAddProductItem = (product: ProductGet) => {
-        console.log('Agregando producto:', product);
+        const productForCart = CartProductSchema.parse(product)
+        addItemToCart(productForCart)
+    };
 
-        addItem(product);
+    const handleAddMultipleProducts = (products: ProductGet[]) => {
+        addMultipleItems(products);
+    };
 
-        // Opcional: Mostrar toast de confirmación
-        toast({
-            title: "Producto agregado",
-            description: `${product.descripcion} agregado al carrito`,
-            className: "border border-green-200 bg-green-50"
-        });
-    }
+    const handleAddWithQuantity = (product: ProductGet, quantity: number) => {
+        addItemWithQuantity(product, quantity);
+    };
 
     // FUNCIÓN onSubmit corregida
     const onSubmit = (data: Sale) => {
-        createSale(data);
+        if (!validateBeforeSubmit()) {
+            return;
+        }
 
-        // Mostrar toast de éxito
-        handleCheckout();
-        console.log(data)
+        createSale(data, {
+            onSuccess: () => {
+                // console.log('Venta creada:', response);
+                showSuccessToast({
+                    title: "Venta Exitosa",
+                    description: `Venta realizada con éxito`,
+                    duration: 5000
+                });
+                handleCheckout();
+
+                queryClient.invalidateQueries({ queryKey: ["sales"] });
+                queryClient.invalidateQueries({ queryKey: ["products"] });
+            },
+            onError: (error: any) => {
+                showErrorToast({
+                    title: "Error en la venta",
+                    description: error.message || "No se pudo procesar la venta. Intenta nuevamente.",
+                    duration: 5000
+                });
+            }
+        });
     };
 
-    // FUNCIÓN para manejar errores del formulario
     const onError = (errors: any) => {
-        const values = getValues()
-        console.log(values)
-        if (values.detalles && values.detalles.length <= 0) {
-            toast({
-                title: "Ha ocurrido un error",
-                description: `Para realizar una venta debes agregar al menos un producto`,
-                className: "border border-red-200"
+        if (errors.id_cliente || errors.tipo_venta || errors.forma_venta || errors.id_responsable) {
+            showErrorToast({
+                title: "Error de validación",
+                description: "Revisa los campos obligatorios del formulario",
+                duration: 5000
+            });
+            return;
+        }
+        const firstErrorKey = Object.keys(errors)[0];
+        const firstError = errors[firstErrorKey];
+
+        if (firstError?.message) {
+            showErrorToast({
+                title: "Error en formulario",
+                description: firstError.message,
+                duration: 5000
             });
         }
-        console.log("Errores del formulario:", errors);
-        console.log(values)
+
+        if (errors.detalles) {
+            validateBeforeSubmit();
+        }
     };
 
-    const onSearchChange=(value:string)=>{
-        console.log(value)
+    const handleGoBack = () => {
+        navigate('/dashboard/productos')
     }
+
+    useEffect(() => {
+        if (!user?._id && saleResponsiblesData && saleResponsiblesData.length > 0) {
+            const firstResponsible = saleResponsiblesData[0];
+            setValue("id_responsable", firstResponsible.id);
+            setResponsible(firstResponsible);
+        }
+        else if (user?._id && saleResponsiblesData) {
+            const currentResponsible = saleResponsiblesData.find(res => res.id === Number(user._id));
+            if (currentResponsible) {
+                setResponsible(currentResponsible);
+            }
+        }
+    }, [saleResponsiblesData, setValue]);
+
+    useEffect(() => {
+        const clientId = getValues("id_cliente");
+        if (clientId) return
+        if (saleCustomersData?.data && saleCustomersData.data.length > 0) {
+            const firstCustomer = saleCustomersData.data[0];
+            setValue("id_cliente", firstCustomer.id);
+            setValue("cliente_nombre", firstCustomer.nombre);
+            setValue("cliente_nit", firstCustomer.nit?.toString() || "");
+        }
+    }, [saleCustomersData, setValue]);
+
+    const canProceedWithSale = (): boolean => {
+        if (items.length === 0) return false;
+        const validation = validateCartWithToast();
+        return validation.isValid;
+    };
+
+    // Shortcuts
+    useHotkeys('escape', handleGoBack, {
+        scopes: ["esc-key"],
+        enabled: true
+    });
+
     return (
         <div className="min-h-screen">
             <FormProvider {...methods}>
-                <form onSubmit={handleSubmit(onSubmit, onError)} className="max-w-7xl mx-auto p-2">
+                <form onSubmit={handleSubmit(onSubmit, onError)} className="max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="flex gap-2 items-center mb-2">
-                        <Button
-                            type="button"
-                            size={'sm'}
-                            variant={'outline'}
-                            className="cursor-pointer"
+                        <TooltipButton
+                            tooltipContentProps={{
+                                align: 'start'
+                            }}
+                            onClick={handleGoBack}
+                            tooltip={<p>Presiona <Kbd>esc</Kbd> para volver a la lista de productos</p>}
                         >
                             <CornerUpLeft />
                             <Kbd>esc</Kbd>
-                            {/* Atras */}
-                        </Button>
+                        </TooltipButton>
+
                         <h1 className="text-lg font-bold text-gray-900">Nueva Venta</h1>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                         {/* Formulario de información de venta - Columna izquierda */}
-                        <div className="lg:col-span-2 space-y-4">
+                        <div className="lg:col-span-2 space-y-3">
                             {/* 1. Datos de la Venta */}
                             <Card className="border-0 shadow-sm">
 
@@ -217,6 +432,7 @@ const CreateSale = () => {
                                                 type="date"
                                                 {...register("fecha")}
                                                 className="w-full"
+                                                autoFocus
                                             />
                                             {errors.fecha && <p className="text-red-500 text-sm mt-1">{errors.fecha.message}</p>}
                                         </div>
@@ -231,9 +447,13 @@ const CreateSale = () => {
                                                             <SelectValue placeholder="Selecciona una forma" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="MY">VENTA MAYOR</SelectItem>
-                                                            <SelectItem value="M">VENTA MENOR</SelectItem>
-                                                            <SelectItem value="Y">VENTA ESPECIAL</SelectItem>
+                                                            {
+                                                                saleModalitiesData && Object.entries(saleModalitiesData || {}).map(([code, description]) => (
+                                                                    <SelectItem key={code} value={code}>
+                                                                        {description}
+                                                                    </SelectItem>
+                                                                ))
+                                                            }
                                                         </SelectContent>
                                                     </Select>
                                                 )}
@@ -262,17 +482,18 @@ const CreateSale = () => {
                                                 name="id_responsable"
                                                 control={control}
                                                 render={({ field }) => (
-                                                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Selecciona un responsable" />
-                                                        </SelectTrigger>
-                                                        <SelectContent showSearch={true} onSearchChange={onSearchChange}>
-                                                            <SelectItem value="1">VARGAS MADELEN</SelectItem>
-                                                            <SelectItem value="2">GARCIA LUIS</SelectItem>
-                                                            <SelectItem value="3">RODRIGUEZ ANA</SelectItem>
-                                                            <SelectItem value="4">ROMRIGUEZ ANA</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                    <ComboboxSelect
+                                                        value={field.value}
+                                                        onChange={(value) => {
+                                                            field.onChange(value);
+                                                            const selected = saleResponsiblesData?.find((c) => c.id.toString() === value.toString());
+                                                            if (selected) {
+                                                                setResponsible(selected);
+                                                            }
+                                                        }}
+                                                        options={saleResponsiblesData || []}
+                                                        optionTag={"nombre"}
+                                                    />
                                                 )}
                                             />
                                             {errors.id_responsable && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
@@ -283,16 +504,30 @@ const CreateSale = () => {
                                                 name="id_cliente"
                                                 control={control}
                                                 render={({ field }) => (
-                                                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Selecciona un cliente" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="67">A TODOMOTOR</SelectItem>
-                                                            <SelectItem value="6">REPUESTOS GARCÍA</SelectItem>
-                                                            <SelectItem value="7">AUTOMOTRIZ CENTRAL</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                    <PaginatedCombobox
+                                                        value={field.value}
+                                                        onChange={(value) => {
+                                                            field.onChange(value);
+                                                            const selected = saleCustomersData?.data.find((c) => c.id.toString() === value);
+                                                            if (selected) {
+                                                                setValue("cliente_nombre", selected.nombre);
+                                                                setValue("cliente_nit", selected.nit?.toString() || "");
+                                                            }
+                                                        }}
+                                                        optionsData={saleCustomersData?.data || []}
+                                                        displayField="nombre"
+                                                        isLoading={isSaleCustomersLoading}
+                                                        updatePage={(page) => { console.log("Update page:", page) }}
+                                                        updateSearch={setCustomerSearchTerm}
+                                                        metaData={
+                                                            {
+                                                                current_page: saleCustomersData?.meta.current_page || 1,
+                                                                last_page: saleCustomersData?.meta.last_page || 1,
+                                                                total: saleCustomersData?.meta.total || 0,
+                                                                per_page: saleCustomersData?.meta.per_page || 10,
+                                                            }
+                                                        }
+                                                    />
                                                 )}
                                             />
                                             {errors.id_cliente && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
@@ -316,9 +551,13 @@ const CreateSale = () => {
                                                             <SelectValue placeholder="Selecciona un tipo" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="VC">VENTA AL CONTADO</SelectItem>
-                                                            <SelectItem value="C">VENTA A CREDITO</SelectItem>
-                                                            <SelectItem value="V">VENTA MIXTA</SelectItem>
+                                                            {
+                                                                saleTypesData && Object.entries(saleTypesData).map(([code, description]) => (
+                                                                    <SelectItem key={code} value={code}>
+                                                                        {description}
+                                                                    </SelectItem>
+                                                                ))
+                                                            }
                                                         </SelectContent>
                                                     </Select>
                                                 )}
@@ -331,8 +570,7 @@ const CreateSale = () => {
                                                 id="fechaPlazo"
                                                 type="date"
                                                 {...register("plazo_pago")}
-                                                disabled={watch("tipo_venta") !== "VENTA A CREDITO"}
-                                                className={watch("tipo_venta") !== "VENTA A CREDITO" ? "bg-gray-100" : ""}
+                                                disabled={watch("tipo_venta") !== "VC"}
                                             />
                                         </div>
                                         <div>
@@ -380,138 +618,16 @@ const CreateSale = () => {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-2">
-                                        {items.map((product) => {
-                                            const basePrice = product.customPrice
-                                            const itemSubtotal = product.customSubtotal
-                                            return (
-                                                <div key={product.product.id} className="border-gray-200 rounded-lg p-3 border">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-3 mb-1">
-                                                                <Badge variant="secondary" className="text-xs">
-                                                                    {product.product.id}
-                                                                </Badge>
-                                                                <span className="text-xs text-gray-500">{product.product.marca}</span>
-                                                            </div>
-                                                            <h4 className="text-sm font-medium text-gray-900 mb-1">{product.product.descripcion}</h4>
-
-                                                            <div className="grid grid-cols-3 gap-3">
-                                                                <div>
-                                                                    <Label className="text-xs text-gray-600 mb-1">Cantidad</Label>
-                                                                    {editingQuantity === product.product.id ? (
-                                                                        <Input
-                                                                            type="number"
-                                                                            step="1"
-                                                                            defaultValue={product.quantity}
-                                                                            className="h-8 text-sm"
-                                                                            onBlur={(e) => {
-                                                                                updateQuantity(product.product.id, parseInt(e.target.value) || product.quantity)
-                                                                                setEditingQuantity(null)
-                                                                            }}
-                                                                            onKeyDown={(e) => {
-                                                                                if (e.key === "Enter") {
-                                                                                    updateQuantity(product.product.id, parseInt((e.target as HTMLInputElement).value) || product.quantity)
-                                                                                    setEditingQuantity(null)
-                                                                                }
-                                                                            }}
-                                                                            autoFocus
-                                                                        />
-                                                                    ) : (
-                                                                        <Button
-                                                                            variant={"ghost"}
-                                                                            size={"sm"}
-                                                                            className="flex items-center gap-1 cursor-pointer hover:bg-gray-100 p-1 rounded h-8 w-full justify-start"
-                                                                            onClick={() => setEditingQuantity(product.product.id)}
-                                                                        >
-                                                                            <span className="text-sm font-medium">{product.quantity}</span>
-                                                                            <Edit3 className="h-3 w-3 text-gray-400" />
-                                                                        </Button>
-                                                                    )}
-                                                                </div>
-
-                                                                <div>
-                                                                    <Label className="text-xs text-gray-600 mb-1">Precio Unit.</Label>
-                                                                    {editingPrice === product.product.id ? (
-                                                                        <Input
-                                                                            type="number"
-                                                                            step="0.01"
-                                                                            defaultValue={basePrice}
-                                                                            className="h-8 text-sm"
-                                                                            onBlur={(e) => {
-                                                                                updateCustomPrice(product.product.id, parseFloat(e.target.value) || basePrice)
-                                                                                setEditingPrice(null)
-                                                                            }}
-                                                                            onKeyDown={(e) => {
-                                                                                if (e.key === "Enter") {
-                                                                                    updateCustomPrice(product.product.id, parseFloat((e.target as HTMLInputElement).value) || basePrice)
-                                                                                    setEditingPrice(null)
-                                                                                }
-                                                                            }}
-                                                                            autoFocus
-                                                                        />
-                                                                    ) : (
-                                                                        <Button
-                                                                            variant={"ghost"}
-                                                                            size={"sm"}
-                                                                            className="flex items-center gap-1 cursor-pointer hover:bg-gray-100 p-1 rounded h-8 w-full justify-start"
-                                                                            onClick={() => setEditingPrice(product.product.id)}
-                                                                        >
-                                                                            <span className="text-sm font-medium">${basePrice.toFixed(2)}</span>
-                                                                            <Edit3 className="h-3 w-3 text-gray-400" />
-                                                                        </Button>
-                                                                    )}
-                                                                </div>
-
-                                                                <div>
-                                                                    <Label className="text-xs text-gray-600 mb-1">Subtotal</Label>
-                                                                    {editingSubtotal === product.product.id ? (
-                                                                        <Input
-                                                                            type="number"
-                                                                            step="0.1"
-                                                                            min="0"
-                                                                            max="100"
-                                                                            defaultValue={itemSubtotal}
-                                                                            className="h-8 text-sm"
-                                                                            onBlur={(e) => {
-                                                                                updateCustomSubtotal(product.product.id, parseFloat(e.target.value) || itemSubtotal)
-                                                                                setEditingSubtotal(null)
-                                                                            }}
-                                                                            onKeyDown={(e) => {
-                                                                                if (e.key === "Enter") {
-                                                                                    updateCustomSubtotal(product.product.id, parseFloat((e.target as HTMLInputElement).value) || itemSubtotal)
-                                                                                    setEditingSubtotal(null)
-                                                                                }
-                                                                            }}
-                                                                            autoFocus
-                                                                        />
-                                                                    ) : (
-                                                                        <Button
-                                                                            variant={"ghost"}
-                                                                            size={"sm"}
-                                                                            className="flex items-center gap-1 cursor-pointer hover:bg-green-50 p-1 rounded  h-8 w-full justify-start"
-                                                                            onClick={() => setEditingSubtotal(product.product.id)}
-                                                                        >
-                                                                            <span className="text-sm font-medium text-green-600">${itemSubtotal.toFixed(2)}</span>
-                                                                            <Edit3 className="h-3 w-3 text-gray-400" />
-                                                                        </Button>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => removeItem(product.product.id)}
-                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            )
-                                        })}
+                                        {items.map((item) => (
+                                            <CartItemComponent
+                                                key={item.product.id}
+                                                item={item}
+                                                removeItem={removeItem}
+                                                updateQuantity={updateQuantity}
+                                                updateCustomPrice={updateCustomPrice}
+                                                updateCustomSubtotal={updateCustomSubtotal}
+                                            />
+                                        ))}
 
                                         {items.length === 0 && (
                                             <div className="text-center py-8 text-gray-500">
@@ -525,25 +641,21 @@ const CreateSale = () => {
                             </Card>
                         </div>
 
-                        {/* Resumen del pedido - Columna derecha */}
+                        {/* Resumen de venta - Columna derecha */}
                         <div className="space-y-6">
                             <SalesSummary
                                 clearCart={clearCart}
                                 discountAmount={discountAmount || 0}
                                 discountPercent={discountPercent || 0}
-                                editingGlobalAmount={editingGlobalAmount}
-                                editingGlobalPercent={editingGlobalPercent}
-                                handleGlobalAmountSubmit={handleGlobalAmountSubmit}
-                                handleGlobalPercentSubmit={handleGlobalPercentSubmit}
                                 isPending={isPending}
                                 reset={reset}
                                 setDiscountAmount={setDiscountAmount}
                                 setDiscountPercent={setDiscountPercent}
-                                setEditingGlobalAmount={setEditingGlobalAmount}
-                                setEditingGlobalPercent={setEditingGlobalPercent}
                                 subtotal={subtotal}
                                 total={total}
                                 watch={watch}
+                                responsibleName={responsible?.nombre || ''}
+                                hasProducts={items.length > 0}
                             />
                         </div>
                     </div>

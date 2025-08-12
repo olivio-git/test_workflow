@@ -40,10 +40,26 @@ const ProductLogistics: React.FC<ProductLogisticsProps> = ({
         {
             accessorKey: "cantidad",
             header: `Cantidad`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        {value}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "costo",
             header: `Costo`,
+            cell: ({ getValue }) => {
+                const value = getValue<number>();
+                return (
+                    <div className="text-end">
+                        ${value.toFixed(2)}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "nro_pedido",

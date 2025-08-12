@@ -12,18 +12,15 @@ import CategoryItemSkeleton from "./CategorySqueleton";
 import { getCachedPage, setCachedPage } from "../Utils/PageCache";
 import type { PaginatedResponse } from "../types/Categories";
 
-
 interface Category {
   id: number;
   categoria: string;
   subcategorias: Array<{ id: number; subcategoria: string }>;
 }
 
-const SIMPLE_MODE = false;
-
 const TableCreateCategory = () => {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Estados
   const [newCategory, setNewCategory] = useState("");
@@ -31,10 +28,8 @@ const TableCreateCategory = () => {
   const [newSubName, setNewSubName] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
-
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
 
@@ -66,7 +61,6 @@ const TableCreateCategory = () => {
       setCachedPage(cacheKey, data);
       return data;
     },
-    enabled: !SIMPLE_MODE,
     keepPreviousData: true,
     staleTime: 0,
   });
@@ -227,7 +221,6 @@ const TableCreateCategory = () => {
           )}
         </Accordion>
 
-
         {isLoading && (
           <div className="p-6 text-center text-gray-500">Cargando categorías...</div>
         )}
@@ -240,7 +233,6 @@ const TableCreateCategory = () => {
           </div>
         )}
       </div>
-
 
       <PaginationControls
         currentPage={currentPage}

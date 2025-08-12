@@ -11,6 +11,7 @@ import type { ProductProviderOrder } from "../types/ProductProviderOrder";
 import { ProductProviderOrderListSchema } from "../schemas/productProviderOrdersSchema";
 import { ProductListResponseSchema } from "../schemas/productResponse.schema";
 import type { ProductListResponse } from "../types/productListResponse ";
+import { ProductDetailSchema } from "../schemas/ProductDetail.schema ";
 
 export const fetchProducts = async (filters: ProductFilters): Promise<ProductListResponse> => {
 	const response = await apiClient.get(PRODUCT_ENDPOINTS.all, { params: filters });
@@ -24,11 +25,13 @@ export const fetchProducts = async (filters: ProductFilters): Promise<ProductLis
 };
 
 export const fetchProductDetail = async (id: number): Promise<ProductDetail> => {
-	const res = await apiClient.get(PRODUCT_ENDPOINTS.byId(id));
-	if (!res.data) throw new Error("Product not found");
-
-	
-	return res.data.data;
+	const response = await apiClient.get(PRODUCT_ENDPOINTS.byId(id));
+	const result = ProductDetailSchema.safeParse(response.data.data);
+	if (!result.success) {
+		console.error("Zod error en fetchProductDetail:", result.error.format());
+		throw new Error("Respuesta inválida del servidor.");
+	}
+	return result.data;
 };
 
 export const fetchProductStock = async ({

@@ -2,12 +2,12 @@
 
 import { useToast } from "@/hooks/use-toast"
 import {
-  Toast,
   ToastClose,
   ToastDescription,
   ToastProvider,
   ToastTitle,
   ToastViewport,
+  ToastWithIcon,
 } from "@/components/atoms/toast"
 
 export function Toaster() {
@@ -17,8 +17,8 @@ export function Toaster() {
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
+          <ToastWithIcon key={id} {...props}>
+            <div className="flex flex-col">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (
                 <ToastDescription>{description}</ToastDescription>
@@ -26,7 +26,7 @@ export function Toaster() {
             </div>
             {action}
             <ToastClose />
-          </Toast>
+          </ToastWithIcon>
         )
       })}
       <ToastViewport />
