@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router';
 import TableShoppingCart from './tableShoppingCart';
 import ShortcutKey from '@/components/common/ShortcutKey';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 
 interface ShoppingCartProps {
     // focusItemId?: string;
