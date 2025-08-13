@@ -4,10 +4,18 @@ export interface CategoryResponse {
   meta: Meta;
 }
 
+// export interface Category {
+//   id: number;
+//   categoria: string;
+//   subcategorias: Subcategory[];
+// }
 export interface Category {
   id: number;
   categoria: string;
-  subcategorias: Subcategory[];
+  subcategorias: Array<{
+    id: number;
+    subcategoria: string;
+  }>;
 }
 
 export interface CategoryDetail {

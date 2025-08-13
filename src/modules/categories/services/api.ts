@@ -19,7 +19,7 @@ export const apiConstructor = async ({
 }: ApiConstructor) => {
     try { 
         const token = await authSDK.getAccessToken();
-        console.log(token)
+        //console.log(token)
         const config = {
             url,
             method,
