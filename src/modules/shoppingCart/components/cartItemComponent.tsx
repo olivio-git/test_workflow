@@ -24,16 +24,16 @@ const CartItemComponent: React.FC<CartItemProps> = ({
     const basePrice = item.customPrice
     const itemSubtotal = item.customSubtotal
     return (
-        <div key={item.product.id} className="border-gray-200 rounded-lg p-3 border">
+        <div key={item.product.id} className="border-gray-200 rounded-lg p-1.5 border">
             <div className="flex items-start justify-between">
                 <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                        <Badge variant="secondary" className="text-xs">
+                    <h4 className="text-xs font-medium text-gray-900 mb-1">{item.product.descripcion}</h4>
+                    <div className="flex items-center gap-3">
+                        <Badge variant="secondary" className="text-[10px]">
                             {item.product.codigo_oem}
                         </Badge>
-                        <span className="text-xs text-gray-500">{item.product.marca}</span>
+                        <span className="text-[10px] text-gray-500">{item.product.marca}</span>
                     </div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-1">{item.product.descripcion}</h4>
 
                     <div className="grid grid-cols-3 gap-3">
                         <div>
@@ -79,7 +79,8 @@ const CartItemComponent: React.FC<CartItemProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => removeItem(item.product.id)}
-                    className="text-red-500 hover:text-red-500 size-7"
+                    className="text-red-500 hover:text-red-500 size-7
+                    "
                 >
                     <Trash2 className="size-3" />
                 </Button>

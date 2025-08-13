@@ -3,7 +3,7 @@ import { Button } from "@/components/atoms/button"
 import { Separator } from "@/components/atoms/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/atoms/sheet"
 import { cn } from "@/lib/utils"
-import { BrushCleaning, CreditCard, Maximize2, Receipt, ShoppingCart } from "lucide-react"
+import { BrushCleaning, CreditCard, FileText, Maximize2, ShoppingCart } from "lucide-react"
 import CartItemComponent from "./cartItemComponent"
 import { Label } from "@/components/atoms/label"
 import { useNavigate } from "react-router"
@@ -44,6 +44,13 @@ const CartSidebar = ({
 
     useHotkeys('escape',
         (event) => {
+            const target = event.target as HTMLElement;
+            const tagName = target.tagName.toLowerCase();
+
+            // Si el foco está en input, textarea o select, no ejecutar el handler
+            if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
+                return;
+            }
             event.preventDefault();
             event.stopPropagation();
             onOpenChange(false);
@@ -53,7 +60,8 @@ const CartSidebar = ({
             enabled: open,
             preventDefault: true,
             keydown: true,
-            keyup: false
+            keyup: false,
+            enableOnFormTags: false
         }
     );
 
@@ -180,13 +188,13 @@ const CartSidebar = ({
                                                 navigate('/dashboard/create-sale')
                                                 onOpenChange(false)
                                             }}>
-                                            <CreditCard className="w-4 h-4 mr-2" />
+                                            <CreditCard className="size-4" />
                                             Proceder a la Venta
                                         </Button>
                                         <Button
                                             size={'sm'}
                                             variant="outline" className="w-full cursor-pointer">
-                                            <Receipt className="w-4 h-4 mr-2" />
+                                            <FileText className="size-4" />
                                             Guardar Cotización
                                         </Button>
                                     </div>

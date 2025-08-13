@@ -29,6 +29,7 @@ export interface EditableFieldProps {
   cancelOnEscape?: boolean;
   confirmOnBlur?: boolean;
   editOnFocus?: boolean;
+  inputRef?: React.Ref<HTMLInputElement>;
 }
 
 export const EditableField: React.FC<EditableFieldProps> = ({
@@ -53,11 +54,23 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   cancelOnEscape = true,
   confirmOnBlur = true,
   editOnFocus = true,
+  inputRef: externalInputRef,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState('');
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Función para asignar ambos refs al input
+  const setRefs = (el: HTMLInputElement | null) => {
+    inputRef.current = el;
+
+    if (typeof externalInputRef === 'function') {
+      externalInputRef(el);
+    } else if (externalInputRef && typeof externalInputRef === 'object') {
+      (externalInputRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
+    }
+  };
 
   const getDisplayValue = (val: string | number): string => {
     if (formatter) {
@@ -147,6 +160,7 @@ export const EditableField: React.FC<EditableFieldProps> = ({
     if (cancelOnEscape && e.key === 'Escape') {
       e.preventDefault();
       cancelEditing();
+      inputRef.current?.blur()
     }
   };
 
@@ -178,7 +192,7 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   return (
     <div className={cn('relative w-full', className, buttonClassName)}>
       <Input
-        ref={inputRef}
+        ref={setRefs}
         type={type}
         value={isEditing ? tempValue : displayValue}
         onChange={isEditing ? handleChange : undefined}

@@ -37,6 +37,8 @@ import { Kbd } from "@/components/atoms/kbd"
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
 import { useDebounce } from "use-debounce"
 import { formatCell } from "@/utils/formatCell"
+import BottomShoppingCartBar from "@/modules/shoppingCart/components/BottomShoppingCartBar"
+import ResizableBox from "@/components/atoms/resizable-box"
 
 const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
 
@@ -389,7 +391,7 @@ const ProductListScreen = () => {
             ),
         },
     ], [])
-    // Filter and sort products
+
     const table = useReactTable<ProductGet>({
         data: products,
         columns,
@@ -476,13 +478,13 @@ const ProductListScreen = () => {
     }
 
     return (
-        <div
+        <main
             className="min-h-screen max-w-full">
             <div className="bg-white rounded-lg shadow-sm">
                 {/* Header */}
-                <div className="p-2 border-b border-gray-200">
+                <header className="p-2 border-b border-gray-200">
                     <h1 className="text-lg font-bold text-gray-900">Productos</h1>
-                    <div className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
+                    <section className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
                         <div className="flex items-center gap-2 md:gap-4 grow">
 
                             <div className="relative w-full">
@@ -496,7 +498,7 @@ const ProductListScreen = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 flex-wrap md:gap-4">
+                        <div className="flex items-center gap-2 flex-wrap">
                             <div className="flex items-center space-x-2">
                                 <Switch
                                     id="infinite-scroll"
@@ -534,8 +536,8 @@ const ProductListScreen = () => {
                                 }
                             </Button>
                         </div>
-                    </div>
-                </div>
+                    </section>
+                </header>
                 {/* Búsquedas individuales */}
                 {
                     showFilters &&
@@ -613,44 +615,24 @@ const ProductListScreen = () => {
                     </div>
                 </div>
 
-                <div
-                    onClick={handleTableClick}
-                    className="overflow-x-hidden">
-                    {isInfiniteScroll ? (
-                        <InfiniteScroll
-                            dataLength={products.length}
-                            next={() => setPage((filters.pagina || 1) + 1)}
-                            hasMore={products.length < (productData?.meta.total || 0)}
-                            loader={
-                                <div className="flex items-center justify-center gap-2 text-center p-6 text-xs sm:text-sm text-gray-500 bg-gray-50">
-                                    <Loader2 className="size-4 animate-spin" />
-                                    Cargando más productos...
-                                </div>
-                            }
-                            scrollableTarget="main-scroll-container"
-                        >
-                            <CustomizableTable
-                                table={table}
-                                isError={isError}
-                                errorMessage="Ocurrió un error al cargar los productos"
-                                isLoading={isLoading}
-                                rows={filters.pagina_registros}
-                                noDataMessage="No se encontraron productos"
-                                selectedRowIndex={selectedIndex}
-                                onRowClick={handleRowClick}
-                                onRowDoubleClick={handleRowDoubleClick}
-                                tableRef={tableRef}
-                                focused={isFocused}
-                                keyboardNavigationEnabled={true}
-                            />
-                        </InfiniteScroll>
-                    ) : (
+                {isInfiniteScroll ? (
+                    <InfiniteScroll
+                        dataLength={products.length}
+                        next={() => setPage((filters.pagina || 1) + 1)}
+                        hasMore={products.length < (productData?.meta.total || 0)}
+                        loader={
+                            <div className="flex items-center justify-center gap-2 text-center p-6 text-xs sm:text-sm text-gray-500 bg-gray-50">
+                                <Loader2 className="size-4 animate-spin" />
+                                Cargando más productos...
+                            </div>
+                        }
+                        scrollableTarget="main-scroll-container"
+                    >
                         <CustomizableTable
                             table={table}
                             isError={isError}
-                            isFetching={isFetching}
-                            isLoading={isLoading}
                             errorMessage="Ocurrió un error al cargar los productos"
+                            isLoading={isLoading}
                             rows={filters.pagina_registros}
                             noDataMessage="No se encontraron productos"
                             selectedRowIndex={selectedIndex}
@@ -660,24 +642,57 @@ const ProductListScreen = () => {
                             focused={isFocused}
                             keyboardNavigationEnabled={true}
                         />
-                    )}
+                    </InfiniteScroll>
+                ) : (
+                    <ResizableBox
+                        direction="vertical"
+                        minSize={20}
+                    >
+                        <div
+                            className="overflow-auto h-full">
+                            <div
+                                onClick={handleTableClick}
+                                className="overflow-x-hidden">
+                                <CustomizableTable
+                                    table={table}
+                                    isError={isError}
+                                    isFetching={isFetching}
+                                    isLoading={isLoading}
+                                    errorMessage="Ocurrió un error al cargar los productos"
+                                    rows={filters.pagina_registros}
+                                    noDataMessage="No se encontraron productos"
+                                    selectedRowIndex={selectedIndex}
+                                    onRowClick={handleRowClick}
+                                    onRowDoubleClick={handleRowDoubleClick}
+                                    tableRef={tableRef}
+                                    focused={isFocused}
+                                    keyboardNavigationEnabled={true}
+                                />
 
-                </div>
+                            </div>
 
-                {/* Pagination */}
-                {
-                    !isInfiniteScroll && (productData?.data?.length ?? 0) > 0 && (
-                        <Pagination
-                            currentPage={filters.pagina || 1}
-                            onPageChange={onPageChange}
-                            totalData={productData?.meta.total || 1}
-                            onShowRowsChange={onShowRowsChange}
-                            showRows={filters.pagina_registros}
-                        />
-                    )
-                }
+                            {/* Pagination */}
+                            {
+                                (productData?.data?.length ?? 0) > 0 && (
+                                    <Pagination
+                                        currentPage={filters.pagina || 1}
+                                        onPageChange={onPageChange}
+                                        totalData={productData?.meta.total || 1}
+                                        onShowRowsChange={onShowRowsChange}
+                                        showRows={filters.pagina_registros}
+                                    />
+                                )
+                            }
+                        </div>
+                    </ResizableBox>
+                )}
+
             </div>
-        </div>
+            {
+                !isInfiniteScroll &&
+                <BottomShoppingCartBar />
+            }
+        </main>
     )
 }
 

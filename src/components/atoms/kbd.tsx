@@ -9,7 +9,7 @@ const Kbd = React.forwardRef<HTMLElement, KbdProps>(
     ({ className, variant = "light", ...props }, ref) => {
         const variantClasses =
             variant === "dark"
-                ? "bg-gray-800 text-gray-100 border-gray-600 shadow-gray-600"
+                ? "bg-primary-foreground/20 text-primary-foreground border border-primary-foreground/30 shadow-gray-600"
                 : "text-gray-400 border-gray-200 bg-white";
 
         return (
