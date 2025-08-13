@@ -101,7 +101,8 @@ export const useKeyboardNavigation = ({
     }
   }, {
     enableOnFormTags: false,
-    preventDefault: true
+    preventDefault: true,
+    enabled:isFocused
   });
 
   // Navegación hacia abajo
@@ -113,7 +114,8 @@ export const useKeyboardNavigation = ({
     }
   }, {
     enableOnFormTags: false,
-    preventDefault: true
+    preventDefault: true,
+    enabled:isFocused
   });
 
   // TAB - Navegar elementos dentro de la fila seleccionada
@@ -161,7 +163,8 @@ export const useKeyboardNavigation = ({
     }
   }, {
     enableOnFormTags: true,
-    preventDefault: false
+    preventDefault: false,
+    enabled:isFocused
   });
 
   // Ver detalles (solo si no estamos navegando dentro de fila)
@@ -171,7 +174,8 @@ export const useKeyboardNavigation = ({
     }
   }, {
     enableOnFormTags: false,
-    preventDefault: true
+    preventDefault: true,
+    enabled:isFocused
   });
 
   // Agregar al carrito
@@ -181,7 +185,8 @@ export const useKeyboardNavigation = ({
     }
   }, {
     enableOnFormTags: false,
-    preventDefault: true
+    preventDefault: true,
+    enabled:isFocused
   });
 
   // Quitar del carrito
@@ -191,7 +196,8 @@ export const useKeyboardNavigation = ({
     }
   }, {
     enableOnFormTags: false,
-    preventDefault: true
+    preventDefault: true,
+    enabled:isFocused
   });
 
   // Resetear navegación dentro de fila cuando cambia la fila seleccionada

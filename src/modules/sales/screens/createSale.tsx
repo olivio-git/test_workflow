@@ -37,6 +37,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema";
 import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
 import CartItemComponent from "@/modules/shoppingCart/components/cartItemComponent";
+import TableShoppingCart from "@/modules/shoppingCart/components/tableShoppingCart";
 
 const CreateSale = () => {
     const queryClient = useQueryClient();
@@ -400,7 +401,7 @@ const CreateSale = () => {
     return (
         <div className="min-h-screen">
             <FormProvider {...methods}>
-                <form onSubmit={handleSubmit(onSubmit, onError)} className="max-w-7xl mx-auto">
+                <form onSubmit={handleSubmit(onSubmit, onError)} className="max-w-7xl mx-auto flex flex-col gap-3">
                     {/* Header */}
                     <div className="flex gap-2 items-center mb-2">
                         <TooltipButton
@@ -421,7 +422,7 @@ const CreateSale = () => {
                         {/* Formulario de información de venta - Columna izquierda */}
                         <div className="lg:col-span-2 space-y-3">
                             {/* 1. Datos de la Venta */}
-                            <Card className="border-0 shadow-sm">
+                            <Card className="border-0 shadow-sm h-full">
 
                                 <CardContent className="space-y-3 py-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -602,47 +603,9 @@ const CreateSale = () => {
                                     <span className="text-xs text-gray-500">* Campos requeridos</span>
                                 </CardContent>
                             </Card>
-
-                            {/* 2. Productos */}
-                            <Card className="border-0 shadow-sm">
-                                <CardHeader className="pb-4">
-                                    <CardTitle>
-                                        <ProductSelectorModal
-                                            searchTerm={searchTerm}
-                                            setSearchTerm={setSearchTerm}
-                                            isSearchOpen={isSearchOpen}
-                                            setIsSearchOpen={setIsSearchOpen}
-                                            addItem={handleAddProductItem}
-                                        />
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        {items.map((item) => (
-                                            <CartItemComponent
-                                                key={item.product.id}
-                                                item={item}
-                                                removeItem={removeItem}
-                                                updateQuantity={updateQuantity}
-                                                updateCustomPrice={updateCustomPrice}
-                                                updateCustomSubtotal={updateCustomSubtotal}
-                                            />
-                                        ))}
-
-                                        {items.length === 0 && (
-                                            <div className="text-center py-8 text-gray-500">
-                                                <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                                                <p>No hay productos agregados</p>
-                                                <p className="text-sm">Haz clic en "Seleccionar Productos" para agregar</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
                         </div>
 
                         {/* Resumen de venta - Columna derecha */}
-                        <div className="space-y-6">
                             <SalesSummary
                                 clearCart={clearCart}
                                 discountAmount={discountAmount || 0}
@@ -657,8 +620,34 @@ const CreateSale = () => {
                                 responsibleName={responsible?.nombre || ''}
                                 hasProducts={items.length > 0}
                             />
-                        </div>
                     </div>
+                    {/* 2. Productos */}
+                    <Card className="border-0 shadow-sm">
+                        <CardHeader className="pb-4">
+                            <CardTitle>
+                                <ProductSelectorModal
+                                    searchTerm={searchTerm}
+                                    setSearchTerm={setSearchTerm}
+                                    isSearchOpen={isSearchOpen}
+                                    setIsSearchOpen={setIsSearchOpen}
+                                    addItem={handleAddProductItem}
+                                />
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                <TableShoppingCart />
+
+                                {items.length === 0 && (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                                        <p>No hay productos agregados</p>
+                                        <p className="text-sm">Haz clic en "Seleccionar Productos" para agregar</p>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </form>
             </FormProvider>
         </div>
