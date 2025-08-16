@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchBrands } from "../services/catalogService";
+import { fetchBrands } from "../services/sharedService";
 
 export const useCommonBrands = (marca?: string) => {
     return useQuery({

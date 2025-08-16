@@ -32,7 +32,7 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
     const isAutoScrolling = useRef<boolean>(false)
     const currentMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
 
-    const [isExpanded, setIsExpanded] = useState<boolean>(true)
+    const [isExpanded, setIsExpanded] = useState<boolean>(initialSize === 100)
     const [size, setSize] = useState<number>(initialSize)
     const [isResizing, setIsResizing] = useState(false)
 
