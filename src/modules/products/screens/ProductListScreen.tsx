@@ -646,7 +646,8 @@ const ProductListScreen = () => {
                 ) : (
                     <ResizableBox
                         direction="vertical"
-                        minSize={20}
+                        minSize={10}
+                        initialSize={20}
                     >
                         <div
                             className="overflow-auto h-full">

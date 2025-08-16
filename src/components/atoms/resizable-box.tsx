@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { ChevronsLeftRightEllipsis } from "lucide-react"
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react"
 
 type ResizeDirection = "both" | "horizontal" | "vertical"
@@ -209,7 +210,9 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
         const ro = new ResizeObserver(() => {
             if (!userResized.current) {
                 measureNatural()
-                setSize(initialSize)
+                if (initialSize === 100) {
+                    setSize(initialSize)
+                }
             }
         })
 
@@ -228,9 +231,6 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
 
             // Inicializar posición del cursor
             currentMousePos.current = { x: e.clientX, y: e.clientY }
-
-            // Ya no necesitamos startPos ni startSize porque ahora calculamos 
-            // el tamaño absoluto basado en la posición del cursor
         },
         [measureNatural],
     )
@@ -324,7 +324,10 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
     }, [isResizing, handleMouseMove, handleMouseUp, handleWheel, direction, stopAutoScroll])
 
     const computedStyle: CSSProperties = {}
-    if (userResized.current && (baseSizePx.current.width > 0 || baseSizePx.current.height > 0)) {
+    // Aplicar el tamaño inicial incluso si el usuario no ha redimensionado
+    const shouldApplySize = userResized.current || initialSize !== 100
+
+    if (shouldApplySize && (baseSizePx.current.width > 0 || baseSizePx.current.height > 0)) {
         if (direction === "vertical") {
             const maxAllowedSize = Math.min(100, (maxSizePx.current.height / baseSizePx.current.height) * 100)
             if (size >= maxAllowedSize - 1) {
@@ -376,7 +379,7 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
         switch (direction) {
             case "horizontal":
                 return {
-                    className: `${baseClasses} -right-1 top-0 w-2 h-full cursor-col-resize`,
+                    className: `${baseClasses} right-0.5 top-0 w-2 h-full cursor-col-resize`,
                     handleStyle: {
                         width: isResizing ? 8 : 6,
                         height: 40,
@@ -385,7 +388,7 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
                 }
             case "vertical":
                 return {
-                    className: `${baseClasses} -bottom-1 h-2 w-full cursor-row-resize`,
+                    className: `${baseClasses} bottom-0.5 h-2 w-full cursor-row-resize`,
                     handleStyle: {
                         width: 40,
                         height: isResizing ? 8 : 6,
@@ -394,10 +397,10 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
                 }
             default: // both
                 return {
-                    className: `${baseClasses} -bottom-1 -right-1 w-3 h-3 cursor-nw-resize`,
+                    className: `${baseClasses} bottom-0.5 right-0.5 w-3 h-3 cursor-nw-resize`,
                     handleStyle: {
-                        width: isResizing ? 16 : 12,
-                        height: isResizing ? 16 : 12,
+                        width: 12,
+                        height: 12,
                         transition: "all 0.2s ease",
                     },
                 }
@@ -406,35 +409,58 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
 
     const handleProps = getHandleProps()
 
+    const getPanelProps = () => {
+        switch (direction) {
+            case "horizontal":
+                return {
+                    className: `pr-2`
+                }
+            case "vertical":
+                return {
+                    className: `pb-2`
+                }
+            default:
+                return {
+                    className: ``
+                }
+        }
+    }
+    const panelProps = getPanelProps()
+
     return (
         <div className="relative">
-            <div ref={panelRef} className={cn("relative overflow-hidden", className)} style={computedStyle}>
+            <div ref={panelRef} className={cn("relative overflow-hidden", panelProps.className, className)} style={computedStyle}>
                 {children}
-            </div>
 
-            {/* Handle original */}
-            <div
-                ref={handleRef}
-                role="separator"
-                aria-orientation={direction === "vertical" ? "horizontal" : "vertical"}
-                tabIndex={0}
-                onDoubleClick={handleToggleExpanded}
-                onMouseDown={handleMouseDown}
-                className={handleProps.className}
-                title={"Arrastra para redimensionar"} //, doble clic para expandir/contraer
-            >
+                {/* Handle original */}
                 <div
-                    className={cn(
-                        "rounded-full transition-all duration-200",
-                        isResizing ? "bg-gray-700 shadow-lg scale-105" : "bg-gray-400 hover:bg-gray-500 hover:shadow-md",
-                    )}
-                    style={handleProps.handleStyle}
-                />
-                {isResizing && isAutoScrolling.current && (
-                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                        Tambien puedes usar la rueda para scroll
+                    ref={handleRef}
+                    role="separator"
+                    aria-orientation={direction === "vertical" ? "horizontal" : "vertical"}
+                    tabIndex={0}
+                    onDoubleClick={handleToggleExpanded}
+                    onMouseDown={handleMouseDown}
+                    className={handleProps.className}
+                    title={"Arrastra para redimensionar"} //, doble clic para expandir/contraer
+                >
+                    <div
+                        className={cn(
+                            `${direction === "both" ? "rounded-xs group opacity-80" : "rounded-full transition-all duration-200"}`,
+                            isResizing ? "bg-gray-700 shadow-lg scale-105 opacity-100" : "bg-gray-400 hover:bg-gray-500 hover:shadow-md",
+                        )}
+                        style={handleProps.handleStyle}
+                    >
+                        {
+                            direction === "both" &&
+                            <ChevronsLeftRightEllipsis className={`size-3 rotate-45 group-hover:text-gray-200 ${isResizing ? "text-gray-200" : "text-gray-700"}`} />
+                        }
                     </div>
-                )}
+                    {isResizing && isAutoScrolling.current && (
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                            Tambien puedes usar la rueda para scroll
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )
