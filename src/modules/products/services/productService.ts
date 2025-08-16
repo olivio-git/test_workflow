@@ -13,7 +13,7 @@ import { ProductListResponseSchema } from "../schemas/productResponse.schema";
 import type { ProductListResponse } from "../types/productListResponse ";
 import { ProductDetailSchema } from "../schemas/ProductDetail.schema ";
 
-export const fetchProducts = async (filters: ProductFilters): Promise<ProductListResponse> => {
+export const fetchProducts = async (filters: Partial<ProductFilters>): Promise<ProductListResponse> => {
 	const response = await apiClient.get(PRODUCT_ENDPOINTS.all, { params: filters });
 
 	const result = ProductListResponseSchema.safeParse(response.data);

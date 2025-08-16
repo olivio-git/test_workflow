@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { ShoppingCart, Trash2, CornerUpLeft } from "lucide-react";
-import { Button } from "@/components/atoms/button";
+import { ShoppingCart, CornerUpLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
-import { Badge } from "@/components/atoms/badge";
 import ProductSelectorModal from "@/modules/products/components/ProductSelectorModal";
 import type { ProductGet } from "@/modules/products/types/ProductGet";
 import authSDK from "@/services/sdk-simple-auth";
@@ -22,8 +20,6 @@ import { useNavigate } from "react-router";
 import { useSaleTypes } from "../hooks/useSaleTypes";
 import { useSaleModalities } from "../hooks/useSaleModalities";
 import { useSetDefaultSelect } from "../hooks/useSetDefaultSelect";
-import { EditableQuantity } from "@/modules/shoppingCart/components/editableQuantity";
-import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice";
 import { useSaleResponsibles } from "../hooks/useSaleResponsibles";
 import { ComboboxSelect } from "@/components/common/SelectCombobox";
 import { useSaleCustomers } from "../hooks/useSaleCustomers";
@@ -36,10 +32,9 @@ import { format, parse } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema";
 import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
-import CartItemComponent from "@/modules/shoppingCart/components/cartItemComponent";
 import TableShoppingCart from "@/modules/shoppingCart/components/tableShoppingCart";
 
-const CreateSale = () => {
+const CreateSaleScreen = () => {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const user = authSDK.getCurrentUser()
@@ -606,20 +601,20 @@ const CreateSale = () => {
                         </div>
 
                         {/* Resumen de venta - Columna derecha */}
-                            <SalesSummary
-                                clearCart={clearCart}
-                                discountAmount={discountAmount || 0}
-                                discountPercent={discountPercent || 0}
-                                isPending={isPending}
-                                reset={reset}
-                                setDiscountAmount={setDiscountAmount}
-                                setDiscountPercent={setDiscountPercent}
-                                subtotal={subtotal}
-                                total={total}
-                                watch={watch}
-                                responsibleName={responsible?.nombre || ''}
-                                hasProducts={items.length > 0}
-                            />
+                        <SalesSummary
+                            clearCart={clearCart}
+                            discountAmount={discountAmount || 0}
+                            discountPercent={discountPercent || 0}
+                            isPending={isPending}
+                            reset={reset}
+                            setDiscountAmount={setDiscountAmount}
+                            setDiscountPercent={setDiscountPercent}
+                            subtotal={subtotal}
+                            total={total}
+                            watch={watch}
+                            responsibleName={responsible?.nombre || ''}
+                            hasProducts={items.length > 0}
+                        />
                     </div>
                     {/* 2. Productos */}
                     <Card className="border-0 shadow-sm">
@@ -654,4 +649,4 @@ const CreateSale = () => {
     );
 };
 
-export default CreateSale;
+export default CreateSaleScreen;
