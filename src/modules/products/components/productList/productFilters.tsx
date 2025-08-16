@@ -1,7 +1,7 @@
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
-import { useCategoriesWithSubcategories } from "@/modules/catalog/hooks/useCategories";
-import { useCommonBrands } from "@/modules/catalog/hooks/useCommonBrands";
+import { useCategoriesWithSubcategories } from "@/modules/shared/hooks/useCategories";
+import { useCommonBrands } from "@/modules/shared/hooks/useCommonBrands";
 import { Search } from "lucide-react";
 import type { useProductFilters } from "../../hooks/useProductFilters";
 import { useEffect, useState } from "react";
