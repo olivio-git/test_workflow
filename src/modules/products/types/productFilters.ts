@@ -1,15 +1,4 @@
-export interface ProductFilters {
-    pagina?: number;
-    pagina_registros?: number;
-    sucursal: number;
-    producto?: number;
-    categoria?: number;
-    subcategoria?: number;
-    descripcion?: string;
-    codigo_oem?: string;
-    codigo_upc?: string;
-    marca?: string;
-    modelo?: string;
-    medida?: string;
-    nro_motor?: string;
-}  
+import type z from "zod";
+import type { productFiltersSchema } from "../schemas/productFilter.schema";
+
+export type ProductFilters = z.infer<typeof productFiltersSchema>;

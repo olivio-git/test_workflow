@@ -1,13 +1,22 @@
 import type RouteType from "./RouteType";
 import Content from "@/modules/dashboard/screens/content";
-import { BoxIcon, LayoutDashboardIcon, Package, ShoppingBag, Table2Icon, TableCellsMerge } from "lucide-react";
+import {
+  BoxIcon,
+  LayoutDashboardIcon,
+  Package,
+  ShoppingBag,
+  Table2,
+  Table2Icon,
+  TableCellsMerge
+} from "lucide-react";
 import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
 // import CreateCategory from "@/modules/categories/screens/CreateCategory";
 import TableCreateCategory from "@/modules/categories/components/TableCreateCategory";
-import CreateSale from "@/modules/sales/screens/createSale";
+import CreateSaleScreen from "@/modules/sales/screens/createSaleScreen";
+import SalesListScreen from "@/modules/sales/screens/salesListScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -87,16 +96,16 @@ const protectedRoutes: RouteType[] = [
       //   showSidebar: true
       // },
       {
-        path:"/dashboard/management-categories",
-        name:"Gestionar categorias",
-        type:"protected",
-        element:TableCreateCategory,
-        isAdmin:true,
-        role:["admin"],
-        icon:TableCellsMerge,
+        path: "/dashboard/management-categories",
+        name: "Gestionar categorias",
+        type: "protected",
+        element: TableCreateCategory,
+        isAdmin: true,
+        role: ["admin"],
+        icon: TableCellsMerge,
 
-        isHeader:false,
-        showSidebar:true
+        isHeader: false,
+        showSidebar: true
       }
     ]
   },
@@ -134,10 +143,22 @@ const protectedRoutes: RouteType[] = [
         path: "/dashboard/create-sale",
         name: "Registrar venta",
         type: "protected",
-        element: CreateSale,
+        element: CreateSaleScreen,
         isAdmin: true,
         role: ["admin"],
         icon: ShoppingBag,
+
+        isHeader: false,
+        showSidebar: true
+      },
+      {
+        path: "/dashboard/sales",
+        name: "Lista de ventas",
+        type: "protected",
+        element: SalesListScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: Table2,
 
         isHeader: false,
         showSidebar: true

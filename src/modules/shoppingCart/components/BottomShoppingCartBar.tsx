@@ -14,13 +14,13 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useRef } from 'react';
 
 interface ShoppingCartProps {
+    callback?: () => void;
     // focusItemId?: string;
-    // onFocusCleared: () => void;
 }
 
 const BottomShoppingCartBar: React.FC<ShoppingCartProps> = ({
+    callback
     // focusItemId,
-    // onFocusCleared
 }) => {
     const tableRef = useRef<{ focusFirstQuantityInput: () => void }>(null);
     const user = authSDK.getCurrentUser()
@@ -43,6 +43,7 @@ const BottomShoppingCartBar: React.FC<ShoppingCartProps> = ({
     // shorcuts
     useHotkeys("alt+f", () => {
         if (tableRef.current) {
+            callback?.()
             tableRef.current.focusFirstQuantityInput();
         }
     }, {

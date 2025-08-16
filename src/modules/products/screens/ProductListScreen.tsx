@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
     Search,
     Filter,
@@ -31,7 +31,6 @@ import { useNavigate } from "react-router"
 import ProductFilters from "../components/productList/productFilters"
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
 import TooltipButton from "@/components/common/TooltipButton"
-import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation"
 import { TooltipWrapper } from "@/components/common/TooltipWrapper "
 import { Kbd } from "@/components/atoms/kbd"
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
@@ -39,11 +38,13 @@ import { useDebounce } from "use-debounce"
 import { formatCell } from "@/utils/formatCell"
 import BottomShoppingCartBar from "@/modules/shoppingCart/components/BottomShoppingCartBar"
 import ResizableBox from "@/components/atoms/resizable-box"
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation"
 
 const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
 
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
+    const tableRef = useRef<HTMLTableElement>(null)
     const { selectedBranchId } = useBranchStore()
     const navigate = useNavigate()
     const user = authSDK.getCurrentUser()
@@ -65,7 +66,7 @@ const ProductListScreen = () => {
         isRefetching: isRefetchingProducts,
     } = useProductsPaginated(filters);
 
-    const { addItemToCart, addMultipleItems } = useCartWithUtils(user?.name ?? '', selectedBranchId ?? '')
+    const { addItemToCart, addMultipleItems, decrementQuantity } = useCartWithUtils(user?.name ?? '', selectedBranchId ?? '')
     const [sorting, setSorting] = useState<SortingState>([])
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
@@ -415,13 +416,22 @@ const ProductListScreen = () => {
         selectedIndex,
         setSelectedIndex,
         isFocused,
-        tableRef,
-        handleTableClick,
-    } = useKeyboardNavigation({
-        products,
-        onAddToCart: addItemToCart,
-        onViewDetails: handleProductDetail,
-        onRemoveFromCart: () => { },
+        containerRef,
+        handleContainerClick: handleTableClick,
+        setIsFocused: setIsFocusedTable
+    } = useKeyboardNavigation<ProductGet, HTMLTableElement>({
+        items: products,
+        containerRef: tableRef,
+        onPrimaryAction: (product) => {
+            handleProductDetail(product.id);
+        },
+        onSecondaryAction: (product) => {
+            addItemToCart(product);
+        },
+        onDeleteAction: (product) => {
+            decrementQuantity(product.id)
+        },
+        getItemId: (product) => product.id
     });
     const handleRowClick = (index: number) => {
         setSelectedIndex(index);
@@ -638,7 +648,7 @@ const ProductListScreen = () => {
                             selectedRowIndex={selectedIndex}
                             onRowClick={handleRowClick}
                             onRowDoubleClick={handleRowDoubleClick}
-                            tableRef={tableRef}
+                            tableRef={containerRef}
                             focused={isFocused}
                             keyboardNavigationEnabled={true}
                         />
@@ -665,7 +675,7 @@ const ProductListScreen = () => {
                                     selectedRowIndex={selectedIndex}
                                     onRowClick={handleRowClick}
                                     onRowDoubleClick={handleRowDoubleClick}
-                                    tableRef={tableRef}
+                                    tableRef={containerRef}
                                     focused={isFocused}
                                     keyboardNavigationEnabled={true}
                                 />
@@ -691,7 +701,9 @@ const ProductListScreen = () => {
             </div>
             {
                 !isInfiniteScroll &&
-                <BottomShoppingCartBar />
+                <BottomShoppingCartBar
+                    callback={() => setIsFocusedTable(false)}
+                />
             }
         </main>
     )
