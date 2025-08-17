@@ -3,6 +3,7 @@ import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "./button";
+import { es } from "date-fns/locale";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -14,13 +15,14 @@ function Calendar({
 }: CalendarProps) {
   return (
     <DayPicker
+      locale={es}
       navLayout="after"
       showOutsideDays={showOutsideDays}
       fixedWeeks={true}
       className={cn("p-3", className)}
       classNames={{
-        month: "flex flex-col items-center",
-        nav:"flex justify-between items-center w-full mb-2",
+        month: "flex flex-col items-center capitalize",
+        nav: "flex justify-between items-center w-full mb-2",
         month_caption: "text-sm font-medium text-center absolute top-4",
         weekdays: "text-xs text-muted-foreground font-normal flex justify-between items-center text-center",
         button_next: cn(
