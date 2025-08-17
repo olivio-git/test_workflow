@@ -23,7 +23,7 @@ export const useSalesFilters = (defaultSucursal: number) => {
     const resetFilters = () => {
         setFilters({
             pagina: 1,
-            pagina_registros: 20,
+            pagina_registros: 25,
             sucursal: defaultSucursal,
         });
     };

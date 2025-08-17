@@ -13,6 +13,7 @@ import { useHotkeys, useHotkeysContext } from "react-hotkeys-hook";
 import { useBranchStore } from "@/states/branchStore"
 import { EditablePercentage } from "./EditablePercentage"
 import { EditablePrice } from "./editablePrice"
+import { formatCurrency } from "@/utils/formaters"
 
 const CartSidebar = ({
     open,
@@ -173,11 +174,11 @@ const CartSidebar = ({
 
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-500 font-medium">Subtotal:</span>
-                                            <span className="">${subtotal.toFixed(2)}</span>
+                                            <span className="">{formatCurrency(subtotal)}</span>
                                         </div>
                                         <div className="flex justify-between font-medium text-lg">
                                             <span>Total:</span>
-                                            <span>${total.toFixed(2)}</span>
+                                            <span>{formatCurrency(total)}</span>
                                         </div>
                                     </div>
                                     <Separator />

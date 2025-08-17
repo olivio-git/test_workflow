@@ -12,6 +12,7 @@ import TableShoppingCart from './tableShoppingCart';
 import ShortcutKey from '@/components/common/ShortcutKey';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useRef } from 'react';
+import { formatCurrency } from '@/utils/formaters';
 
 interface ShoppingCartProps {
     callback?: () => void;
@@ -109,11 +110,11 @@ const BottomShoppingCartBar: React.FC<ShoppingCartProps> = ({
 
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500 font-medium">Subtotal:</span>
-                                <span className="">${subtotal.toFixed(2)}</span>
+                                <span className="">{formatCurrency(subtotal)}</span>
                             </div>
                             <div className="flex justify-between font-medium text-lg">
                                 <span>Total:</span>
-                                <span>${total.toFixed(2)}</span>
+                                <span>{formatCurrency(total)}</span>
                             </div>
 
                             <div className="grid sm:grid-cols-2 gap-2">

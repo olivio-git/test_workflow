@@ -36,7 +36,7 @@ export const salesGetAllResponseSchema = z.object({
         last: z.string().nullable(),
         prev: z.string().nullable(),
         next: z.string().nullable(),
-    }),
+    }).nullable(),
     meta: z.object({
         current_page: z.number().int(),
         from: z.number().int().nullable(),
@@ -48,7 +48,7 @@ export const salesGetAllResponseSchema = z.object({
         })).nullable(),
         path: z.string(),
         per_page: z.number().int(),
-        to: z.number().int(),
+        to: z.number().int().nullable(),
         total: z.number().int(),
-    }),
+    }).nullable(),
 });

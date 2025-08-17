@@ -9,6 +9,7 @@ import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice";
 import { EditablePercentage } from "@/modules/shoppingCart/components/EditablePercentage";
 import TooltipButton from "@/components/common/TooltipButton";
 import ShortcutKey from "@/components/common/ShortcutKey";
+import { formatCurrency } from "@/utils/formaters";
 interface SalesSummaryProps {
     isPending: boolean
     clearCart: () => void
@@ -77,7 +78,7 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                             </div>
 
                             <div>
-                                <Label className="text-xs text-gray-600">Monto ($)</Label>
+                                <Label className="text-xs text-gray-600">Monto (Bs)</Label>
                                 <EditablePrice
                                     key={discountAmount}
                                     value={discountAmount}
@@ -106,17 +107,17 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                     </div>
                     <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Subtotal:</span>
-                        <span className="font-medium">${subtotal.toFixed(2)}</span>
+                        <span className="font-medium">{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Descuento ({discountPercent?.toFixed(2)}%):</span>
-                        <span className="font-medium text-orange-600">-${discountAmount?.toFixed(2)}</span>
+                        <span className="font-medium text-orange-600">-{formatCurrency(discountAmount)}</span>
                     </div>
                 </div>
 
                 <div className="flex justify-between items-center py-2">
                     <span className="text-lg font-semibold">TOTAL:</span>
-                    <span className="text-2xl font-bold text-gray-900">${total.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-gray-900">{formatCurrency(total)}</span>
                 </div>
 
                 <div className="space-y-3">
