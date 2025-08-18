@@ -1,20 +1,85 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Trash2, Plus } from "lucide-react";
-import { useHotkeys } from "react-hotkeys-hook";
-import { Button } from "@/components/atoms/button";
-import { Input } from "@/components/atoms/input";
-import DialogSearchDetails from "./DialogSearchDetails";
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Plus, Trash2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
+import DialogSearchDetails from './DialogSearchDetails';
 
 interface PurchaseDetail {
-  id_producto: string;
-  cantidad: number;
-  costo: number;
-  inc_p_venta: number;
-  precio_venta: number;
-  inc_p_venta_alt: number;
-  precio_venta_alt: number;
-  producto: { descripcion: string; codigo_oem: string };
-  subtotal: number;
+  id?: number; // ID del detalle (para edición)
+  id_producto?: string; // Para compatibilidad con creación
+  producto: {
+    id: number;
+    codigo_interno: number;
+    descripcion: string;
+    descripcion_alt: string;
+    codigo_oem: string;
+    codigo_upc: string;
+    modelo: string | null;
+    medida: string;
+    nro_motor: string;
+    id_categoria: number;
+    categoria?: {
+      id: number;
+      categoria: string;
+      id_estado: string;
+      codigo_interno: number;
+      version?: number;
+    } | null;
+    id_subcategora: number;
+    subcategoria: {
+      id: number;
+      subcategoria: string;
+      id_categoria: number;
+      id_estado: string;
+      codigo_interno: number;
+    };
+    id_marca: number;
+    marca: {
+      id: number;
+      marca: string;
+      id_estado: string;
+      codigo_interno: number;
+    };
+    id_procedencia: number;
+    procedencia: {
+      id: number;
+      procedencia: string;
+      id_estado: string;
+      codigo_interno: number;
+    };
+    id_unidad_medida: number;
+    unidad_medida: {
+      id: number;
+      unidad_medida: string;
+      id_estado: string;
+      codigo_interno: number;
+    };
+    costo_referencia: string;
+    stock_minimo: string;
+    precio_venta: string;
+    precio_venta_alt: string;
+    id_marca_vehiculo: number;
+    marca_vehiculo: {
+      id: number;
+      marca_vehiculo: string;
+      codigo_interno: number;
+      id_estado: string;
+    };
+  };
+  cantidad: string | number;
+  costo: string | number;
+  inc_precio_venta: string | number;
+  precio_venta: string | number;
+  inc_precio_venta_alt: string | number;
+  precio_venta_alt: string | number;
+  moneda: string;
+  fecha_mod_precio: string;
+  // Campos calculados localmente
+  subtotal?: number;
+  // Campos de compatibilidad
+  inc_p_venta?: number;
+  inc_p_venta_alt?: number;
 }
 
 interface Props {
@@ -24,11 +89,70 @@ interface Props {
 
 const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(
     null
   );
-  const [tempValue, setTempValue] = useState("");
+  const roundToTwo = (num: number): number =>
+    Math.round((num + Number.EPSILON) * 100) / 100;
+  // Tipo con campos numéricos garantizados para edición/render
+  type NormalizedPurchaseDetail = PurchaseDetail & {
+    cantidad: number;
+    costo: number;
+    inc_p_venta: number;
+    precio_venta: number;
+    inc_p_venta_alt: number;
+    precio_venta_alt: number;
+    subtotal: number;
+  };
+
+  // Función para normalizar los datos del servidor
+  const normalizeDetail = (
+    detail: PurchaseDetail
+  ): NormalizedPurchaseDetail => {
+    return {
+      ...detail,
+      id_producto: detail.id_producto || detail.producto.id.toString(),
+      cantidad:
+        typeof detail.cantidad === 'string'
+          ? parseFloat(detail.cantidad)
+          : detail.cantidad,
+      costo:
+        typeof detail.costo === 'string'
+          ? parseFloat(detail.costo)
+          : detail.costo,
+      inc_p_venta: (detail.inc_p_venta ??
+        (typeof detail.inc_precio_venta === 'string'
+          ? parseFloat(detail.inc_precio_venta)
+          : detail.inc_precio_venta)) as number,
+      precio_venta:
+        typeof detail.precio_venta === 'string'
+          ? parseFloat(detail.precio_venta)
+          : (detail.precio_venta as number),
+      inc_p_venta_alt: (detail.inc_p_venta_alt ??
+        (typeof detail.inc_precio_venta_alt === 'string'
+          ? parseFloat(detail.inc_precio_venta_alt)
+          : detail.inc_precio_venta_alt)) as number,
+      precio_venta_alt:
+        typeof detail.precio_venta_alt === 'string'
+          ? parseFloat(detail.precio_venta_alt)
+          : (detail.precio_venta_alt as number),
+      subtotal: 0, // Se calculará después
+    };
+  };
+
+  // Normalizar detalles al recibirlos
+  const normalizedDetalles: NormalizedPurchaseDetail[] = detalles.map(
+    detail => {
+      const normalized = normalizeDetail(detail);
+      normalized.subtotal = roundToTwo(normalized.cantidad * normalized.costo);
+      return normalized;
+    }
+  );
+
+  // console.log('Detalles originales:', detalles);
+  // console.log('Detalles normalizados:', normalizedDetalles);
+  const [tempValue, setTempValue] = useState('');
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -36,95 +160,97 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   // Utilidades para manejo de moneda en centavos
   // const toCents = (amount: number): number => Math.round(amount * 100);
   // const fromCents = (cents: number): number => cents / 100;
-  const roundToTwo = (num: number): number =>
-    Math.round((num + Number.EPSILON) * 100) / 100;
 
   // Función para cálculos financieros precisos
   // Función para cálculos financieros precisos - CORREGIDA
+  type EditableNumericKey = keyof Pick<
+    NormalizedPurchaseDetail,
+    | 'cantidad'
+    | 'costo'
+    | 'inc_p_venta'
+    | 'precio_venta'
+    | 'inc_p_venta_alt'
+    | 'precio_venta_alt'
+  >;
+
   const calculatePrecise = (
-    detail: PurchaseDetail,
-    fieldName: string,
+    detail: NormalizedPurchaseDetail,
+    fieldName: EditableNumericKey,
     newValue: number
   ) => {
-    const updatedDetail = { ...detail };
+    const updatedDetail: NormalizedPurchaseDetail = { ...detail };
+    // Coerce optional and/or string numeric fields to safe numbers
+    const toNum = (v: unknown): number =>
+      typeof v === 'number' ? v : parseFloat(String(v ?? 0)) || 0;
+    const inc = toNum(updatedDetail.inc_p_venta);
+    const incAlt = toNum(updatedDetail.inc_p_venta_alt);
 
-    if (fieldName === "costo") {
+    if (fieldName === 'costo') {
       updatedDetail.costo = roundToTwo(newValue);
       // Precio de venta basado en costo
-      updatedDetail.precio_venta = roundToTwo(
-        newValue * (1 + updatedDetail.inc_p_venta / 100)
-      );
+      updatedDetail.precio_venta = roundToTwo(newValue * (1 + inc / 100));
       // Precio alternativo basado en el nuevo precio de venta
       updatedDetail.precio_venta_alt = roundToTwo(
-        updatedDetail.precio_venta * (1 + updatedDetail.inc_p_venta_alt / 100)
+        toNum(updatedDetail.precio_venta) * (1 + incAlt / 100)
       );
-    } else if (fieldName === "inc_p_venta") {
+    } else if (fieldName === 'inc_p_venta') {
       updatedDetail.inc_p_venta = roundToTwo(newValue);
       // Recalcular precio de venta basado en costo
       updatedDetail.precio_venta = roundToTwo(
-        updatedDetail.costo * (1 + newValue / 100)
+        toNum(updatedDetail.costo) * (1 + newValue / 100)
       );
       // Recalcular precio alternativo basado en el nuevo precio de venta
       updatedDetail.precio_venta_alt = roundToTwo(
-        updatedDetail.precio_venta * (1 + updatedDetail.inc_p_venta_alt / 100)
+        toNum(updatedDetail.precio_venta) *
+          (1 + toNum(updatedDetail.inc_p_venta_alt) / 100)
       );
-    } else if (fieldName === "inc_p_venta_alt") {
+    } else if (fieldName === 'inc_p_venta_alt') {
       updatedDetail.inc_p_venta_alt = roundToTwo(newValue);
       // Precio alternativo basado en precio de venta (no en costo)
       updatedDetail.precio_venta_alt = roundToTwo(
-        updatedDetail.precio_venta * (1 + newValue / 100)
+        toNum(updatedDetail.precio_venta) * (1 + newValue / 100)
       );
-    } else if (fieldName === "precio_venta") {
+    } else if (fieldName === 'precio_venta') {
       updatedDetail.precio_venta = roundToTwo(newValue);
       // Recalcular porcentaje de incremento sobre costo
+      const costoNow = toNum(updatedDetail.costo);
       updatedDetail.inc_p_venta =
-        updatedDetail.costo > 0
-          ? roundToTwo(
-              ((newValue - updatedDetail.costo) / updatedDetail.costo) * 100
-            )
-          : 0;
+        costoNow > 0 ? roundToTwo(((newValue - costoNow) / costoNow) * 100) : 0;
       // Recalcular precio alternativo basado en el nuevo precio de venta
       updatedDetail.precio_venta_alt = roundToTwo(
-        newValue * (1 + updatedDetail.inc_p_venta_alt / 100)
+        newValue * (1 + toNum(updatedDetail.inc_p_venta_alt) / 100)
       );
-    } else if (fieldName === "precio_venta_alt") {
+    } else if (fieldName === 'precio_venta_alt') {
       updatedDetail.precio_venta_alt = roundToTwo(newValue);
       // Recalcular porcentaje alternativo basado en precio de venta (no en costo)
+      const pv = toNum(updatedDetail.precio_venta);
       updatedDetail.inc_p_venta_alt =
-        updatedDetail.precio_venta > 0
-          ? roundToTwo(
-              ((newValue - updatedDetail.precio_venta) /
-                updatedDetail.precio_venta) *
-                100
-            )
-          : 0;
-    } else if (fieldName === "cantidad") {
+        pv > 0 ? roundToTwo(((newValue - pv) / pv) * 100) : 0;
+    } else if (fieldName === 'cantidad') {
       updatedDetail.cantidad = Math.round(newValue); // Cantidad siempre entero
-    } else {
-      (updatedDetail as any)[fieldName] = roundToTwo(newValue);
     }
 
     // Subtotal siempre redondeado
     updatedDetail.subtotal = roundToTwo(
-      updatedDetail.costo * updatedDetail.cantidad
+      toNum(updatedDetail.costo) * Math.round(toNum(updatedDetail.cantidad))
     );
 
     return updatedDetail;
   };
 
-  const editableColumns = [
-    "cantidad",
-    "costo",
-    "inc_p_venta",
-    "precio_venta",
-    "inc_p_venta_alt",
-    "precio_venta_alt",
+  const editableColumns: EditableNumericKey[] = [
+    'cantidad',
+    'costo',
+    'inc_p_venta',
+    'precio_venta',
+    'inc_p_venta_alt',
+    'precio_venta_alt',
   ];
 
   // Hotkeys para navegación y acciones globales - shortcuts simplificados
   useHotkeys(
-    "ctrl+m",
-    (e) => {
+    'ctrl+m',
+    e => {
       e.preventDefault();
       e.stopPropagation();
       setIsSearchOpen(true);
@@ -137,7 +263,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   );
 
   useHotkeys(
-    "escape",
+    'escape',
     () => {
       if (editing) {
         cancelEdit();
@@ -150,8 +276,8 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   // Navegación con flechas cuando hay una fila seleccionada
   useHotkeys(
-    "arrowup",
-    (e) => {
+    'arrowup',
+    e => {
       if (!editing && selectedRow !== null && selectedRow > 0) {
         e.preventDefault();
         setSelectedRow(selectedRow - 1);
@@ -161,12 +287,12 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   );
 
   useHotkeys(
-    "arrowdown",
-    (e) => {
+    'arrowdown',
+    e => {
       if (
         !editing &&
         selectedRow !== null &&
-        selectedRow < detalles.length - 1
+        selectedRow < normalizedDetalles.length - 1
       ) {
         e.preventDefault();
         setSelectedRow(selectedRow + 1);
@@ -177,12 +303,12 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   // Eliminar fila seleccionada
   useHotkeys(
-    "delete, backspace",
-    (e) => {
+    'delete, backspace',
+    e => {
       if (!editing && selectedRow !== null) {
         e.preventDefault();
-        const detail = detalles[selectedRow];
-        remove(detail.id_producto);
+        const detail = normalizedDetalles[selectedRow];
+        remove(detail.id_producto!);
         setSelectedRow(null);
       }
     },
@@ -191,8 +317,8 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   // Editar primera celda de la fila seleccionada - simplificado
   useHotkeys(
-    "ctrl+enter",
-    (e) => {
+    'ctrl+enter',
+    e => {
       if (!editing && selectedRow !== null) {
         e.preventDefault();
         startEdit(selectedRow, 0); // Siempre empezar en la primera celda (cantidad)
@@ -203,8 +329,8 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   // Duplicar fila seleccionada
   useHotkeys(
-    "ctrl+d",
-    (e) => {
+    'ctrl+d',
+    e => {
       if (!editing && selectedRow !== null) {
         e.preventDefault();
         duplicateRow(selectedRow);
@@ -220,15 +346,15 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   }, [editing]);
 
   const startEdit = (rowIndex: number, colIndex: number) => {
-    const detail = detalles[rowIndex];
+    const detail = normalizedDetalles[rowIndex];
     const fieldName = editableColumns[colIndex];
     const currentValue = detail[fieldName as keyof PurchaseDetail] as number;
 
     // Formatear el valor inicial según el tipo de campo
     let formattedValue: string;
-    if (fieldName === "cantidad") {
+    if (fieldName === 'cantidad') {
       formattedValue = Math.round(currentValue).toString();
-    } else if (fieldName.includes("inc_p_venta")) {
+    } else if (fieldName.includes('inc_p_venta')) {
       // Porcentajes con 1 decimal
       formattedValue = roundToTwo(currentValue).toFixed(1);
     } else {
@@ -251,7 +377,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
     }
 
     const fieldName = editableColumns[editing.col];
-    const newDetalles = [...detalles];
+    const newDetalles = [...normalizedDetalles];
     const detail = { ...newDetalles[editing.row] };
 
     // Usar función de cálculo preciso
@@ -265,26 +391,26 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   const cancelEdit = () => {
     setEditing(null);
-    setTempValue("");
+    setTempValue('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation();
 
     switch (e.key) {
-      case "Enter":
+      case 'Enter':
         e.preventDefault();
         saveEdit();
         // Mover a la siguiente fila
-        if (editing && editing.row < detalles.length - 1) {
+        if (editing && editing.row < normalizedDetalles.length - 1) {
           setTimeout(() => startEdit(editing.row + 1, editing.col), 10);
         }
         break;
-      case "Escape":
+      case 'Escape':
         e.preventDefault();
         cancelEdit();
         break;
-      case "Tab":
+      case 'Tab':
         e.preventDefault();
         saveEdit();
         // Mover a la siguiente celda
@@ -298,7 +424,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
               nextRow++;
             }
 
-            if (nextRow < detalles.length) {
+            if (nextRow < normalizedDetalles.length) {
               startEdit(nextRow, nextCol);
             }
           }, 10);
@@ -312,17 +438,20 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   };
 
   const remove = (id: string) => {
-    setDetalles(detalles.filter((d) => d.id_producto !== id));
+    const updatedDetalles = normalizedDetalles.filter(
+      d => d.id_producto !== id
+    );
+    setDetalles(updatedDetalles);
   };
 
   const duplicateRow = (rowIndex: number) => {
-    const detail = detalles[rowIndex];
+    const detail = normalizedDetalles[rowIndex];
     const newDetail = {
       ...detail,
       id_producto: `${detail.id_producto}_copy_${Date.now()}`, // Generar nuevo ID único
     };
 
-    const newDetalles = [...detalles];
+    const newDetalles = [...normalizedDetalles];
     newDetalles.splice(rowIndex + 1, 0, newDetail);
     setDetalles(newDetalles);
     setSelectedRow(rowIndex + 1);
@@ -336,8 +465,8 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   const handleProductAdded = (productId: string) => {
     // Encontrar el índice del producto recién agregado
-    const newProductIndex = detalles.findIndex(
-      (d) => d.id_producto === productId
+    const newProductIndex = normalizedDetalles.findIndex(
+      d => d.id_producto === productId
     );
     if (newProductIndex !== -1) {
       setSelectedRow(newProductIndex);
@@ -346,15 +475,15 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
 
   const formatValue = (
     value: number,
-    format: "currency" | "percentage" | "number"
+    format: 'currency' | 'percentage' | 'number'
   ) => {
     // Asegurar que siempre mostramos valores redondeados
     const roundedValue = roundToTwo(value);
 
     switch (format) {
-      case "currency":
+      case 'currency':
         return `${roundedValue.toFixed(2)}`;
-      case "percentage":
+      case 'percentage':
         return `${roundedValue.toFixed(1)}%`;
       default:
         // Para cantidad, mostrar como entero si es un número entero
@@ -368,8 +497,8 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
     rowIndex: number;
     colIndex: number;
     value: number;
-    format?: "currency" | "percentage" | "number";
-  }> = ({ rowIndex, colIndex, value, format = "number" }) => {
+    format?: 'currency' | 'percentage' | 'number';
+  }> = ({ rowIndex, colIndex, value, format = 'number' }) => {
     const isActive = editing?.row === rowIndex && editing?.col === colIndex;
 
     if (isActive) {
@@ -396,12 +525,16 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
     );
   };
 
-  const totalCosto = roundToTwo(detalles.reduce((s, d) => s + d.subtotal, 0));
-  const totalGeneral = roundToTwo(
-    detalles.reduce((s, d) => s + d.precio_venta * d.cantidad, 0)
+  const totalCosto = roundToTwo(
+    normalizedDetalles.reduce((s, d) => s + d.cantidad * d.costo, 0)
   );
+
+  const totalGeneral = roundToTwo(
+    normalizedDetalles.reduce((s, d) => s + d.precio_venta * d.cantidad, 0)
+  );
+
   const totalMenor = roundToTwo(
-    detalles.reduce((s, d) => s + d.precio_venta_alt * d.cantidad, 0)
+    normalizedDetalles.reduce((s, d) => s + d.precio_venta_alt * d.cantidad, 0)
   );
 
   return (
@@ -412,7 +545,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
       <DialogSearchDetails
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        details={detalles}
+        details={normalizedDetalles}
         setDetails={setDetalles}
         isSearchOpen={isSearchOpen}
         setIsSearchOpen={setIsSearchOpen}
@@ -436,7 +569,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
               className="bg-black text-white"
             >
               <Plus className="w-4 h-4 mr-2 text-white" />
-              Agregar Producto{" "}
+              Agregar Producto{' '}
               <span className="text-xs text-white ml-1 opacity-60">
                 (Ctrl+M)
               </span>
@@ -480,15 +613,15 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {detalles.map((detail, rowIndex) => (
+              {normalizedDetalles.map((detail, rowIndex) => (
                 <tr
                   key={detail.id_producto}
                   className={`
                     transition-colors duration-150 cursor-pointer
                     ${
                       selectedRow === rowIndex
-                        ? "bg-blue-50 border-blue-200"
-                        : "hover:bg-gray-50"
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'hover:bg-gray-50'
                     }
                   `}
                   onClick={() => handleRowClick(rowIndex)}
@@ -553,16 +686,16 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
                   </td>
                   <td className="px-3 py-3 text-center">
                     <div className="text-sm font-medium text-gray-900">
-                      ${detail.subtotal.toFixed(2)}
+                      {/* ${detail.subtotal.toFixed(2)} */}
                     </div>
                   </td>
                   <td className="px-3 py-3 text-center">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
-                        remove(detail.id_producto);
+                        remove(detail.id_producto!);
                       }}
                       className="size-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
@@ -619,7 +752,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
             className="mt-4 hover:bg-gray-50"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Agregar Producto{" "}
+            Agregar Producto{' '}
             <span className="text-xs ml-1 opacity-60">(Ctrl+M)</span>
           </Button>
         </div>
