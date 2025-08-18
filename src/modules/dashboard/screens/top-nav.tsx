@@ -3,7 +3,7 @@ import CommandPalette from "./CommandPalette/CommandPalette";
 import SearchButton from "./CommandPalette/SearchButton";
 import { useState } from "react";
 import protectedRoutes from "@/navigation/Protected.Route";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation,matchPath } from "react-router";
 import { useHotkeys } from "react-hotkeys-hook";
 import SelectBranch from "../components/SelectBranch";
 import type RouteType from "@/navigation/RouteType";
@@ -36,19 +36,30 @@ const flattenRoutes = (routes: RouteType[]): RouteType[] => {
 
   return flattened;
 };
-
-const findParentRoute = (routes: RouteType[], targetPath: string): RouteType | null => {
+const matchRoute = (routes: RouteType[], pathname: string): RouteType | null => {
   for (const route of routes) {
+    if (route.path && matchPath({ path: route.path, end: true }, pathname)) {
+      return route;
+    }
     if (route.subRoutes) {
-      for (const subRoute of route.subRoutes) {
-        if (subRoute.path === targetPath) {
-          return route;
-        }
-      }
+      const found = matchRoute(route.subRoutes, pathname);
+      if (found) return found;
     }
   }
   return null;
 };
+
+const findParentRoute = (routes: RouteType[], pathname: string): RouteType | null => {
+  for (const route of routes) {
+    if (route.subRoutes?.some(sr => sr.path && matchPath({ path: sr.path, end: true }, pathname))) {
+      return route;
+    }
+    const nestedParent = route.subRoutes ? findParentRoute(route.subRoutes, pathname) : null;
+    if (nestedParent) return route;
+  }
+  return null;
+};
+
 
 const TopNav: React.FC<TopNavProps> = ({
   isSidebarMenuOpen,
@@ -59,10 +70,14 @@ const TopNav: React.FC<TopNavProps> = ({
   const { selectedBranchId } = useBranchStore()
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  // const routes = protectedRoutes.filter((route) => route.type === "protected");
   const routes = protectedRoutes.filter((route) => route.type === "protected");
-  const flatRoutes = flattenRoutes(routes);
+  // const flatRoutes = flattenRoutes(routes);
 
-  const currentRoute = flatRoutes.find((route) => route.path === location.pathname);
+  // const currentRoute = flatRoutes.find((route) => route.path === location.pathname);
+  const currentRoute = matchRoute(routes, location.pathname);
+  
+  // const parentRoute = findParentRoute(routes, location.pathname);
   const parentRoute = findParentRoute(routes, location.pathname);
   const {
     getCartCount: cartLength
@@ -112,7 +127,6 @@ const TopNav: React.FC<TopNavProps> = ({
         </span>
       );
     }
-
     breadcrumbItems.push(
       <Link
         key="current"

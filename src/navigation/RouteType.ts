@@ -13,4 +13,5 @@ export default interface RouteType {
     subRoutes?: RouteType[];
     isHeader?:boolean;
     showSidebar?:boolean
+    showInCommandPalette?:boolean;
 }

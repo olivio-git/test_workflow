@@ -1,20 +1,21 @@
+import protectedRoutes from "@/navigation/Protected.Route";
 import {
   Command,
+  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  CommandEmpty,
 } from "cmdk";
-import { useNavigate } from "react-router-dom";
-import protectedRoutes from "@/navigation/Protected.Route";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 
 const processRoutes = (routes: any[]) => {
   const flatRoutes: any[] = [];
 
   routes.forEach((route) => {
-    if (route.path && !route.isHeader) {
+    // Verificar si la ruta debe mostrarse en el command palette
+    if (route.path && !route.isHeader && route.showInCommandPalette !== false) {
       flatRoutes.push({
         name: route.name,
         path: route.path,
@@ -25,7 +26,8 @@ const processRoutes = (routes: any[]) => {
 
     if (route.subRoutes) {
       route.subRoutes.forEach((subRoute: any) => {
-        if (subRoute.path) {
+        // Verificar si la subruta debe mostrarse en el command palette
+        if (subRoute.path && subRoute.showInCommandPalette !== false) {
           flatRoutes.push({
             name: subRoute.name,
             path: subRoute.path,

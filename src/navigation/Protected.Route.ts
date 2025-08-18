@@ -1,22 +1,19 @@
-import type RouteType from "./RouteType";
 import Content from "@/modules/dashboard/screens/content";
-import {
-  BoxIcon,
-  LayoutDashboardIcon,
-  Package,
-  ShoppingBag,
-  Table2,
-  Table2Icon,
-  TableCellsMerge
-} from "lucide-react";
 import CreateProduct from "@/modules/products/screens/CreateProduct";
-import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
+import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
+import { BoxIcon, LayoutDashboardIcon, Package, ShoppingBag, Table2, Table2Icon, TableCellsMerge, UserCogIcon } from "lucide-react";
+import type RouteType from "./RouteType";
 // import CreateCategory from "@/modules/categories/screens/CreateCategory";
 import TableCreateCategory from "@/modules/categories/components/TableCreateCategory";
+import EditPurchase from "@/modules/purchases/screens/EditPurchase";
+import PurchaseDetailScreen from "@/modules/purchases/screens/PurchaseDetailScreen";
+import PurchaseListScreen from "@/modules/purchases/screens/PurchaseListScreen";
 import CreateSaleScreen from "@/modules/sales/screens/createSaleScreen";
 import SalesListScreen from "@/modules/sales/screens/salesListScreen";
+import { UserDetailScreen } from "@/modules/users";
+import UserListScreen from "@/modules/users/screens/UserListScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -27,6 +24,53 @@ const protectedRoutes: RouteType[] = [
     isAdmin: false,
     role: ["user"],
     icon: LayoutDashboardIcon,
+  },
+  {
+    name: "Usuarios",
+    type: "protected",
+    role: ["admin"],
+    isHeader: true,
+    showSidebar: true,
+    // icon:BoxIcon,
+    subRoutes: [
+      {
+        path: "/dashboard/user",
+        name: "Listar Usuarios",
+        type: "protected",
+        element: UserListScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: UserCogIcon,
+
+        isHeader: false,
+        showSidebar: true
+      },
+      {
+        path: "/dashboard/user/:nickname",
+        name: "Detalle de Usuario",
+        type: "protected",
+        element: UserDetailScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: BoxIcon,
+
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: false
+      },
+      // {
+      //   path: "/dashboard/user/:iuserId/permisions",
+      //   name: "Permisos de Usuario",
+      //   type: "protected",
+      //   element: UserPermissionsScreen,
+      //   isAdmin: true,
+      //   role: ["admin"],
+      //   icon: BoxIcon,
+
+      //   isHeader: false,
+      //   showSidebar: false
+      // },
+    ]
   },
   {
     name: "Productos",
@@ -68,7 +112,8 @@ const protectedRoutes: RouteType[] = [
         role: ["admin"],
         icon: Package,
         isHeader: false,
-        showSidebar: false
+        showSidebar: false,
+        showInCommandPalette: false
       },
     ]
   },
@@ -128,6 +173,43 @@ const protectedRoutes: RouteType[] = [
 
         isHeader: false,
         showSidebar: true
+      },
+      {
+        path: "/dashboard/list-purchases",
+        name: "Listado de compras",
+        type: "protected",
+        element: PurchaseListScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: Package,
+
+        isHeader: false,
+        showSidebar: true
+      },
+      {
+        path: "/dashboard/purchases/:purchaseId",
+        name: "Detalle de compra",
+        type: "protected",
+        element: PurchaseDetailScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: Package,
+        
+        showInCommandPalette: false,
+        isHeader: false,
+        showSidebar: false
+      },
+      {
+        path: "/dashboard/purchases/:purchaseId/editar",
+        name: "Editar compra",
+        type: "protected",
+        element: EditPurchase,
+        isAdmin: true,
+        role: ["admin"],
+        icon: Package,
+
+        isHeader: false,
+        showSidebar: false
       }
     ]
   },

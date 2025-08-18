@@ -30,10 +30,10 @@ export function usePurchaseForm(initialBranch: number) {
     tipo_compra: "",
     forma_compra: "",
     comentario: "",
-    usuario: 1,
-    sucursal: initialBranch,
+    usuario: 1, // ID por defecto
+    sucursal: initialBranch || 1, // Usar branch inicial o 1 por defecto
     detalles: [],
-    id_responsable: 1
+    id_responsable: 1 // ID por defecto
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<FormTouched>({});
@@ -77,10 +77,10 @@ export function usePurchaseForm(initialBranch: number) {
       tipo_compra: "CC",
       forma_compra: "MY",
       comentario: "",
-      usuario: 1,
-      sucursal: initialBranch,
+      usuario: 1, // ID por defecto
+      sucursal: initialBranch || 1, // Usar branch inicial o 1 por defecto
       detalles: [],
-      id_responsable: 1,
+      id_responsable: 1, // ID por defecto
     });
     setErrors({});
     setTouched({});
