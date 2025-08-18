@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchMeasurements } from "../services/catalogService";
+import { fetchMeasurements } from "../services/sharedService";
 
 export const useCommonMeasurements = (unidad_medida?: string) => {
     return useQuery({

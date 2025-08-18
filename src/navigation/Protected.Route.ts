@@ -3,14 +3,15 @@ import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
-import { BoxIcon, LayoutDashboardIcon, Package, ShoppingBag, Table2Icon, TableCellsMerge, UserCogIcon } from "lucide-react";
+import { BoxIcon, LayoutDashboardIcon, Package, ShoppingBag, Table2, Table2Icon, TableCellsMerge, UserCogIcon } from "lucide-react";
 import type RouteType from "./RouteType";
 // import CreateCategory from "@/modules/categories/screens/CreateCategory";
 import TableCreateCategory from "@/modules/categories/components/TableCreateCategory";
 import EditPurchase from "@/modules/purchases/screens/EditPurchase";
 import PurchaseDetailScreen from "@/modules/purchases/screens/PurchaseDetailScreen";
 import PurchaseListScreen from "@/modules/purchases/screens/PurchaseListScreen";
-import CreateSale from "@/modules/sales/screens/createSale";
+import CreateSaleScreen from "@/modules/sales/screens/createSaleScreen";
+import SalesListScreen from "@/modules/sales/screens/salesListScreen";
 import { UserDetailScreen } from "@/modules/users";
 import UserListScreen from "@/modules/users/screens/UserListScreen";
 
@@ -224,10 +225,22 @@ const protectedRoutes: RouteType[] = [
         path: "/dashboard/create-sale",
         name: "Registrar venta",
         type: "protected",
-        element: CreateSale,
+        element: CreateSaleScreen,
         isAdmin: true,
         role: ["admin"],
         icon: ShoppingBag,
+
+        isHeader: false,
+        showSidebar: true
+      },
+      {
+        path: "/dashboard/sales",
+        name: "Lista de ventas",
+        type: "protected",
+        element: SalesListScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: Table2,
 
         isHeader: false,
         showSidebar: true

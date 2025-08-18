@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
     Search,
     Filter,
@@ -31,7 +31,6 @@ import { useNavigate } from "react-router"
 import ProductFilters from "../components/productList/productFilters"
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
 import TooltipButton from "@/components/common/TooltipButton"
-import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation"
 import { TooltipWrapper } from "@/components/common/TooltipWrapper "
 import { Kbd } from "@/components/atoms/kbd"
 import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
@@ -39,11 +38,14 @@ import { useDebounce } from "use-debounce"
 import { formatCell } from "@/utils/formatCell"
 import BottomShoppingCartBar from "@/modules/shoppingCart/components/BottomShoppingCartBar"
 import ResizableBox from "@/components/atoms/resizable-box"
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation"
+import { formatCurrency } from "@/utils/formaters"
 
 const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
 
 const ProductListScreen = () => {
     const [isInfiniteScroll, setIsInfiniteScroll] = useState(false)
+    const tableRef = useRef<HTMLTableElement>(null)
     const { selectedBranchId } = useBranchStore()
     const navigate = useNavigate()
     const user = authSDK.getCurrentUser()
@@ -65,7 +67,7 @@ const ProductListScreen = () => {
         isRefetching: isRefetchingProducts,
     } = useProductsPaginated(filters);
 
-    const { addItemToCart, addMultipleItems } = useCartWithUtils(user?.name ?? '', selectedBranchId ?? '')
+    const { addItemToCart, addMultipleItems, decrementQuantity } = useCartWithUtils(user?.name ?? '', selectedBranchId ?? '')
     const [sorting, setSorting] = useState<SortingState>([])
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
@@ -260,9 +262,9 @@ const ProductListScreen = () => {
                 const precioAlt = row.original.precio_venta_alt;
                 return (
                     <div className="space-y-1 flex items-end flex-col">
-                        <div className="font-bold text-green-600">${getValue<number>().toFixed(2)}</div>
+                        <div className="font-bold text-green-600">{formatCurrency(getValue<number>())}</div>
                         <div className="flex items-center gap-1">
-                            <span className=" text-gray-500">Alt: ${formatCell(precioAlt.toFixed(2))}</span>
+                            <span className=" text-gray-500">Alt: {formatCurrency(precioAlt)}</span>
                         </div>
                     </div>
                 );
@@ -415,13 +417,22 @@ const ProductListScreen = () => {
         selectedIndex,
         setSelectedIndex,
         isFocused,
-        tableRef,
-        handleTableClick,
-    } = useKeyboardNavigation({
-        products,
-        onAddToCart: addItemToCart,
-        onViewDetails: handleProductDetail,
-        onRemoveFromCart: () => { },
+        containerRef,
+        handleContainerClick: handleTableClick,
+        setIsFocused: setIsFocusedTable
+    } = useKeyboardNavigation<ProductGet, HTMLTableElement>({
+        items: products,
+        containerRef: tableRef,
+        onPrimaryAction: (product) => {
+            handleProductDetail(product.id);
+        },
+        onSecondaryAction: (product) => {
+            addItemToCart(product);
+        },
+        onDeleteAction: (product) => {
+            decrementQuantity(product.id)
+        },
+        getItemId: (product) => product.id
     });
     const handleRowClick = (index: number) => {
         setSelectedIndex(index);
@@ -526,7 +537,7 @@ const ProductListScreen = () => {
 
                             <Button variant="outline" size="sm" onClick={resetFilters}>
                                 <Filter className="h-4 w-4 mr-2" />
-                                Reset Filters
+                                Limpiar Filtros
                             </Button>
                             <Button size={'sm'} onClick={toggleShowFilters}>
                                 {
@@ -549,14 +560,23 @@ const ProductListScreen = () => {
                 {/* Results Info */}
                 <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
                     {
-                        products.length > 0 ?
-                            isInfiniteScroll ?
-
+                        products.length > 0 ? (
+                            isInfiniteScroll ? (
                                 `Mostrando ${products.length} de ${productData?.meta.total} productos`
-                                :
-                                `Mostrando ${((filters.pagina ?? 1) * (filters.pagina_registros ?? 1)) - ((filters.pagina_registros ?? 1) - 1)} 
-                            - ${(filters.pagina ?? 1) * (filters.pagina_registros ?? 1)} de ${productData?.meta.total} productos`
-                            : <span>Cargando...</span>
+                            ) : (
+                                (() => {
+                                    const pagina = filters.pagina ?? 1;
+                                    const porPagina = filters.pagina_registros ?? 1;
+
+                                    const inicio = (pagina - 1) * porPagina + 1;
+                                    const fin = pagina * porPagina;
+
+                                    return `Mostrando ${inicio} - ${fin} de ${productData?.meta.total} productos`;
+                                })()
+                            )
+                        ) : (
+                            <span>Cargando...</span>
+                        )
                     }
 
                     <div className="flex items-center gap-2">
@@ -638,7 +658,7 @@ const ProductListScreen = () => {
                             selectedRowIndex={selectedIndex}
                             onRowClick={handleRowClick}
                             onRowDoubleClick={handleRowDoubleClick}
-                            tableRef={tableRef}
+                            tableRef={containerRef}
                             focused={isFocused}
                             keyboardNavigationEnabled={true}
                         />
@@ -646,7 +666,8 @@ const ProductListScreen = () => {
                 ) : (
                     <ResizableBox
                         direction="vertical"
-                        minSize={20}
+                        minSize={10}
+                        initialSize={20}
                     >
                         <div
                             className="overflow-auto h-full">
@@ -664,7 +685,7 @@ const ProductListScreen = () => {
                                     selectedRowIndex={selectedIndex}
                                     onRowClick={handleRowClick}
                                     onRowDoubleClick={handleRowDoubleClick}
-                                    tableRef={tableRef}
+                                    tableRef={containerRef}
                                     focused={isFocused}
                                     keyboardNavigationEnabled={true}
                                 />
@@ -690,7 +711,9 @@ const ProductListScreen = () => {
             </div>
             {
                 !isInfiniteScroll &&
-                <BottomShoppingCartBar />
+                <BottomShoppingCartBar
+                    callback={() => setIsFocusedTable(false)}
+                />
             }
         </main>
     )

@@ -141,3 +141,13 @@
     animation: slide-out 0.2s ease-out;
   }
 }
+
+.rdp-weekday {
+  width: 100%;
+  text-align: center;
+}
+
+.rdp-day_button {
+  width: 100%;
+  height: 100%;
+}
