@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/atoms/checkbox";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Badge } from "@/components/atoms/badge";
-import { Edit, Eye, Loader2, MoreVertical, Receipt, Settings } from "lucide-react";
+import { Edit, Eye, Loader2, MoreVertical, Settings } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import CustomizableTable from "@/components/common/CustomizableTable";
 import ResizableBox from "@/components/atoms/resizable-box";
@@ -72,15 +72,6 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
             console.error('Error saving column visibility:', error);
         }
     }, [columnVisibility, user?.name]);
-
-    const formatDate = (dateString: string) => {
-        try {
-            const date = new Date(dateString);
-            return format(date, "dd/MM/yyyy HH:mm", { locale: es });
-        } catch {
-            return dateString;
-        }
-    };
 
     const columns = useMemo<ColumnDef<SaleGetAll>[]>(() => [
         {
@@ -179,11 +170,29 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         {
             accessorKey: "fecha",
             header: "Fecha",
-            size: 150,
+            size: 140,
             minSize: 120,
-            cell: ({ getValue }) => (
-                <div className="text-sm">{formatDate(getValue<string>())}</div>
-            ),
+            cell: ({ getValue }) => {
+                const dateString = getValue<string>();
+
+                try {
+                    const date = new Date(dateString);
+                    const isToday = format(date, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+
+                    return (
+                        <div className="text-center text-xs">
+                            <div className={`font-medium ${isToday ? 'text-blue-600' : 'text-foreground'}`}>
+                                {format(date, "dd/MM/yyyy", { locale: es })}
+                            </div>
+                            <div className="text-muted-foreground">
+                                {format(date, "HH:mm", { locale: es })}
+                            </div>
+                        </div>
+                    );
+                } catch {
+                    return <span className="text-xs text-muted-foreground">{dateString}</span>;
+                }
+            },
         },
         {
             accessorKey: "cliente",
@@ -259,19 +268,33 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         {
             accessorKey: "comprobantes",
             header: "Comprobantes",
-            size: 120,
-            minSize: 100,
+            size: 140,
+            minSize: 120,
             cell: ({ getValue }) => {
                 const comprobantes = getValue<string>();
+
+                if (!comprobantes || comprobantes.trim() === "" || comprobantes === "|") {
+                    return (
+                        <div className="text-center">
+                            <span className="text-muted-foreground italic text-xs">
+                                Sin comprobantes
+                            </span>
+                        </div>
+                    );
+                }
+
+                const [comprobante1, comprobante2] = comprobantes
+                    .split("|")
+                    .map(comp => comp.trim())
+                    .filter(comp => comp !== "");
+
                 return (
-                    <div className="text-center">
-                        {comprobantes && comprobantes !== "|" ? (
-                            <Badge variant="secondary" className="text-xs">
-                                <Receipt className="w-3 h-3 mr-1" />
-                                {comprobantes}
-                            </Badge>
-                        ) : (
-                            <span className="text-muted-foreground italic text-xs">Sin comprobantes</span>
+                    <div className="flex flex-col space-y-0.5 text-xs text-foreground items-center">
+                        {comprobante1 && (
+                            <Badge variant={'secondary'} className="flex justify-center w-full rounded py-0.5">{comprobante1}</Badge>
+                        )}
+                        {comprobante2 && (
+                            <Badge variant={'secondary'} className="flex justify-center w-full rounded py-0.5">{comprobante2}</Badge>
                         )}
                     </div>
                 );

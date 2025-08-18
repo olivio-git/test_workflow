@@ -481,7 +481,7 @@ const CreateSaleScreen = () => {
                                                     <ComboboxSelect
                                                         value={field.value}
                                                         onChange={(value) => {
-                                                            field.onChange(value);
+                                                            field.onChange(Number(value));
                                                             const selected = saleResponsiblesData?.find((c) => c.id.toString() === value.toString());
                                                             if (selected) {
                                                                 setResponsible(selected);
@@ -503,7 +503,7 @@ const CreateSaleScreen = () => {
                                                     <PaginatedCombobox
                                                         value={field.value}
                                                         onChange={(value) => {
-                                                            field.onChange(value);
+                                                            field.onChange(Number(value));
                                                             const selected = saleCustomersData?.data.find((c) => c.id.toString() === value);
                                                             if (selected) {
                                                                 setValue("cliente_nombre", selected.nombre);
