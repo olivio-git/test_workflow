@@ -97,6 +97,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
     Math.round((num + Number.EPSILON) * 100) / 100;
   // Tipo con campos numéricos garantizados para edición/render
   type NormalizedPurchaseDetail = PurchaseDetail & {
+    id_detalle_compra: number;
     cantidad: number;
     costo: number;
     inc_p_venta: number;
@@ -112,6 +113,7 @@ const PurchaseDetailsTable: React.FC<Props> = ({ detalles, setDetalles }) => {
   ): NormalizedPurchaseDetail => {
     return {
       ...detail,
+      id_detalle_compra: detail.id || 0, // Asegurar que siempre haya un ID
       id_producto: detail.id_producto || detail.producto.id.toString(),
       cantidad:
         typeof detail.cantidad === 'string'

@@ -334,7 +334,7 @@ const UserListScreen = () => {
           return (
             <Badge
               variant={activo ? 'success' : 'destructive'}
-              className="flex items-center gap-1 w-fit"
+              className="flex items-center gap-1 w-fit rounded-sm"
             >
               {activo ? (
                 <CheckCircle className="h-3 w-3" />

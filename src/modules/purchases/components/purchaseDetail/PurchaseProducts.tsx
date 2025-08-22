@@ -1,24 +1,24 @@
-import { useMemo, useState, useRef } from "react";
-import { TabsContent } from "@/components/atoms/tabs";
 import { Badge } from "@/components/atoms/badge";
+import { TabsContent } from "@/components/atoms/tabs";
 import { formatCell } from "@/utils/formatCell";
+import { useMemo, useRef, useState } from "react";
 import type { PurchaseDetail } from "../../types/PurchaseDetail";
 
 import {
   getCoreRowModel,
-  getSortedRowModel,
   getFilteredRowModel,
+  getSortedRowModel,
   useReactTable,
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
 
-import CustomizableTable from "@/components/common/CustomizableTable";
 import {
+  TableCell,
   // Table as AtomTable,
   TableRow,
-  TableCell,
 } from "@/components/atoms/table";
+import CustomizableTable from "@/components/common/CustomizableTable";
 
 interface PurchaseProductsProps {
   purchase: PurchaseDetail | undefined;
@@ -124,10 +124,10 @@ const PurchaseProducts: React.FC<PurchaseProductsProps> = ({
               <Badge variant="outline" title="Marca" className="text-[10px] border border-gray-300">Marca: {row.original.marca}</Badge>
             )}
             {row.original.procedencia && (
-              <Badge variant="outline" title="Procedencia" className="text-[10px] border border-gray-300">Proc: {row.original.procedencia}</Badge>
+              <Badge variant="outline" title="Procedencia" className="text-[10px] border border-gray-300">Procedencia: {row.original.procedencia}</Badge>
             )}
             {row.original.marca_vehiculo && (
-              <Badge variant="secondary" title="Marca Vehículo" className="text-[10px]">M. Vehículo: {row.original.marca_vehiculo}</Badge>
+              <Badge variant="secondary" title="Marca Vehículo" className="text-[10px]">Marca Vehículo: {row.original.marca_vehiculo}</Badge>
             )}
           </div>
         </div>
@@ -135,13 +135,13 @@ const PurchaseProducts: React.FC<PurchaseProductsProps> = ({
     },
     {
       accessorKey: "codigo_interno",
-      header: "Código/Código OEM",
+      header: "Código interno/Código OEM",
       size: 140,
       minSize: 120,
       cell: ({ getValue, row }) => (
         <div className="space-y-0.5">
           <div title="Código interno" className="font-mono text-xs text-gray-900 truncate">
-            {formatCell(getValue<string>())}
+            Interno:{formatCell(getValue<string>())}
           </div>
           {row.original.codigo_oem && (
             <div title="Código OEM" className="font-mono text-[12px] text-gray-500 truncate">

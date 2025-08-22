@@ -106,14 +106,15 @@ export function usePurchaseEdit(initialData?: PurchaseDetail) {
           // Si es un detalle existente, preservar estructura original
           if (detalle.id) {
             return {
-              id: detalle.id,
+              id_detalle_compra: detalle.id,
+              id_producto: detalle.id_producto || detalle.producto.id.toString(),
               producto: detalle.producto,
-              cantidad: detalle.cantidad,
-              costo: detalle.costo,
-              inc_precio_venta: detalle.inc_precio_venta || detalle.inc_p_venta,
-              precio_venta: detalle.precio_venta,
-              inc_precio_venta_alt: detalle.inc_precio_venta_alt || detalle.inc_p_venta_alt,
-              precio_venta_alt: detalle.precio_venta_alt,
+              cantidad: parseInt(String(detalle.cantidad), 10),
+              costo: Number(detalle.costo),
+              inc_p_venta: Number(detalle.inc_precio_venta || detalle.inc_p_venta),
+              precio_venta: Number(detalle.precio_venta),
+              inc_p_venta_alt: Number(detalle.inc_precio_venta_alt || detalle.inc_p_venta_alt),
+              precio_venta_alt: Number(detalle.precio_venta_alt),
               moneda: detalle.moneda || 'BOB ',
               fecha_mod_precio: detalle.fecha_mod_precio || new Date().toISOString()
             };

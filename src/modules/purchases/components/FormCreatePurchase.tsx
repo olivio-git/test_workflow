@@ -47,10 +47,19 @@ const FormCreatePurchase: React.FC<Props> = ({
 }) => {
   const { data: proveedores = [], isLoading: isLoadingProviders } =
     useProviders();
+
   const inputClass = (f: string) =>
     errors[f]
       ? 'h-8 text-sm border-red-500 focus:border-red-500'
       : 'h-8 text-sm';
+
+  // Helper para formatear la fecha a YYYY-MM-DD
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  };
+
   return (
     <div className="p-4 bg-white border border-gray-200 rounded-lg">
       <div className="grid gap-6 sm:grid-cols-2">
@@ -77,7 +86,7 @@ const FormCreatePurchase: React.FC<Props> = ({
           <Label>Fecha *</Label>
           <Input
             type="date"
-            value={formData.fecha}
+            value={formatDate(formData.fecha)}
             onChange={e => onChange('fecha', e.target.value)}
             onBlur={() => onBlur('fecha')}
             className={inputClass('fecha')}
@@ -134,14 +143,6 @@ const FormCreatePurchase: React.FC<Props> = ({
             onBlur={() => onBlur('tipo_compra')}
             className={inputClass('tipo_compra')}
           />
-          {/* <ComboboxSelect
-            value={formData.tipo_compra}
-            onChange={(v) => onChange("tipo_compra", v)}
-            options={tipoCompra || []}
-            optionTag="tipo"
-            placeholder="Seleccionar el tipo de compra"
-            className={inputClass("tipo_compra")}
-          /> */}
           {errors.tipo_compra && (
             <p className="text-sm text-red-500 mt-1">{errors.tipo_compra}</p>
           )}
@@ -157,14 +158,6 @@ const FormCreatePurchase: React.FC<Props> = ({
             onBlur={() => onBlur('forma_compra')}
             className={inputClass('forma_compra')}
           />
-          {/* <ComboboxSelect
-            value={formData.forma_compra}
-            onChange={(v) => onChange("forma_compra", v)}
-            options={forma || []}
-            optionTag="forma"
-            placeholder="Seleccionar estado"
-            className={inputClass("forma_compra")}
-          /> */}
           {errors.forma_compra && (
             <p className="text-sm text-red-500 mt-1">{errors.forma_compra}</p>
           )}
