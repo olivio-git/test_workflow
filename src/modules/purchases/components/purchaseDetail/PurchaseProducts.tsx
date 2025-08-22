@@ -1,7 +1,8 @@
 import { Badge } from "@/components/atoms/badge";
+import { Input } from "@/components/atoms/input";
 import { TabsContent } from "@/components/atoms/tabs";
 import { formatCell } from "@/utils/formatCell";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PurchaseDetail } from "../../types/PurchaseDetail";
 
 import {
@@ -88,6 +89,40 @@ const PurchaseProducts: React.FC<PurchaseProductsProps> = ({
       };
     });
   }, [purchase?.detalles]);
+
+  // Search (in-memory) - user types, we debounce and filter the existing rows
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(search.trim().toLowerCase()), 250);
+    return () => clearTimeout(id);
+  }, [search]);
+
+  const filteredRows = useMemo(() => {
+    if (!debouncedSearch) return rows;
+    return rows.filter(r => {
+      const haystack = [
+        r.descripcion || "",
+        r.descripcion_alt || "",
+        r.codigo_interno || "",
+        r.codigo_oem || "",
+        r.marca || "",
+        r.categoria || "",
+        r.procedencia || "",
+        r.marca_vehiculo || "",
+        r.motor || "",
+        r.medida || ""
+      ].join(" ").toLowerCase();
+      return haystack.includes(debouncedSearch);
+    });
+  }, [rows, debouncedSearch]);
+
+  // Totales (ahora sobre los rows filtrados)
+  const totalItems = filteredRows.length;
+  const totalImporte = useMemo(
+    () => filteredRows.reduce((acc, r) => acc + r.subtotal, 0),
+    [filteredRows]
+  );
 
   // Columnas
   const columns = useMemo<ColumnDef<ProductRow>[]>(() => [
@@ -214,19 +249,12 @@ const PurchaseProducts: React.FC<PurchaseProductsProps> = ({
     },
   ], []);
 
-  // Totales
-  const totalItems = rows.length;
-  const totalImporte = useMemo(
-    () => rows.reduce((acc, r) => acc + r.subtotal, 0),
-    [rows]
-  );
-
   // Tabla
   const [sorting, setSorting] = useState<SortingState>([]);
   const tableRef = useRef<HTMLTableElement | null>(null);
 
   const table = useReactTable<ProductRow>({
-    data: rows,
+    data: filteredRows,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -262,12 +290,22 @@ const PurchaseProducts: React.FC<PurchaseProductsProps> = ({
 
   return (
     <TabsContent value="products" className="">
-      {/* Encabezado compacto */}
-      <div className="bg-white border-t border-l border-r border-gray-200 rounded-t-lg p-4">
-        <h2 className="text-sm font-medium text-gray-900">Productos de la compra</h2>
-        <p className="text-xs text-gray-600 mt-1">
-          {purchase.cantidad_detalles} {purchase.cantidad_detalles === 1 ? "producto" : "productos"} en total
-        </p>
+      {/* Encabezado compacto con buscador */}
+      <div className="bg-white border-t border-l border-r border-gray-200 rounded-t-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-medium text-gray-900">Productos de la compra</h2>
+          <p className="text-xs text-gray-600 mt-1">
+            {purchase.cantidad_detalles} {purchase.cantidad_detalles === 1 ? "producto" : "productos"} en total
+          </p>
+        </div>
+        <div className="w-full sm:w-120">
+          <Input
+            placeholder="Buscar producto (descr, código, marca, categoría...)"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-8 text-sm"
+          />
+        </div>
       </div>
 
       {/* Tabla */}

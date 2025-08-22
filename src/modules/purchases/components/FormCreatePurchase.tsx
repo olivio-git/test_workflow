@@ -3,8 +3,9 @@ import { Label } from '@/components/atoms/label';
 import { ComboboxSelect } from '@/modules/products/components/SelectCombobox';
 import React from 'react';
 import { useProviders } from '../hooks/useProviders';
+import { usePurchaseCommons } from '../hooks/usePurchaseCommons';
 import { type FormData } from '../hooks/usePurchaseForm';
-
+// Importación temporal deshabilitada 
 // const tipoCompra = [
 //   {
 //     id:1,
@@ -46,7 +47,14 @@ const FormCreatePurchase: React.FC<Props> = ({
   onBlur,
 }) => {
   const { data: proveedores = [], isLoading: isLoadingProviders } =
-    useProviders();
+    useProviders(); 
+  const {
+    purchaseTypes,
+    purchaseModalities,
+    responsibles,
+    loading,
+    errors: commonsErrors,
+  } = usePurchaseCommons();
 
   const inputClass = (f: string) =>
     errors[f]
@@ -100,7 +108,7 @@ const FormCreatePurchase: React.FC<Props> = ({
           </Label>
           <Input
             type="text"
-            value={formData.nro_comprobante}
+            value={formData.nro_comprobante }
             onChange={e => onChange('nro_comprobante', e.target.value)}
             onBlur={() => onBlur('nro_comprobante')}
             placeholder="FA-01"
@@ -131,36 +139,93 @@ const FormCreatePurchase: React.FC<Props> = ({
           )}
         </div>
 
-        {/* Método de pago */}
+        {/* Tipo de compra */}
         <div className="flex flex-col space-y-2">
           <Label className="text-sm font-medium text-gray-700">
             Tipo de compra *
           </Label>
-          <Input
-            type="text"
-            value={formData.tipo_compra}
-            onChange={e => onChange('tipo_compra', e.target.value)}
-            onBlur={() => onBlur('tipo_compra')}
+          <ComboboxSelect
+            value={formData.tipo_compra || undefined}
+            onChange={v => onChange('tipo_compra', v)}
+            options={purchaseTypes.map(pt => ({ id: pt.value, label: pt.label }))}
+            optionTag="label"
+            placeholder={
+              loading.types
+                ? 'Cargando tipos...'
+                : 'Seleccionar tipo de compra'
+            }
             className={inputClass('tipo_compra')}
+            disabled={loading.types}
           />
           {errors.tipo_compra && (
             <p className="text-sm text-red-500 mt-1">{errors.tipo_compra}</p>
           )}
+          {commonsErrors.types && (
+            <p className="text-sm text-red-500 mt-1">Error: {commonsErrors.types}</p>
+          )}
         </div>
 
-        {/* Estado */}
+        {/* Forma de compra */}
         <div className="flex flex-col space-y-2">
           <Label className="text-sm font-medium text-gray-700">Forma *</Label>
-          <Input
-            type="text"
-            value={formData.forma_compra}
-            onChange={e => onChange('forma_compra', e.target.value)}
-            onBlur={() => onBlur('forma_compra')}
+          <ComboboxSelect
+            value={formData.forma_compra || undefined}
+            onChange={v => onChange('forma_compra', v)}
+            options={purchaseModalities.map(pm => ({ id: pm.value, label: pm.label }))}
+            optionTag="label"
+            placeholder={
+              loading.modalities
+                ? 'Cargando formas...'
+                : 'Seleccionar forma de compra'
+            }
             className={inputClass('forma_compra')}
+            disabled={loading.modalities}
           />
           {errors.forma_compra && (
             <p className="text-sm text-red-500 mt-1">{errors.forma_compra}</p>
           )}
+          {commonsErrors.modalities && (
+            <p className="text-sm text-red-500 mt-1">Error: {commonsErrors.modalities}</p>
+          )}
+        </div>
+
+        {/* Responsable */}
+        <div className="flex flex-col space-y-2">
+          <Label className="text-sm font-medium text-gray-700">Responsable *</Label>
+          <ComboboxSelect
+            value={formData.id_responsable || undefined}
+            onChange={v => onChange('id_responsable', v)}
+            options={responsibles.map(r => ({ id: r.value, label: r.label }))}
+            optionTag="label"
+            placeholder={
+              loading.responsibles
+                ? 'Cargando responsables...'
+                : 'Seleccionar responsable'
+            }
+            className={inputClass('id_responsable')}
+            disabled={loading.responsibles}
+          />
+          {errors.id_responsable && (
+            <p className="text-sm text-red-500 mt-1">{errors.id_responsable}</p>
+          )}
+          {commonsErrors.responsibles && (
+            <p className="text-sm text-red-500 mt-1">Error: {commonsErrors.responsibles}</p>
+          )}
+        </div>
+      </div>
+      
+      {/* Comentario */}
+      <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="flex flex-col space-y-2">
+          <Label className="text-sm font-medium text-gray-700">Comentarios</Label>
+          <textarea
+            value={formData.comentario}
+            onChange={e => onChange('comentario', e.target.value)}
+            onBlur={() => onBlur('comentario')}
+            placeholder="Comentarios adicionales sobre la compra"
+            rows={3}
+            className="p-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+          />
         </div>
       </div>
     </div>
