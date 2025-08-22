@@ -1,5 +1,4 @@
 import { Label } from "@/components/atoms/label";
-import type { useSalesFilters } from "../hooks/useSalesFilters";
 import { AlertCircle, CalendarIcon, Search, X } from "lucide-react";
 import { Input } from "@/components/atoms/input";
 import { useEffect, useState } from "react";
@@ -9,15 +8,16 @@ import { Button } from "@/components/atoms/button";
 import { Calendar } from "@/components/atoms/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useSaleCustomers } from "../hooks/useSaleCustomers";
 import { PaginatedCombobox } from "@/components/common/paginatedCombobox";
+import { useSaleCustomers } from "@/modules/sales/hooks/useSaleCustomers";
+import type { useSalesFilters } from "@/modules/sales/hooks/useSalesFilters";
 
-interface SalesFiltersProps {
+interface QuotationsFiltersProps {
     filters: ReturnType<typeof useSalesFilters>["filters"]
     updateFilter: ReturnType<typeof useSalesFilters>["updateFilter"]
 }
 
-const SalesFiltersComponent: React.FC<SalesFiltersProps> = ({
+const QuotationsFiltersComponent: React.FC<QuotationsFiltersProps> = ({
     filters,
     updateFilter
 }) => {
@@ -152,7 +152,7 @@ const SalesFiltersComponent: React.FC<SalesFiltersProps> = ({
         <section className="space-y-2">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <div className="space-y-2">
-                    <Label className="text-gray-700 text-sm font-medium">Nro. de Venta</Label>
+                    <Label className="text-gray-700 text-sm font-medium">Nro. de Cotizacion</Label>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <Input
@@ -370,4 +370,4 @@ const SalesFiltersComponent: React.FC<SalesFiltersProps> = ({
     );
 }
 
-export default SalesFiltersComponent;
+export default QuotationsFiltersComponent;

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { SaleGetAll, SalesGetAllResponse } from "../types/salesGetResponse";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type RowSelectionState } from "@tanstack/react-table";
 import { Checkbox } from "@/components/atoms/checkbox";
 import { format } from "date-fns";
@@ -9,7 +8,6 @@ import { Clock, Edit, Eye, HelpCircle, Loader2, MoreVertical, Settings, Trash2 }
 import InfiniteScroll from "react-infinite-scroll-component";
 import CustomizableTable from "@/components/common/CustomizableTable";
 import ResizableBox from "@/components/atoms/resizable-box";
-import type { useSalesFilters } from "../hooks/useSalesFilters";
 import Pagination from "@/components/common/pagination";
 import { TooltipWrapper } from "@/components/common/TooltipWrapper ";
 import { Kbd } from "@/components/atoms/kbd";
@@ -19,12 +17,14 @@ import authSDK from "@/services/sdk-simple-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { formatCurrency } from "@/utils/formaters";
 import { useNavigate } from "react-router";
+import type { QuotationGetAll, QuotationGetAllResponse } from "../../types/quotationGet.types";
+import type { useSalesFilters } from "@/modules/sales/hooks/useSalesFilters";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import ShortcutKey from "@/components/common/ShortcutKey";
 
-interface SalesListTableProps {
-    data: SalesGetAllResponse
-    sales: SaleGetAll[]
+interface QuotationsListTableProps {
+    data: QuotationGetAllResponse
+    quotations: QuotationGetAll[]
     filters: ReturnType<typeof useSalesFilters>["filters"]
     setPage: ReturnType<typeof useSalesFilters>["setPage"]
     updateFilter: ReturnType<typeof useSalesFilters>["updateFilter"]
@@ -32,14 +32,14 @@ interface SalesListTableProps {
     isLoading: boolean
     isFetching: boolean,
     isError: boolean,
-    handleDeleteSale: (saleId: number) => void
+    handleDeleteSale: (quotationId: number) => void
 }
 
-const getColumnVisibilityKey = (userName: string) => `sales-columns-${userName}`;
+const getColumnVisibilityKey = (userName: string) => `quotations-columns-${userName}`;
 
-const SalesListTable: React.FC<SalesListTableProps> = ({
+const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
     data,
-    sales,
+    quotations,
     filters,
     setPage,
     updateFilter,
@@ -80,11 +80,11 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         }
     }, [columnVisibility, user?.name]);
 
-    const handleSeeDetails = (saleId: number) => {
-        navigate(`/dashboard/sales/${saleId}`)
+    const handleSeeDetails = (quotationId: number) => {
+        navigate(`/dashboard/quotations/${quotationId}`)
     }
 
-    const columns = useMemo<ColumnDef<SaleGetAll>[]>(() => [
+    const columns = useMemo<ColumnDef<QuotationGetAll>[]>(() => [
         {
             id: "Select",
             header: ({ table }) => (
@@ -114,8 +114,8 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
             minSize: 40,
         },
         {
-            accessorKey: "nro_venta",
-            header: "Nro. Venta",
+            accessorKey: "nro_cotizacion",
+            header: "Nro. Cotizacion",
             size: 120,
             minSize: 100,
             enableHiding: false,
@@ -157,7 +157,7 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                                     onKeyDown={(e) => e.stopPropagation()}
                                     onClick={() => { }}>
                                     <Edit className="size-4 mr-2" />
-                                    Editar venta
+                                    Editar cotizacion
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onKeyDown={e => e.stopPropagation()}
@@ -165,7 +165,7 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                                     className="text-red-600 focus:text-red-600 focus:bg-red-50"
                                 >
                                     <Trash2 className="size-4 mr-2" />
-                                    Eliminar venta
+                                    Eliminar cotizacion
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -175,7 +175,7 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                             align: 'start'
                         }}
                         tooltip={
-                            <p className="flex gap-1">Presiona <Kbd>enter</Kbd> para ver los detalles de la venta</p>
+                            <p className="flex gap-1">Presiona <Kbd>enter</Kbd> para ver los detalles de la cotizacion</p>
                         }
                     >
                         <div className="space-y-1 flex flex-col">
@@ -336,8 +336,8 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         },
     ], []);
 
-    const table = useReactTable<SaleGetAll>({
-        data: sales,
+    const table = useReactTable<QuotationGetAll>({
+        data: quotations,
         columns,
         state: {
             columnVisibility,
@@ -360,23 +360,23 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         handleContainerClick: handleTableClick,
         // setIsFocused: setIsFocusedTable,
         hotkeys
-    } = useKeyboardNavigation<SaleGetAll, HTMLTableElement>({
-        items: sales,
+    } = useKeyboardNavigation<QuotationGetAll, HTMLTableElement>({
+        items: quotations,
         containerRef: tableRef,
-        onPrimaryAction: (sale) => {
-            handleSeeDetails(sale.id)
+        onPrimaryAction: (quotation) => {
+            handleSeeDetails(quotation.id)
         },
-        getItemId: (sale) => sale.id
+        getItemId: (quotation) => quotation.id
     });
     const handleRowClick = (index: number) => {
         setSelectedIndex(index);
     };
 
-    const handleRowDoubleClick = (sale: SaleGetAll) => {
-        handleSeeDetails(sale.id)
+    const handleRowDoubleClick = (quotation: QuotationGetAll) => {
+        handleSeeDetails(quotation.id)
     };
 
-    const hasSalesSelected = Object.keys(rowSelection).length;
+    const hasQuotationsSelected = Object.keys(rowSelection).length;
 
     const onPageChange = (page: number) => {
         setPage(page);
@@ -391,9 +391,9 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
             {/* Results Info */}
             <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
                 {
-                    sales.length > 0 ? (
+                    quotations.length > 0 ? (
                         isInfiniteScroll ? (
-                            `Mostrando ${sales.length} de ${data?.meta?.total} ventas`
+                            `Mostrando ${quotations.length} de ${data?.meta?.total} cotizaciones`
                         ) : (
                             (() => {
                                 const pagina = filters.pagina ?? 1;
@@ -402,7 +402,7 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                                 const inicio = (pagina - 1) * porPagina + 1;
                                 const fin = pagina * porPagina;
 
-                                return `Mostrando ${inicio} - ${fin} de ${data?.meta?.total} ventas`;
+                                return `Mostrando ${inicio} - ${fin} de ${data?.meta?.total} cotizaciones`;
                             })()
                         )
                     ) : (
@@ -454,13 +454,13 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                         </DropdownMenuContent>
                     </DropdownMenu>
                     {
-                        table && hasSalesSelected > 0 && (
+                        table && hasQuotationsSelected > 0 && (
                             <Button size={'sm'} className="relative"
                             // onClick={handleAddSelectedToCart}
                             >
                                 Proximamente...
                                 <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-[10px]">
-                                    {hasSalesSelected}
+                                    {hasQuotationsSelected}
                                 </Badge>
                             </Button>
                         )
@@ -492,7 +492,7 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                                 <div className="space-y-1.5">
                                     <h4 className="text-xs font-medium text-blue-600 tracking-wide">Acciones</h4>
                                     <div className="space-y-1 text-gray-600 text-xs">
-                                        <p> <ShortcutKey combo={hotkeys.primaryAction ?? ''} /> Detalle de venta </p>
+                                        <p> <ShortcutKey combo={hotkeys.primaryAction ?? ''} /> Detalle de cotizacion </p>
                                     </div>
                                 </div>
                             </div>
@@ -507,13 +507,13 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
 
             {isInfiniteScroll ? (
                 <InfiniteScroll
-                    dataLength={sales.length}
+                    dataLength={quotations.length}
                     next={() => setPage((filters.pagina || 1) + 1)}
-                    hasMore={sales.length < ((data?.meta?.total ?? 0))}
+                    hasMore={quotations.length < ((data?.meta?.total ?? 0))}
                     loader={
                         <div className="flex items-center justify-center gap-2 text-center p-6 text-xs sm:text-sm text-gray-500 bg-gray-50">
                             <Loader2 className="size-4 animate-spin" />
-                            Cargando más ventas...
+                            Cargando más cotizaciones...
                         </div>
                     }
                     scrollableTarget="main-scroll-container"
@@ -521,10 +521,10 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                     <CustomizableTable
                         table={table}
                         isError={isError}
-                        errorMessage="Ocurrió un error al cargar las ventas"
+                        errorMessage="Ocurrió un error al cargar las cotizaciones"
                         isLoading={isLoading}
                         rows={filters.pagina_registros}
-                        noDataMessage="No se encontraron ventas"
+                        noDataMessage="No se encontraron cotizaciones"
                         selectedRowIndex={selectedIndex}
                         onRowClick={handleRowClick}
                         onRowDoubleClick={handleRowDoubleClick}
@@ -548,8 +548,8 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                                 isError={isError}
                                 isFetching={isFetching}
                                 isLoading={isLoading}
-                                errorMessage="Ocurrió un error al cargar las ventas"
-                                noDataMessage="No se encontraron ventas"
+                                errorMessage="Ocurrió un error al cargar las cotizaciones"
+                                noDataMessage="No se encontraron cotizaciones"
                                 rows={filters.pagina_registros}
                                 selectedRowIndex={selectedIndex}
                                 onRowClick={handleRowClick}
@@ -580,4 +580,4 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
     );
 }
 
-export default SalesListTable;
+export default QuotationsListTable;

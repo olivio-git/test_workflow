@@ -321,5 +321,8 @@ export const useKeyboardNavigation = <T, E extends HTMLElement = HTMLElement>({
         totalItems: items.length,
         isFirstItem: selectedIndex === 0,
         isLastItem: selectedIndex === items.length - 1,
+
+        // atajos de teclado
+        hotkeys,
     };
 };

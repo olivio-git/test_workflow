@@ -9,6 +9,8 @@ import {
     RefreshCcw,
     MoreVertical,
     Edit,
+    Trash2,
+    HelpCircle,
 } from "lucide-react"
 import { Button } from "@/components/atoms/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
@@ -33,13 +35,17 @@ import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
 import TooltipButton from "@/components/common/TooltipButton"
 import { TooltipWrapper } from "@/components/common/TooltipWrapper "
 import { Kbd } from "@/components/atoms/kbd"
-import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
 import { useDebounce } from "use-debounce"
 import { formatCell } from "@/utils/formatCell"
 import BottomShoppingCartBar from "@/modules/shoppingCart/components/BottomShoppingCartBar"
 import ResizableBox from "@/components/atoms/resizable-box"
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation"
 import { formatCurrency } from "@/utils/formaters"
+import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced"
+import { useDeleteProduct } from "../hooks/useDeleteProduct"
+import useConfirmMutation from "@/hooks/useConfirmMutation"
+import ConfirmationModal from "@/components/common/confirmationModal"
+import ShortcutKey from "@/components/common/ShortcutKey"
 
 const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
 
@@ -124,6 +130,40 @@ const ProductListScreen = () => {
         }
     }, [productData?.data, isInfiniteScroll, filters.pagina]);
 
+    const handleResetFilters = () => {
+        resetFilters()
+        setSearchDescription("")
+    }
+
+    const handleDeleteSuccess = (_data: any, productId: number) => {
+        showSuccessToast({
+            title: "Producto eliminado",
+            description: `El producto #${productId} se eliminó exitosamente`,
+            duration: 5000
+        })
+    };
+
+    const handleDeleteError = (_error: any, productId: number) => {
+        showErrorToast({
+            title: "Error al eliminar el producto",
+            description: `No se pudo eliminar el producto #${productId}. Por favor, intenta nuevamente`,
+            duration: 5000
+        })
+    };
+
+    const {
+        mutate: deleteProduct,
+        isPending: isDeletingProduct
+    } = useDeleteProduct()
+
+    const {
+        close: handleCloseDeleteAlert,
+        confirm: handleConfirmDeleteAlert,
+        isOpen: showDeleteAlert,
+        open: handleOpenDeleteAlert,
+        variables: productToDelete
+    } = useConfirmMutation(deleteProduct, handleDeleteSuccess, handleDeleteError)
+
     // Función para determinar el color del stock
     const getStockColor = (stock: number, stock_min: number) => {
         const stockMin: number = stock_min || 10
@@ -136,8 +176,7 @@ const ProductListScreen = () => {
     }
 
     const handleAddItemCart = (product: ProductGet) => {
-        const productForCart = CartProductSchema.parse(product)
-        addItemToCart(productForCart)
+        addItemToCart(product)
     }
 
     const columns = useMemo<ColumnDef<ProductGet>[]>(() => [
@@ -221,6 +260,14 @@ const ProductListScreen = () => {
                                     <Edit className="mr-2 h-4 w-4" />
                                     Editar producto
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onKeyDown={e => e.stopPropagation()}
+                                    onClick={() => handleOpenDeleteAlert(row.original.id)}
+                                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                >
+                                    <Trash2 className="size-4 mr-2" />
+                                    Eliminar producto
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -230,14 +277,15 @@ const ProductListScreen = () => {
                                 align: 'start'
                             }}
                             tooltip={
-                                <p>Presiona <Kbd>enter</Kbd> para ver los detalles del producto</p>
+                                <p className="flex gap-1">Presiona <Kbd>enter</Kbd> para ver los detalles del producto</p>
                             }
                         >
                             <h3 className="font-medium text-gray-900 leading-tigh hover:underline truncate">{getValue<string>()}</h3>
                         </TooltipWrapper>
-                        <span className=" text-gray-500 font-mono">
-                            UPC: {formatCell(row.original.codigo_upc)}
-                        </span>
+                        <div className="text-gray-500 flex gap-4">
+                            <span className="text-blue-600 font-medium">ID: {row.original.id}</span>
+                            <span>UPC: {formatCell(row.original.codigo_upc)}</span>
+                        </div>
                     </div>
                 </div>
             ),
@@ -419,7 +467,8 @@ const ProductListScreen = () => {
         isFocused,
         containerRef,
         handleContainerClick: handleTableClick,
-        setIsFocused: setIsFocusedTable
+        setIsFocused: setIsFocusedTable,
+        hotkeys
     } = useKeyboardNavigation<ProductGet, HTMLTableElement>({
         items: products,
         containerRef: tableRef,
@@ -457,9 +506,7 @@ const ProductListScreen = () => {
         }
 
         try {
-            const productsForCart = selectedProducts.map(product => CartProductSchema.parse(product));
-            addMultipleItems(productsForCart);
-
+            addMultipleItems(selectedProducts);
             setTimeout(() => {
                 if (table && table.resetRowSelection) {
                     table.resetRowSelection();
@@ -535,8 +582,8 @@ const ProductListScreen = () => {
                                 <RefreshCcw className={`size-4 ${isRefetchingProducts || isFetching ? 'animate-spin' : ''}`} />
                             </TooltipButton>
 
-                            <Button variant="outline" size="sm" onClick={resetFilters}>
-                                <Filter className="h-4 w-4 mr-2" />
+                            <Button variant="outline" size="sm" onClick={handleResetFilters}>
+                                <Filter className="h-4 w-4" />
                                 Limpiar Filtros
                             </Button>
                             <Button size={'sm'} onClick={toggleShowFilters}>
@@ -595,7 +642,7 @@ const ProductListScreen = () => {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm">
-                                    <Settings className="w-4 h-4 mr-2" />
+                                    <Settings className="w-4 h-4" />
                                     Columnas
                                 </Button>
                             </DropdownMenuTrigger>
@@ -632,6 +679,47 @@ const ProductListScreen = () => {
                                 </Button>
                             )
                         }
+                        <TooltipWrapper
+                            tooltipContentProps={{
+                                align: 'end',
+                                className: 'max-w-xs'
+                            }}
+                            tooltip={
+                                <div className="flex flex-col space-y-3">
+                                    {/* Título del tooltip */}
+                                    <div className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                                        Atajos de teclado
+                                    </div>
+
+                                    {/* Sección de navegación básica */}
+                                    <div className="space-y-1.5">
+                                        <h4 className="text-xs font-medium text-gray-700 tracking-wide">Navegación</h4>
+                                        <div className="space-y-1 text-gray-600 text-xs">
+                                            <p> <ShortcutKey combo={hotkeys.activate ?? ''} /> Activar tabla </p>
+                                            <p> <ShortcutKey combo={hotkeys.deactivate ?? ''} /> Salir de tabla </p>
+                                            <p> <ShortcutKey combo={hotkeys.moveUp ?? ''} /> / <ShortcutKey combo={hotkeys.moveDown ?? ''} /> Navegar filas </p>
+                                            <p> <ShortcutKey combo={hotkeys.navigate ?? ''} /> Cambiar columna</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Sección de acciones */}
+                                    <div className="space-y-1.5">
+                                        <h4 className="text-xs font-medium text-blue-600 tracking-wide">Acciones</h4>
+                                        <div className="space-y-1 text-gray-600 text-xs">
+                                            <p> <ShortcutKey combo={hotkeys.primaryAction ?? ''} /> Detalle de producto </p>
+                                            <p> <ShortcutKey combo={hotkeys.secondaryAction ?? ''} /> Agregar al carrito </p>
+                                            {/* <p className="text-red-600">
+                                                <ShortcutKey combo={hotkeys.deleteAction ?? ''} /> Eliminar del carrito
+                                            </p> */}
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        >
+                            <span className="border-gray-200 border h-8 w-8 px-1 rounded-md flex items-center justify-center cursor-help hover:bg-accent">
+                                <HelpCircle />
+                            </span>
+                        </TooltipWrapper>
                     </div>
                 </div>
 
@@ -715,8 +803,16 @@ const ProductListScreen = () => {
                     callback={() => setIsFocusedTable(false)}
                 />
             }
+
+            <ConfirmationModal
+                isOpen={showDeleteAlert}
+                title="Eliminar producto"
+                message={`¿Estás seguro de que deseas eliminar el producto #${productToDelete}?`}
+                onClose={handleCloseDeleteAlert}
+                onConfirm={handleConfirmDeleteAlert}
+                isLoading={isDeletingProduct}
+            />
         </main>
     )
 }
-
 export default ProductListScreen

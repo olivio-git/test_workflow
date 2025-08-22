@@ -1,9 +1,15 @@
 import { z } from "zod"
 
 export const SaleCustomerSchema = z.object({
-    id: z.number(),
+    id: z.number().int(),
     nombre: z.string(),
     nit: z.number().nullable(),
+})
+
+export const SaleCustomerGetSchema = SaleCustomerSchema.omit({ nombre: true }).extend({
+    cliente: z.string(),
+    direccion: z.string().nullable(),
+    contacto: z.string().nullable(),
 })
 
 export const SaleCustomerListResponseSchema = z.object({

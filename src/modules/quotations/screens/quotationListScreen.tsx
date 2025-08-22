@@ -1,6 +1,4 @@
 import { useBranchStore } from "@/states/branchStore";
-import { useSalesPaginated } from "../hooks/useSalesPaginated";
-import { useSalesFilters } from "../hooks/useSalesFilters";
 import { useEffect, useState } from "react";
 import { Filter, RefreshCcw, Search } from "lucide-react";
 import { Input } from "@/components/atoms/input";
@@ -9,22 +7,24 @@ import { Switch } from "@/components/atoms/switch";
 import { Label } from "@/components/atoms/label";
 import TooltipButton from "@/components/common/TooltipButton";
 import { Button } from "@/components/atoms/button";
-import SalesFiltersComponent from "../components/salesFilterComponent";
 import { Separator } from "@/components/atoms/separator";
-import type { SaleGetAll } from "../types/salesGetResponse";
-import SalesListTable from "../components/salesListTable";
 import ConfirmationModal from "@/components/common/confirmationModal";
-import { useDeleteSale } from "../hooks/useDeleteSale";
 import useConfirmMutation from "@/hooks/useConfirmMutation";
 import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
+import type { QuotationGetAll } from "../types/quotationGet.types";
+import { useSalesFilters } from "@/modules/sales/hooks/useSalesFilters";
+import { useQuotationsPaginated } from "../hooks/useQuotationsPaginated";
+import QuotationsListTable from "../components/quotationList/quotationListTable";
+import QuotationsFiltersComponent from "../components/quotationList/quotationFilterComponent";
+import { useDeleteQuotation } from "../hooks/useDeleteQuotation";
 
-const SalesListScreen = () => {
+const QuotationListScreen = () => {
     const { selectedBranchId } = useBranchStore()
     const [searchKeywords, setSearchKeywords] = useState("");
     const [debouncedSearchKeywords] = useDebounce(searchKeywords, 500);
     const [isInfiniteScroll, setIsInfiniteScroll] = useState<boolean>(false)
     const [showFilters, setShowFilters] = useState<boolean>(true)
-    const [sales, setSales] = useState<SaleGetAll[]>([]);
+    const [quotations, setQuotations] = useState<QuotationGetAll[]>([]);
 
     const {
         filters,
@@ -34,71 +34,71 @@ const SalesListScreen = () => {
     } = useSalesFilters(Number(selectedBranchId) || 1)
 
     const {
-        data: salesData,
+        data: quotationData,
         isLoading,
         error,
         isFetching,
         isError,
-        refetch: refetchSales,
-        isRefetching: isRefetchingSales,
-    } = useSalesPaginated(filters)
+        refetch: refetchQuotations,
+        isRefetching: isRefetchingQuotations,
+    } = useQuotationsPaginated(filters)
 
     useEffect(() => {
-        if (!salesData?.data || error || isFetching) return;
+        if (!quotationData?.data || error || isFetching) return;
 
         if (isInfiniteScroll && filters.pagina && filters.pagina > 1) {
-            setSales((prev) => {
+            setQuotations((prev) => {
                 // Evitar duplicados
-                const newSales = salesData.data.filter(
-                    newSale => !prev.some(existingSale => existingSale.id === newSale.id)
+                const newQuotations = quotationData.data.filter(
+                    newQuotation => !prev.some(existingQuotation => existingQuotation.id === newQuotation.id)
                 );
-                return [...prev, ...newSales];
+                return [...prev, ...newQuotations];
             });
         } else {
-            setSales(salesData.data);
+            setQuotations(quotationData.data);
         }
-    }, [salesData?.data, isInfiniteScroll, filters.pagina]);
+    }, [quotationData?.data, isInfiniteScroll, filters.pagina]);
 
     const handleResetFilters = () => {
         resetFilters()
         setSearchKeywords("")
     }
 
-    const handleDeleteSuccess = (_data: any, saleId: number) => {
+    const handleDeleteSuccess = (_data: any, quotationId: number) => {
         showSuccessToast({
-            title: "Venta eliminada",
-            description: `La venta #${saleId} se eliminó exitosamente`,
+            title: "Cotizacion eliminada",
+            description: `La cotizacion #${quotationId} se eliminó exitosamente`,
             duration: 5000
         })
     };
 
-    const handleDeleteError = (_error: any, saleId: number) => {
+    const handleDeleteError = (_error: any, quotationId: number) => {
         showErrorToast({
-            title: "Error al eliminar venta",
-            description: `No se pudo eliminar la venta #${saleId}. Por favor, intenta nuevamente`,
+            title: "Error al eliminar cotizacion",
+            description: `No se pudo eliminar la cotizacion #${quotationId}. Por favor, intenta nuevamente`,
             duration: 5000
         })
     };
 
     const {
-        mutate: deleteSale,
+        mutate: deleteQuotation,
         isPending: isDeleting
-    } = useDeleteSale()
+    } = useDeleteQuotation()
 
     const {
         close: handleCloseDeleteAlert,
         confirm: handleConfirmDeleteAlert,
         isOpen: showDeleteAlert,
         open: handleOpenDeleteAlert,
-        variables: saleToDelete
-    } = useConfirmMutation(deleteSale, handleDeleteSuccess, handleDeleteError)
+        variables: quotationToDelete
+    } = useConfirmMutation(deleteQuotation, handleDeleteSuccess, handleDeleteError)
 
     useEffect(() => {
         updateFilter("keywords", debouncedSearchKeywords);
     }, [debouncedSearchKeywords]);
 
-    const handleRefetchSales = () => {
-        refetchSales();
+    const handleRefetchQuotations = () => {
+        refetchQuotations();
     }
 
     const toggleShowFilters = () => {
@@ -108,7 +108,7 @@ const SalesListScreen = () => {
     return (
         <main className="min-h-screen space-y-2">
             <header className="bg-white rounded-lg p-2 space-y-2 border border-gray-200">
-                <h1 className="text-lg font-bold text-gray-900">Ventas</h1>
+                <h1 className="text-lg font-bold text-gray-900">Cotizaciones</h1>
                 <section className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
                     <div className="flex items-center gap-2 md:gap-4 grow">
 
@@ -139,14 +139,14 @@ const SalesListScreen = () => {
                         </div>
 
                         <TooltipButton
-                            onClick={handleRefetchSales}
+                            onClick={handleRefetchQuotations}
                             buttonProps={{
                                 className: 'w-8',
-                                disabled: isRefetchingSales || isFetching,
+                                disabled: isRefetchingQuotations || isFetching,
                             }}
-                            tooltip={"Recargar ventas"}
+                            tooltip={"Recargar cotizaciones"}
                         >
-                            <RefreshCcw className={`size-4 ${isRefetchingSales || isFetching ? 'animate-spin' : ''}`} />
+                            <RefreshCcw className={`size-4 ${isRefetchingQuotations || isFetching ? 'animate-spin' : ''}`} />
                         </TooltipButton>
 
                         <Button variant="outline" size="sm" onClick={handleResetFilters}>
@@ -167,7 +167,7 @@ const SalesListScreen = () => {
                     showFilters && (
                         <>
                             <Separator />
-                            <SalesFiltersComponent
+                            <QuotationsFiltersComponent
                                 filters={filters}
                                 updateFilter={updateFilter}
                             />
@@ -177,14 +177,14 @@ const SalesListScreen = () => {
             </header>
 
             <div className="bg-white rounded-lg border border-gray-200 space-y-2">
-                <SalesListTable
-                    data={salesData || { data: [], meta: null, links: null }}
+                <QuotationsListTable
+                    data={quotationData || { data: [], meta: null, links: null }}
                     filters={filters}
                     isError={isError}
                     isFetching={isFetching}
                     isInfiniteScroll={isInfiniteScroll}
                     isLoading={isLoading}
-                    sales={sales}
+                    quotations={quotations}
                     setPage={setPage}
                     updateFilter={updateFilter}
                     handleDeleteSale={handleOpenDeleteAlert}
@@ -192,8 +192,8 @@ const SalesListScreen = () => {
             </div>
             <ConfirmationModal
                 isOpen={showDeleteAlert}
-                title="Eliminar venta"
-                message={`¿Estás seguro de que deseas eliminar la venta #${saleToDelete}?`}
+                title="Eliminar cotizacion"
+                message={`¿Estás seguro de que deseas eliminar la cotizacion #${quotationToDelete}?`}
                 onClose={handleCloseDeleteAlert}
                 onConfirm={handleConfirmDeleteAlert}
                 isLoading={isDeleting}
@@ -202,4 +202,4 @@ const SalesListScreen = () => {
     );
 }
 
-export default SalesListScreen;
+export default QuotationListScreen;

@@ -390,7 +390,7 @@ const FormCreateProduct: React.FC = () => {
   };
 
   return (
-    <div className="px-2 w-full sm:px-4">
+    <div className="w-full space-y-2">
       <div className="p-3 bg-white border border-gray-200 rounded-lg sm:p-4">
         <h2 className="flex items-center gap-2 mb-3 text-base font-semibold text-gray-900">
           <Package className="w-4 h-4" />

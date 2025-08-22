@@ -14,6 +14,8 @@ import CreateSaleScreen from "@/modules/sales/screens/createSaleScreen";
 import SalesListScreen from "@/modules/sales/screens/salesListScreen";
 import { UserDetailScreen } from "@/modules/users";
 import UserListScreen from "@/modules/users/screens/UserListScreen";
+import SaleDetailScreen from "@/modules/sales/screens/saleDetailScreen";
+import QuotationListScreen from "@/modules/quotations/screens/quotationListScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -81,7 +83,7 @@ const protectedRoutes: RouteType[] = [
     // icon:BoxIcon,
     subRoutes: [
       {
-        path: "/dashboard/create-producto",
+        path: "/dashboard/create-product",
         name: "Registrar Producto",
         type: "protected",
         element: CreateProduct,
@@ -194,7 +196,7 @@ const protectedRoutes: RouteType[] = [
         isAdmin: true,
         role: ["admin"],
         icon: Package,
-        
+
         showInCommandPalette: false,
         isHeader: false,
         showSidebar: false
@@ -244,9 +246,67 @@ const protectedRoutes: RouteType[] = [
 
         isHeader: false,
         showSidebar: true
-      }
+      },
+      {
+        path: "/dashboard/sales/:id",
+        name: "Detalle de venta",
+        type: "protected",
+        element: SaleDetailScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: Package,
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: false
+      },
     ]
-  }
+  },
+  {
+    name: "Cotizaciones",
+    type: "protected",
+    isAdmin: false,
+    role: ["user"],
+    isHeader: true,
+    showSidebar: true,
+    subRoutes: [
+      // {
+      //   path: "/dashboard/create-sale",
+      //   name: "Registrar venta",
+      //   type: "protected",
+      //   element: CreateSaleScreen,
+      //   isAdmin: true,
+      //   role: ["admin"],
+      //   icon: ShoppingBag,
+
+      //   isHeader: false,
+      //   showSidebar: true
+      // },
+      {
+        path: "/dashboard/quotations",
+        name: "Lista de cotizaciones",
+        type: "protected",
+        element: QuotationListScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: Table2,
+
+        isHeader: false,
+        showSidebar: true
+      },
+      // {
+      //   path: "/dashboard/sales/:id",
+      //   name: "Detalle de venta",
+      //   type: "protected",
+      //   element: SaleDetailScreen,
+      //   isAdmin: true,
+      //   role: ["admin"],
+      //   icon: Package,
+      //   isHeader: false,
+      //   showSidebar: false,
+      //   showInCommandPalette: false
+      // },
+    ]
+  },
 ];
 
 export default protectedRoutes;

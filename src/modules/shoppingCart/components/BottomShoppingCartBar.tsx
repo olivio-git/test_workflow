@@ -1,7 +1,7 @@
 import { Button } from '@/components/atoms/button';
 import authSDK from '@/services/sdk-simple-auth';
 import { useBranchStore } from '@/states/branchStore';
-import { FileText, CreditCard } from 'lucide-react';
+import { FileText, CreditCard, BrushCleaning } from 'lucide-react';
 import { useCartWithUtils } from '../hooks/useCartWithUtils';
 import { Separator } from '@/components/atoms/separator';
 import { Label } from '@/components/atoms/label';
@@ -16,12 +16,10 @@ import { formatCurrency } from '@/utils/formaters';
 
 interface ShoppingCartProps {
     callback?: () => void;
-    // focusItemId?: string;
 }
 
 const BottomShoppingCartBar: React.FC<ShoppingCartProps> = ({
     callback
-    // focusItemId,
 }) => {
     const tableRef = useRef<{ focusFirstQuantityInput: () => void }>(null);
     const user = authSDK.getCurrentUser()
@@ -55,7 +53,6 @@ const BottomShoppingCartBar: React.FC<ShoppingCartProps> = ({
     return (
         <section
             className="bg-card border border-border rounded-lg shadow-sm overflow-hidden mt-2"
-
         >
             <header className="bg-primary text-primary-foreground px-4 py-3">
                 <h3 className="font-semibold text-sm flex items-center justify-between">
@@ -63,7 +60,22 @@ const BottomShoppingCartBar: React.FC<ShoppingCartProps> = ({
                         <CreditCard className="h-4 w-4" />
                         Carrito de Venta
                     </div>
+
                     <ShortcutKey combo='alt+f' variant="dark" />
+
+                    {
+                        cart.length > 0 && (
+                            <Button
+                                className="cursor-pointer"
+                                size={'sm'}
+                                onClick={clearCart}
+                                variant={'destructive'}
+                            >
+                                <BrushCleaning />
+                                Limpiar Carrito
+                            </Button>
+                        )
+                    }
                 </h3>
             </header>
 
@@ -114,7 +126,7 @@ const BottomShoppingCartBar: React.FC<ShoppingCartProps> = ({
                             </div>
                             <div className="flex justify-between font-medium text-lg">
                                 <span>Total:</span>
-                                <span>{formatCurrency(total)}</span>
+                                <span className='text-emerald-600'>{formatCurrency(total)}</span>
                             </div>
 
                             <div className="grid sm:grid-cols-2 gap-2">

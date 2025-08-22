@@ -1,9 +1,8 @@
-import * as React from "react";
 import { DayPicker } from "react-day-picker";
-
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "./button";
+import { Button, buttonVariants } from "./button";
 import { es } from "date-fns/locale";
+import { useState } from "react";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -13,9 +12,14 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  const today = new Date();
+  const [month, setMonth] = useState(today);
+
   return (
     <DayPicker
       locale={es}
+      month={month}
+      onMonthChange={setMonth}
       navLayout="after"
       showOutsideDays={showOutsideDays}
       fixedWeeks={true}
@@ -47,6 +51,18 @@ function Calendar({
         hidden: "invisible",
         ...classNames,
       }}
+      footer={
+        <footer className="flex flex-wrap gap-1 justify-end mt-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMonth(today)}
+            className="text-xs px-2 py-1 h-auto"
+          >
+            Hoy
+          </Button>
+        </footer>
+      }
       {...props}
     />
   );

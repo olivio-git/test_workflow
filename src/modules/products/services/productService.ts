@@ -11,7 +11,7 @@ import type { ProductProviderOrder } from "../types/ProductProviderOrder";
 import { ProductProviderOrderListSchema } from "../schemas/productProviderOrdersSchema";
 import { ProductListResponseSchema } from "../schemas/productResponse.schema";
 import type { ProductListResponse } from "../types/productListResponse ";
-import { ProductDetailSchema } from "../schemas/ProductDetail.schema ";
+import { ProductDetailSchema } from "../schemas/ProductDetail.schema";
 
 export const fetchProducts = async (filters: Partial<ProductFilters>): Promise<ProductListResponse> => {
 	const response = await apiClient.get(PRODUCT_ENDPOINTS.all, { params: filters });
@@ -83,4 +83,21 @@ export const fetchProductSalesStats = async ({
 		throw new Error("Respuesta inválida del servidor.");
 	}
 	return result.data;
+};
+
+/**
+ * Elimina un producto por ID
+ * @param productId - ID del producto a eliminar
+ */
+export const deleteProduct = async (productId: number): Promise<void> => {
+	try {
+		await apiClient.delete(PRODUCT_ENDPOINTS.delete(productId));
+
+	} catch (error: any) {
+		if (error.response?.data?.error?.message) {
+			console.error("Error eliminando producto:", error.response.data.error.message);
+			throw new Error(error.response.data.error.message);
+		}
+		throw new Error("Error eliminando el producto.");
+	}
 };
