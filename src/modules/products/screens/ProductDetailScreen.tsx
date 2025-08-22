@@ -24,11 +24,11 @@ import ProductDetailSkeleton from "../components/productDetail/ProductDetailSkel
 import ErrorDataComponent from "@/components/common/errorDataComponent"
 import authSDK from "@/services/sdk-simple-auth"
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
-import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema"
 import { useProductsPaginated } from "../hooks/useProductsPaginated"
 import TooltipButton from "@/components/common/TooltipButton"
 import { Kbd } from "@/components/atoms/kbd"
 import { useHotkeys } from "react-hotkeys-hook"
+import type { ProductGet } from "../types/ProductGet"
 
 const ProductDetailScreen = () => {
     const navigate = useNavigate()
@@ -139,8 +139,10 @@ const ProductDetailScreen = () => {
     }
 
     const handleAddItemCart = () => {
-        const productTransform = CartProductSchema.parse(productForCart?.data[0])
-        addItemToCart(productTransform);
+        const productData = productForCart?.data[0];
+        if (!productData) return;
+
+        addItemToCart(productData);
     }
 
     const handleRetry = () => {

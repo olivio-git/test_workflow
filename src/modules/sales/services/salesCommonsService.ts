@@ -5,8 +5,8 @@ import { SaleTypesSchema } from "../schemas/salesTypes.schema"
 import type { SaleModalities } from "../types/modalitiesSale"
 import type { SaleResponsibleListResponse } from "../types/saleResponsible"
 import { SaleResponsibleListResponseSchema } from "../schemas/saleResponsibles.schema"
-import type { SaleCustomerListResponse } from "../types/productCustomer.types"
-import { SaleCustomerListResponseSchema } from "../schemas/productCustomer.schema"
+import type { SaleCustomerListResponse } from "../types/saleCustomer.types"
+import { SaleCustomerListResponseSchema } from "../schemas/saleCustomer.schema"
 
 export const fetchSaleTypes = async (): Promise<SaleTypes> => {
     const response = await apiClient.get(SALECOMMONS_ENDPOINTS.types)

@@ -30,9 +30,9 @@ import { useHotkeys } from "react-hotkeys-hook";
 import TooltipButton from "@/components/common/TooltipButton";
 import { format, parse } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
-import { CartProductSchema } from "@/modules/shoppingCart/schemas/cartProduct.schema";
 import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
 import TableShoppingCart from "@/modules/shoppingCart/components/tableShoppingCart";
+import { useDebounce } from "use-debounce";
 
 const CreateSaleScreen = () => {
     const queryClient = useQueryClient();
@@ -41,6 +41,8 @@ const CreateSaleScreen = () => {
     const { selectedBranchId } = useBranchStore()
     const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
     const [responsible, setResponsible] = useState<SaleResponsible | null>(null);
+
+    const [debouncedCustomerSearchTerm] = useDebounce<string>(customerSearchTerm, 500)
 
     const {
         data: saleTypesData,
@@ -57,7 +59,7 @@ const CreateSaleScreen = () => {
     const {
         data: saleCustomersData,
         isLoading: isSaleCustomersLoading
-    } = useSaleCustomers(customerSearchTerm)
+    } = useSaleCustomers(debouncedCustomerSearchTerm)
 
     const {
         mutate: createSale,
@@ -101,22 +103,16 @@ const CreateSaleScreen = () => {
     } = methods
 
     const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
     const {
         items,
         getCartSubtotal,
         getCartTotal,
         discountAmount,
         discountPercent,
-        updateQuantity,
-        removeItem,
-        updateCustomPrice,
-        updateCustomSubtotal,
         setDiscountAmount,
         setDiscountPercent,
         clearCart,
         addItemToCart,
-        addItemWithQuantity,
         addMultipleItems,
         validateCartWithToast
     } = useCartWithUtils(user?.name || '', selectedBranchId ?? '')
@@ -286,16 +282,11 @@ const CreateSaleScreen = () => {
     };
 
     const handleAddProductItem = (product: ProductGet) => {
-        const productForCart = CartProductSchema.parse(product)
-        addItemToCart(productForCart)
+        addItemToCart(product)
     };
 
     const handleAddMultipleProducts = (products: ProductGet[]) => {
         addMultipleItems(products);
-    };
-
-    const handleAddWithQuantity = (product: ProductGet, quantity: number) => {
-        addItemWithQuantity(product, quantity);
     };
 
     // FUNCIÓN onSubmit corregida
@@ -381,11 +372,11 @@ const CreateSaleScreen = () => {
         }
     }, [saleCustomersData, setValue]);
 
-    const canProceedWithSale = (): boolean => {
-        if (items.length === 0) return false;
-        const validation = validateCartWithToast();
-        return validation.isValid;
-    };
+    // const canProceedWithSale = (): boolean => {
+    //     if (items.length === 0) return false;
+    //     const validation = validateCartWithToast();
+    //     return validation.isValid;
+    // };
 
     // Shortcuts
     useHotkeys('escape', handleGoBack, {
@@ -398,18 +389,16 @@ const CreateSaleScreen = () => {
             <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit, onError)} className="max-w-7xl mx-auto flex flex-col gap-3">
                     {/* Header */}
-                    <div className="flex gap-2 items-center mb-2">
+                    <div className="flex gap-2 items-center">
                         <TooltipButton
                             tooltipContentProps={{
                                 align: 'start'
                             }}
                             onClick={handleGoBack}
-                            tooltip={<p>Presiona <Kbd>esc</Kbd> para volver a la lista de productos</p>}
+                            tooltip={<p className="flex gap-1">Presiona <Kbd>esc</Kbd> para volver a la lista de productos</p>}
                         >
                             <CornerUpLeft />
-                            <Kbd>esc</Kbd>
                         </TooltipButton>
-
                         <h1 className="text-lg font-bold text-gray-900">Nueva Venta</h1>
                     </div>
 
@@ -433,46 +422,6 @@ const CreateSaleScreen = () => {
                                             {errors.fecha && <p className="text-red-500 text-sm mt-1">{errors.fecha.message}</p>}
                                         </div>
                                         <div>
-                                            <Label htmlFor="forma" className="text-sm font-medium text-gray-700 mb-2">Forma de venta *</Label>
-                                            <Controller
-                                                name="forma_venta"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Select onValueChange={field.onChange} value={field.value}>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Selecciona una forma" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {
-                                                                saleModalitiesData && Object.entries(saleModalitiesData || {}).map(([code, description]) => (
-                                                                    <SelectItem key={code} value={code}>
-                                                                        {description}
-                                                                    </SelectItem>
-                                                                ))
-                                                            }
-                                                        </SelectContent>
-                                                    </Select>
-                                                )}
-                                            />
-                                            {errors.forma_venta && <p className="text-red-500 text-sm mt-1">{errors.forma_venta.message}</p>}
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="nroComprobante" className="text-sm font-medium text-gray-700 mb-2">N° Comprobante</Label>
-                                            <Input
-                                                id="nroComprobante"
-                                                {...register("nro_comprobante")}
-                                                placeholder="Número de comprobante"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="nroComprobanteSecundario" className="text-sm font-medium text-gray-700 mb-2">N° Comprobante Secundario</Label>
-                                            <Input
-                                                id="nroComprobanteSecundario"
-                                                {...register("nro_comprobante2")}
-                                                placeholder="Número secundario"
-                                            />
-                                        </div>
-                                        <div>
                                             <Label htmlFor="responsable" className="text-sm font-medium text-gray-700 mb-2">Responsable de Venta *</Label>
                                             <Controller
                                                 name="id_responsable"
@@ -481,7 +430,7 @@ const CreateSaleScreen = () => {
                                                     <ComboboxSelect
                                                         value={field.value}
                                                         onChange={(value) => {
-                                                            field.onChange(value);
+                                                            field.onChange(Number(value));
                                                             const selected = saleResponsiblesData?.find((c) => c.id.toString() === value.toString());
                                                             if (selected) {
                                                                 setResponsible(selected);
@@ -494,6 +443,7 @@ const CreateSaleScreen = () => {
                                             />
                                             {errors.id_responsable && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
                                         </div>
+
                                         <div>
                                             <Label htmlFor="cliente" className="text-sm font-medium text-gray-700 mb-2">Cliente *</Label>
                                             <Controller
@@ -503,7 +453,7 @@ const CreateSaleScreen = () => {
                                                     <PaginatedCombobox
                                                         value={field.value}
                                                         onChange={(value) => {
-                                                            field.onChange(value);
+                                                            field.onChange(Number(value));
                                                             const selected = saleCustomersData?.data.find((c) => c.id.toString() === value);
                                                             if (selected) {
                                                                 setValue("cliente_nombre", selected.nombre);
@@ -536,6 +486,47 @@ const CreateSaleScreen = () => {
                                                 placeholder="Cliente alternativo"
                                             />
                                         </div>
+                                        <div>
+                                            <Label htmlFor="nroComprobante" className="text-sm font-medium text-gray-700 mb-2">N° Comprobante</Label>
+                                            <Input
+                                                id="nroComprobante"
+                                                {...register("nro_comprobante")}
+                                                placeholder="Número de comprobante"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="nroComprobanteSecundario" className="text-sm font-medium text-gray-700 mb-2">N° Comprobante Secundario</Label>
+                                            <Input
+                                                id="nroComprobanteSecundario"
+                                                {...register("nro_comprobante2")}
+                                                placeholder="Número secundario"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="forma" className="text-sm font-medium text-gray-700 mb-2">Forma de venta *</Label>
+                                            <Controller
+                                                name="forma_venta"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Selecciona una forma" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {
+                                                                saleModalitiesData && Object.entries(saleModalitiesData || {}).map(([code, description]) => (
+                                                                    <SelectItem key={code} value={code}>
+                                                                        {description}
+                                                                    </SelectItem>
+                                                                ))
+                                                            }
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
+                                            {errors.forma_venta && <p className="text-red-500 text-sm mt-1">{errors.forma_venta.message}</p>}
+                                        </div>
+
                                         <div>
                                             <Label htmlFor="tipoVenta" className="text-sm font-medium text-gray-700 mb-2">Tipo de Venta *</Label>
                                             <Controller
@@ -621,25 +612,25 @@ const CreateSaleScreen = () => {
                         <CardHeader className="pb-4">
                             <CardTitle>
                                 <ProductSelectorModal
-                                    searchTerm={searchTerm}
-                                    setSearchTerm={setSearchTerm}
                                     isSearchOpen={isSearchOpen}
                                     setIsSearchOpen={setIsSearchOpen}
                                     addItem={handleAddProductItem}
+                                    onlyWithStock={true}
+                                    addMultipleItem={handleAddMultipleProducts}
                                 />
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
-                                <TableShoppingCart />
-
-                                {items.length === 0 && (
+                                {items.length === 0 ? (
                                     <div className="text-center py-8 text-gray-500">
                                         <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                                         <p>No hay productos agregados</p>
                                         <p className="text-sm">Haz clic en "Seleccionar Productos" para agregar</p>
                                     </div>
-                                )}
+                                ) :
+                                    <TableShoppingCart />
+                                }
                             </div>
                         </CardContent>
                     </Card>

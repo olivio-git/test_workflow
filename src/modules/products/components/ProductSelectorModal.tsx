@@ -4,40 +4,48 @@ import { Button } from "@/components/atoms/button";
 import {
     Dialog,
     DialogContent,
+    DialogFooter,
     DialogTitle,
     DialogTrigger,
 } from "@/components/atoms/dialog";
 import { Input } from "@/components/atoms/input";
 import { Plus, Search, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ProductGet } from "../types/ProductGet";
 import { useProductsPaginated } from "../hooks/useProductsPaginated";
 import { useProductFilters } from "../hooks/useProductFilters";
 import { useBranchStore } from "@/states/branchStore";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { formatCurrency } from "@/utils/formaters";
+import { useDebounce } from "use-debounce";
+import NoDataComponent from "@/components/common/noDataComponent";
+import { Checkbox } from "@/components/atoms/checkbox";
 
 interface ProductSelectorModalProps {
     isSearchOpen: boolean
     setIsSearchOpen: any
-    searchTerm: any
-    setSearchTerm: any
     addItem: (product: ProductGet) => void
+    addMultipleItem: (products: ProductGet[]) => void
+    onlyWithStock?: boolean
 }
 const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
     isSearchOpen,
     setIsSearchOpen,
-    searchTerm,
-    setSearchTerm,
-    addItem
+    addItem,
+    addMultipleItem,
+    onlyWithStock = false,
 }) => {
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
     const [products, setProducts] = useState<ProductGet[]>([]);
+    const [selectedProducts, setSelectedProducts] = useState<ProductGet[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm] = useDebounce(searchTerm, 500)
 
     const { selectedBranchId } = useBranchStore()
     const {
         filters,
         setPage,
-        updateFilter
+        updateFilter,
+        resetFilters,
     } = useProductFilters(Number(selectedBranchId) ?? 0)
     const {
         data: productsResponse,
@@ -49,40 +57,61 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
     const addProduct = (product: ProductGet) => {
         addItem(product)
         setIsSearchOpen(false);
-        setSearchTerm("");
-        setPage(1); // Reset page when closing modal
     };
 
-    // Debounce para el término de búsqueda
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearchTerm(searchTerm);
-        }, 300);
+        updateFilter("descripcion", debouncedSearchTerm)
+    }, [debouncedSearchTerm]);
 
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
+    const filteredProducts = useMemo(() => {
+        if (!productsResponse?.data) return [];
 
-    // Reset cuando cambia el término de búsqueda o se abre el modal
+        return onlyWithStock
+            ? productsResponse.data.filter((p) => p.stock_actual > 0)
+            : productsResponse.data;
+    }, [productsResponse?.data, onlyWithStock]);
+
     useEffect(() => {
-        if (isSearchOpen) {
-            setPage(1);
-            updateFilter("descripcion", debouncedSearchTerm)
+        if (!filteredProducts || error || isFetching) return;
+
+        if (filters.pagina && filters.pagina > 1) {
+            setProducts((prev) => {
+                const merged = [...prev, ...filteredProducts];
+                // quitar duplicados por id
+                const unique = merged.filter(
+                    (item, index, self) => index === self.findIndex((p) => p.id === item.id)
+                );
+
+                return unique;
+            });
+        } else {
+            setProducts(filteredProducts);
         }
-    }, [debouncedSearchTerm, isSearchOpen]);
+    }, [filteredProducts, filters.pagina]);
 
     useEffect(() => {
-        if (!productsResponse?.data || error || isFetching) return;
-        if (productsResponse?.data) {
-            if (filters.pagina && filters.pagina > 1) {
-                setProducts((prev) => [...prev, ...productsResponse.data]);
-            } else {
-                setProducts(productsResponse.data);
+        resetFilters()
+        setSearchTerm("")
+        setSelectedProducts([])
+    }, [isSearchOpen])
+
+    const handleToggleSelectedProduct = (product: ProductGet) => {
+        setSelectedProducts((prev) => {
+            const existingProduct = prev.find((p) => p.id === product.id)
+            if (existingProduct) {
+                return prev.filter((p) => p.id !== product.id)
             }
-        }
-    }, [productsResponse, filters.pagina]);
+            return [...prev, product]
+        })
+    }
+
+    const handleAddMultipleItems = () => {
+        addMultipleItem(selectedProducts)
+        setIsSearchOpen(false)
+    }
 
     return (
-        <div className="flex items-center justify-between">
+        <section className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">
                 Detalle de Productos
             </h3>
@@ -144,48 +173,56 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
 
                                 >
                                     <div className="space-y-1 p-2">
-                                        {products.map((product) => (
-                                            <div
-                                                key={product.id}
-                                                className="rounded-lg p-3 hover:bg-gray-100 cursor-pointer transition-colors"
-                                                onClick={() => addProduct(product)}
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex-1">
-                                                        <h4 className="font-medium text-sm">
-                                                            {product.descripcion}
-                                                        </h4>
-                                                        <p className="text-xs text-gray-500">
-                                                            OEM: {product.codigo_oem} | UPC:{" "}
-                                                            {product.codigo_upc}
-                                                        </p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <Badge
-                                                                variant="default"
-                                                                className="text-xs "
-                                                            >
-                                                                {product.marca}
-                                                            </Badge>
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="text-xs border-gray-200"
-                                                            >
-                                                                {product.categoria}
+                                        {products.map((product) => {
+                                            const isSelected = selectedProducts.some((p) => p.id === product.id)
+                                            return (
+                                                <article
+                                                    key={product.id}
+                                                    className={`rounded-lg p-2 hover:bg-gray-100 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50' : ''}`}
+                                                    onDoubleClick={() => addProduct(product)}
+                                                    onClick={() => handleToggleSelectedProduct(product)}
+                                                >
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="">
+                                                            <Checkbox
+                                                                checked={isSelected}
+                                                                onCheckedChange={() => handleToggleSelectedProduct(product)}
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h4 className="font-medium text-sm">
+                                                                {product.descripcion}
+                                                            </h4>
+                                                            <p className="text-xs text-gray-500">
+                                                                OEM: {product.codigo_oem} | UPC:{" "}
+                                                                {product.codigo_upc}
+                                                            </p>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <Badge
+                                                                    variant="accent"
+                                                                >
+                                                                    {product.categoria}
+                                                                </Badge>
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="border-gray-200"
+                                                                >
+                                                                    {product.marca}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-sm font-bold text-green-600">
+                                                                {formatCurrency(product.precio_venta)}
+                                                            </p>
+                                                            <Badge variant={'default'}>
+                                                                {`${product.stock_actual} ${product.unidad_medida}`}
                                                             </Badge>
                                                         </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <p className="text-sm font-semibold text-green-600">
-                                                            ${product.precio_venta}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500">
-                                                            Stock: {product.stock_actual}{" "}
-                                                            {product.unidad_medida}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
+                                                </article>
+                                            )
+                                        })}
 
                                         {products.length >= (productsResponse?.meta.total || 0) && (
                                             <div className="text-center py-4 text-gray-500 text-sm">
@@ -195,15 +232,30 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                                     </div>
                                 </InfiniteScroll>
                             ) : (
-                                <div className="text-center py-8 text-gray-500">
-                                    No se encontraron productos
-                                </div>
+                                <NoDataComponent
+                                    message="No se encontraron productos"
+                                    description="Intenta nuevamente con otro término de búsqueda"
+                                />
                             )}
                         </div>
                     </div>
+                    <DialogFooter>
+                        <Button
+                            variant={'outline'}
+                            onClick={() => setIsSearchOpen(false)}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleAddMultipleItems}
+                        >
+                            <Plus className="size-4" />
+                            {`Agregar ${selectedProducts.length > 0 ? `(${selectedProducts.length})` : ''}`}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+        </section>
     );
 };
 export default ProductSelectorModal;

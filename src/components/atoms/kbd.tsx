@@ -15,7 +15,7 @@ const Kbd = React.forwardRef<HTMLElement, KbdProps>(
         return (
             <kbd
                 className={cn(
-                    "inline-flex h-5 min-w-5 shadow-sm items-center justify-center rounded border px-1 font-medium font-mono text-[0.625rem]",
+                    "flex h-5 min-w-5 max-w-max shadow-sm items-center justify-center rounded border px-1 font-medium font-mono text-[0.625rem]",
                     variantClasses,
                     className
                 )}
