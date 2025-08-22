@@ -17,6 +17,7 @@ import UserListScreen from "@/modules/users/screens/UserListScreen";
 import SaleDetailScreen from "@/modules/sales/screens/saleDetailScreen";
 import QuotationListScreen from "@/modules/quotations/screens/quotationListScreen";
 import QuotationDetailScreen from "@/modules/quotations/screens/quotationDetailScreen";
+import SaleEditScreen from "@/modules/sales/screens/saleEditScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -255,7 +256,17 @@ const protectedRoutes: RouteType[] = [
         element: SaleDetailScreen,
         isAdmin: true,
         role: ["admin"],
-        icon: Package,
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: false
+      },
+      {
+        path: "/dashboard/sales/:saleId/update",
+        name: "Editar venta",
+        type: "protected",
+        element: SaleEditScreen,
+        isAdmin: true,
+        role: ["admin"],
         isHeader: false,
         showSidebar: false,
         showInCommandPalette: false

@@ -16,12 +16,21 @@ export const SaleItemSchema = z.object({
     ),
     monenda: z.string(),
     descuento: z.preprocess(
-        (val) => (val == null ? null : parseFloat(val as string)),
-        z.number().nonnegative().transform((val) => parseFloat(val.toFixed(5))).nullable()
+        (val) => {
+            if (val === null || val === undefined) return 0; // null o undefined → 0
+            if (typeof val === "string") return parseFloat(val); // string → number
+            return val; // number → number
+        },
+        z.number().nonnegative().transform((val) => parseFloat(val.toFixed(5)))
     ),
+
     porcentaje_descuento: z.preprocess(
-        (val) => (val == null ? null : parseFloat(val as string)),
-        z.number().nonnegative().transform((val) => parseFloat(val.toFixed(5))).nullable()
+        (val) => {
+            if (val === null || val === undefined) return 0;
+            if (typeof val === "string") return parseFloat(val);
+            return val;
+        },
+        z.number().nonnegative().transform((val) => parseFloat(val.toFixed(5)))
     ),
 })
 
@@ -35,4 +44,11 @@ export const SaleGetByIdSchema = z.object({
     responsable_venta: SaleResponsibleSchema.nullable(),
     cantidad_detalles: z.number().int(),
     detalles: z.array(SaleItemSchema),
+    comprobante: z.string().nullable(),
+    comprobante2: z.string().nullable(),
+    comentarios: z.string().nullable(),
+    plazo_pago: z.string().nullable(),
+    vehiculo: z.string().nullable(),
+    nmotor: z.string().nullable(),
+    cliente_nit: z.string().nullable(),
 })

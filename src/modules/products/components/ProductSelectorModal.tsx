@@ -90,6 +90,21 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
     }, [filteredProducts, filters.pagina]);
 
     useEffect(() => {
+        if (!productsResponse?.meta) return;
+
+        const totalPages = Math.ceil(productsResponse.meta.total / filters.pagina_registros);
+        if (
+            products.length > 0 &&
+            products.length < 10 &&
+            filters.pagina < totalPages
+        ) {
+            // No hay scroll -> cargar más automáticamente
+            setPage((filters.pagina || 1) + 1);
+        }
+    }, [products]);
+
+
+    useEffect(() => {
         resetFilters()
         setSearchTerm("")
         setSelectedProducts([])
@@ -109,6 +124,9 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
         addMultipleItem(selectedProducts)
         setIsSearchOpen(false)
     }
+
+    const totalPages = Math.ceil((productsResponse?.meta.total || 0) / filters.pagina_registros);
+    const hasMoreProducts = filters.pagina < totalPages;
 
     return (
         <section className="flex items-center justify-between">
@@ -160,7 +178,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                                 <InfiniteScroll
                                     dataLength={products.length}
                                     next={() => setPage((filters.pagina || 1) + 1)}
-                                    hasMore={products.length < (productsResponse?.meta.total || 0)}
+                                    hasMore={hasMoreProducts}
                                     loader={
                                         <div className="flex items-center justify-center py-4">
                                             <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
@@ -170,7 +188,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                                         </div>
                                     }
                                     scrollableTarget="products-scroll-container"
-
+                                    scrollThreshold={0.8}
                                 >
                                     <div className="space-y-1 p-2">
                                         {products.map((product) => {

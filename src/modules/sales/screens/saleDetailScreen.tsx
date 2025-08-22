@@ -37,7 +37,8 @@ const SaleDetailScreen = () => {
 
     const {
         data: saleData,
-        isLoading: isLoadingSale
+        isLoading: isLoadingSale,
+        isError: isErrorSale
     } = useSaleGetById(Number(saleId))
 
     const handleDeleteSuccess = (_data: any, saleId: number) => {
@@ -105,217 +106,226 @@ const SaleDetailScreen = () => {
         enabled: true
     });
 
+    if (isLoadingSale) {
+        return <SaleDetailSkeleton />;
+    }
+
+    if (isErrorSale) {
+        return <ErrorDataComponent
+            errorMessage="No se pudo cargar la venta."
+            showButtonIcon={false}
+            buttonText="Ir a lista de ventas"
+            onRetry={() => {
+                navigate("/dashboard/sales")
+            }}
+        />
+    }
+
     return (
         <main className="flex flex-col items-center">
-            {
-                isLoadingSale ? (
-                    <SaleDetailSkeleton />
-                ) : (
-                    <div className="max-w-7xl w-full space-y-2">
-                        <header className="border-gray-200 border bg-white rounded-lg p-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <TooltipButton
-                                        tooltipContentProps={{
-                                            align: 'start'
-                                        }}
-                                        onClick={handleGoBack}
-                                        tooltip={<p className="flex gap-1">Presiona <Kbd>esc</Kbd> para volver a la lista de ventas</p>}
-                                        buttonProps={{
-                                            variant: 'default',
-                                        }}
-                                    >
-                                        <CornerUpLeft />
-                                    </TooltipButton>
-                                    <div>
-                                        <h1 className="text-lg lg:text-xl font-bold text-gray-900 leading-tight">
-                                            Venta {saleData?.nro}
-                                        </h1>
-                                        {saleData && (
-                                            <p className="text-sm text-gray-600">
-                                                {saleData.cliente ? `${saleData.cliente?.cliente} - ` : ''}
-                                                {saleData.cantidad_detalles} {saleData.cantidad_detalles === 1 ? 'producto' : 'productos'}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div >
+            <div className="max-w-7xl w-full space-y-2">
+                <header className="border-gray-200 border bg-white rounded-lg p-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <TooltipButton
+                                tooltipContentProps={{
+                                    align: 'start'
+                                }}
+                                onClick={handleGoBack}
+                                tooltip={<p className="flex gap-1">Presiona <Kbd>esc</Kbd> para volver a la lista de ventas</p>}
+                                buttonProps={{
+                                    variant: 'default',
+                                }}
+                            >
+                                <CornerUpLeft />
+                            </TooltipButton>
+                            <div>
+                                <h1 className="text-lg lg:text-xl font-bold text-gray-900 leading-tight">
+                                    Venta {saleData?.nro}
+                                </h1>
+                                {saleData && (
+                                    <p className="text-sm text-gray-600">
+                                        {saleData.cliente ? `${saleData.cliente?.cliente} - ` : ''}
+                                        {saleData.cantidad_detalles} {saleData.cantidad_detalles === 1 ? 'producto' : 'productos'}
+                                    </p>
+                                )}
+                            </div>
+                        </div >
 
-                                {/* Action Buttons */}
-                                < div className="flex items-center gap-2" >
-                                    <TooltipButton
-                                        onClick={handleUpdateSale}
-                                        tooltip="Editar venta"
-                                        buttonProps={{
-                                            variant: 'outline',
-                                            size: 'sm'
-                                        }}
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                        Editar
-                                    </TooltipButton>
+                        {/* Action Buttons */}
+                        < div className="flex items-center gap-2" >
+                            <TooltipButton
+                                onClick={handleUpdateSale}
+                                tooltip="Editar venta"
+                                buttonProps={{
+                                    variant: 'outline',
+                                    size: 'sm'
+                                }}
+                            >
+                                <Edit className="h-4 w-4" />
+                                Editar
+                            </TooltipButton>
 
-                                    <TooltipButton
-                                        onClick={() => handleOpenDeleteAlert(saleData?.id)}
-                                        tooltip="Eliminar venta"
-                                        buttonProps={{
-                                            variant: 'destructive',
-                                            size: 'sm',
-                                            disabled: isDeleting
-                                        }}
-                                    >
-                                        {
-                                            !isDeleting ? (
-                                                <>
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Eliminar
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    Eliminando...
-                                                </>
-                                            )
-                                        }
-                                    </TooltipButton>
-                                </div >
-                            </div >
-                        </header >
+                            <TooltipButton
+                                onClick={() => handleOpenDeleteAlert(saleData?.id)}
+                                tooltip="Eliminar venta"
+                                buttonProps={{
+                                    variant: 'destructive',
+                                    size: 'sm',
+                                    disabled: isDeleting
+                                }}
+                            >
+                                {
+                                    !isDeleting ? (
+                                        <>
+                                            <Trash2 className="h-4 w-4" />
+                                            Eliminar
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Eliminando...
+                                        </>
+                                    )
+                                }
+                            </TooltipButton>
+                        </div >
+                    </div >
+                </header >
 
-                        <Card className="bg-white border border-gray-200 shadow-none">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                                    <FileText className="h-5 w-5 text-gray-700" />
-                                    Información General
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 text-base font-semibold text-gray-900">
+                <Card className="bg-white border border-gray-200 shadow-none">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                            <FileText className="h-5 w-5 text-gray-700" />
+                            Información General
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 text-base font-semibold text-gray-900">
+                            <div>
+                                <Label>Número de venta</Label>
+                                <p className="font-bold">{saleData?.nro}</p>
+                            </div>
+                            <div>
+                                <Label>Fecha</Label>
+                                <p className="font-semibold flex items-center gap-2">
+                                    <Calendar className="size-4 text-gray-600" />
+                                    {formatDate(saleData?.fecha ?? '')}
+                                </p>
+                            </div>
+                            <div>
+                                <Label>Total</Label>
+                                <br />
+                                <Badge
+                                    className="rounded font-bold text-base"
+                                    variant={'success'}>
+                                    {formatCurrency(totalVenta)}
+                                </Badge>
+                            </div>
+                            <div>
+                                <Label>Tipo de venta</Label>
+                                <br />
+                                <Badge
+                                    variant={getContextColor(saleData?.tipo_venta ?? '')}
+                                    className="rounded w-max"
+                                >
+                                    {saleData?.tipo_venta}
+                                </Badge>
+                            </div>
+                            <div>
+                                <Label>Forma de venta</Label>
+                                <br />
+                                <Badge variant="secondary" className="rounded w-max">
+                                    {saleData?.forma_venta}
+                                </Badge>
+                            </div>
+                            <div>
+                                <Label>Productos</Label>
+                                <br />
+                                <p className="text-base">
+                                    {saleData?.cantidad_detalles}{' '}
+                                    {saleData?.cantidad_detalles === 1 ? 'producto' : 'productos'}
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="grid md:grid-cols-2 gap-2">
+                    <Card className="bg-white border border-gray-200 shadow-none">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                                <Building2 className="h-5 w-5 text-gray-700" />
+                                Información del cliente
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-xs text-gray-900 space-y-4">
+                                <div>
+                                    <Label>Cliente</Label>
+                                    <p className="text-base text-blue-600 font-semibold">{saleData?.cliente?.cliente}</p>
+                                </div>
+                                <div>
+                                    <Label>Dirección</Label>
+                                    <p>{formatCell(saleData?.cliente?.direccion)}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <Label>Número de venta</Label>
-                                        <p className="font-bold">{saleData?.nro}</p>
+                                        <Label>Contacto</Label>
+                                        <p>{formatCell(saleData?.cliente?.contacto)}</p>
                                     </div>
                                     <div>
-                                        <Label>Fecha</Label>
-                                        <p className="font-semibold flex items-center gap-2">
-                                            <Calendar className="size-4 text-gray-600" />
-                                            {formatDate(saleData?.fecha ?? '')}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <Label>Total</Label>
-                                        <br />
-                                        <Badge
-                                            className="rounded font-bold text-base"
-                                            variant={'success'}>
-                                            {formatCurrency(totalVenta)}
-                                        </Badge>
-                                    </div>
-                                    <div>
-                                        <Label>Tipo de venta</Label>
-                                        <br />
-                                        <Badge
-                                            variant={getContextColor(saleData?.tipo_venta ?? '')}
-                                            className="rounded w-max"
-                                        >
-                                            {saleData?.tipo_venta}
-                                        </Badge>
-                                    </div>
-                                    <div>
-                                        <Label>Forma de venta</Label>
-                                        <br />
-                                        <Badge variant="secondary" className="rounded w-max">
-                                            {saleData?.forma_venta}
-                                        </Badge>
-                                    </div>
-                                    <div>
-                                        <Label>Productos</Label>
-                                        <br />
-                                        <p className="text-base">
-                                            {saleData?.cantidad_detalles}{' '}
-                                            {saleData?.cantidad_detalles === 1 ? 'producto' : 'productos'}
-                                        </p>
+                                        <Label>NIT</Label>
+                                        <p>{formatCell(saleData?.cliente?.nit)}</p>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                        <div className="grid md:grid-cols-2 gap-2">
-                            <Card className="bg-white border border-gray-200 shadow-none">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                                        <Building2 className="h-5 w-5 text-gray-700" />
-                                        Información del cliente
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-xs text-gray-900 space-y-4">
-                                        <div>
-                                            <Label>Cliente</Label>
-                                            <p className="text-base text-blue-600 font-semibold">{saleData?.cliente?.cliente}</p>
-                                        </div>
-                                        <div>
-                                            <Label>Dirección</Label>
-                                            <p>{formatCell(saleData?.cliente?.direccion)}</p>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <Label>Contacto</Label>
-                                                <p>{formatCell(saleData?.cliente?.contacto)}</p>
-                                            </div>
-                                            <div>
-                                                <Label>NIT</Label>
-                                                <p>{formatCell(saleData?.cliente?.nit)}</p>
-                                            </div>
-                                        </div>
+                    <Card className="bg-white border border-gray-200 shadow-none">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                                <User className="h-5 w-5 text-gray-700" />
+                                Responsable de venta
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-xs text-gray-900 space-y-4">
+                                <div>
+                                    <Label>Nombre</Label>
+                                    <p className="text-base font-semibold">
+                                        {[
+                                            saleData?.responsable_venta?.nombre,
+                                            saleData?.responsable_venta?.apellido_paterno,
+                                            saleData?.responsable_venta?.apellido_materno
+                                        ]
+                                            .filter(Boolean)
+                                            .join(" ")}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <Label>DNI</Label>
+                                        <p>{formatCell(saleData?.responsable_venta?.dni)}</p>
                                     </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="bg-white border border-gray-200 shadow-none">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                                        <User className="h-5 w-5 text-gray-700" />
-                                        Responsable de venta
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-xs text-gray-900 space-y-4">
-                                        <div>
-                                            <Label>Nombre</Label>
-                                            <p className="text-base font-semibold">
-                                                {[
-                                                    saleData?.responsable_venta?.nombre,
-                                                    saleData?.responsable_venta?.apellido_paterno,
-                                                    saleData?.responsable_venta?.apellido_materno
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(" ")}
-                                            </p>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <Label>DNI</Label>
-                                                <p>{formatCell(saleData?.responsable_venta?.dni)}</p>
-                                            </div>
-                                            <div>
-                                                <Label>Celular</Label>
-                                                <p>{formatCell(saleData?.responsable_venta?.celular)}</p>
-                                            </div>
-                                        </div>
+                                    <div>
+                                        <Label>Celular</Label>
+                                        <p>{formatCell(saleData?.responsable_venta?.celular)}</p>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                        <SaleProductsSection
-                            products={saleData?.detalles ?? []}
-                            isLoading={isLoadingSale}
-                            totalAmount={totalVenta}
-                        />
-                    </div >
-                )
-            }
+                <SaleProductsSection
+                    products={saleData?.detalles ?? []}
+                    isLoading={isLoadingSale}
+                    totalAmount={totalVenta}
+                />
+            </div >
 
             <ConfirmationModal
                 isOpen={showDeleteAlert}

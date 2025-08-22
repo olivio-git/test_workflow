@@ -27,7 +27,7 @@ const QuotationDetailScreen = () => {
             <ErrorDataComponent
                 errorMessage="No se pudo cargar la cotizacion."
                 showButtonIcon={false}
-                buttonText="Ir a lista de cotizaviones"
+                buttonText="Ir a lista de cotizaciones"
                 onRetry={() => {
                     navigate("/dashboard/quotations")
                 }}
@@ -37,7 +37,8 @@ const QuotationDetailScreen = () => {
 
     const {
         data: quotationData,
-        isLoading: isLoadingQuotation
+        isLoading: isLoadingQuotation,
+        isError: isErrorQuotation
     } = useQuotationGetById(Number(quotationId))
 
     const handleDeleteSuccess = (_data: any, quotationId: number) => {
@@ -105,217 +106,224 @@ const QuotationDetailScreen = () => {
         enabled: true
     });
 
+    if (isLoadingQuotation) {
+        return <SaleDetailSkeleton />;
+    }
+
+    if (isErrorQuotation) {
+        return <ErrorDataComponent
+            errorMessage="No se pudo cargar la cotización."
+            showButtonIcon={false}
+            buttonText="Ir a lista de cotizaciones"
+            onRetry={() => navigate("/dashboard/quotations")}
+        />;
+    }
+
     return (
         <main className="flex flex-col items-center">
-            {
-                isLoadingQuotation ? (
-                    <SaleDetailSkeleton />
-                ) : (
-                    <div className="max-w-7xl w-full space-y-2">
-                        <header className="border-gray-200 border bg-white rounded-lg p-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <TooltipButton
-                                        tooltipContentProps={{
-                                            align: 'start'
-                                        }}
-                                        onClick={handleGoBack}
-                                        tooltip={<p className="flex gap-1">Presiona <Kbd>esc</Kbd> para volver a la lista de cotizaviones</p>}
-                                        buttonProps={{
-                                            variant: 'default',
-                                        }}
-                                    >
-                                        <CornerUpLeft />
-                                    </TooltipButton>
-                                    <div>
-                                        <h1 className="text-lg lg:text-xl font-bold text-gray-900 leading-tight">
-                                            Cotizacion {quotationData?.nro}
-                                        </h1>
-                                        {quotationData && (
-                                            <p className="text-sm text-gray-600">
-                                                {quotationData.cliente ? `${quotationData.cliente?.cliente} - ` : ''}
-                                                {quotationData.cantidad_detalles} {quotationData.cantidad_detalles === 1 ? 'producto' : 'productos'}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div >
+            <div className="max-w-7xl w-full space-y-2">
+                <header className="border-gray-200 border bg-white rounded-lg p-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <TooltipButton
+                                tooltipContentProps={{
+                                    align: 'start'
+                                }}
+                                onClick={handleGoBack}
+                                tooltip={<p className="flex gap-1">Presiona <Kbd>esc</Kbd> para volver a la lista de cotizaciones</p>}
+                                buttonProps={{
+                                    variant: 'default',
+                                }}
+                            >
+                                <CornerUpLeft />
+                            </TooltipButton>
+                            <div>
+                                <h1 className="text-lg lg:text-xl font-bold text-gray-900 leading-tight">
+                                    Cotizacion {quotationData?.nro}
+                                </h1>
+                                {quotationData && (
+                                    <p className="text-sm text-gray-600">
+                                        {quotationData.cliente ? `${quotationData.cliente?.cliente} - ` : ''}
+                                        {quotationData.cantidad_detalles} {quotationData.cantidad_detalles === 1 ? 'producto' : 'productos'}
+                                    </p>
+                                )}
+                            </div>
+                        </div >
 
-                                {/* Action Buttons */}
-                                < div className="flex items-center gap-2" >
-                                    <TooltipButton
-                                        onClick={handleUpdateQuotation}
-                                        tooltip="Editar cotizacion"
-                                        buttonProps={{
-                                            variant: 'outline',
-                                            size: 'sm'
-                                        }}
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                        Editar
-                                    </TooltipButton>
+                        {/* Action Buttons */}
+                        < div className="flex items-center gap-2" >
+                            <TooltipButton
+                                onClick={handleUpdateQuotation}
+                                tooltip="Editar cotizacion"
+                                buttonProps={{
+                                    variant: 'outline',
+                                    size: 'sm'
+                                }}
+                            >
+                                <Edit className="h-4 w-4" />
+                                Editar
+                            </TooltipButton>
 
-                                    <TooltipButton
-                                        onClick={() => handleOpenDeleteAlert(quotationData?.id)}
-                                        tooltip="Eliminar cotizacion"
-                                        buttonProps={{
-                                            variant: 'destructive',
-                                            size: 'sm',
-                                            disabled: isDeleting
-                                        }}
-                                    >
-                                        {
-                                            !isDeleting ? (
-                                                <>
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Eliminar
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    Eliminando...
-                                                </>
-                                            )
-                                        }
-                                    </TooltipButton>
-                                </div >
-                            </div >
-                        </header >
+                            <TooltipButton
+                                onClick={() => handleOpenDeleteAlert(quotationData?.id)}
+                                tooltip="Eliminar cotizacion"
+                                buttonProps={{
+                                    variant: 'destructive',
+                                    size: 'sm',
+                                    disabled: isDeleting
+                                }}
+                            >
+                                {
+                                    !isDeleting ? (
+                                        <>
+                                            <Trash2 className="h-4 w-4" />
+                                            Eliminar
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Eliminando...
+                                        </>
+                                    )
+                                }
+                            </TooltipButton>
+                        </div >
+                    </div >
+                </header >
 
-                        <Card className="bg-white border border-gray-200 shadow-none">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                                    <FileText className="h-5 w-5 text-gray-700" />
-                                    Información General
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 text-base font-semibold text-gray-900">
+                <Card className="bg-white border border-gray-200 shadow-none">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                            <FileText className="h-5 w-5 text-gray-700" />
+                            Información General
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 text-base font-semibold text-gray-900">
+                            <div>
+                                <Label>Número de cotizacion</Label>
+                                <p className="font-bold">{quotationData?.nro}</p>
+                            </div>
+                            <div>
+                                <Label>Fecha</Label>
+                                <p className="font-semibold flex items-center gap-2">
+                                    <Calendar className="size-4 text-gray-600" />
+                                    {formatDate(quotationData?.fecha ?? '')}
+                                </p>
+                            </div>
+                            <div>
+                                <Label>Total</Label>
+                                <br />
+                                <Badge
+                                    className="rounded font-bold text-base"
+                                    variant={'success'}>
+                                    {formatCurrency(totalQuotation)}
+                                </Badge>
+                            </div>
+                            <div>
+                                <Label>Tipo de cotizacion</Label>
+                                <br />
+                                <Badge
+                                    variant={getContextColor(quotationData?.tipo_cotizacion ?? '')}
+                                    className="rounded w-max"
+                                >
+                                    {quotationData?.tipo_cotizacion}
+                                </Badge>
+                            </div>
+                            <div>
+                                <Label>Forma de cotizacion</Label>
+                                <br />
+                                <Badge variant="secondary" className="rounded w-max">
+                                    {quotationData?.forma_cotizacion}
+                                </Badge>
+                            </div>
+                            <div>
+                                <Label>Productos</Label>
+                                <br />
+                                <p className="text-base">
+                                    {quotationData?.cantidad_detalles}{' '}
+                                    {quotationData?.cantidad_detalles === 1 ? 'producto' : 'productos'}
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="grid md:grid-cols-2 gap-2">
+                    <Card className="bg-white border border-gray-200 shadow-none">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                                <Building2 className="h-5 w-5 text-gray-700" />
+                                Información del cliente
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-xs text-gray-900 space-y-4">
+                                <div>
+                                    <Label>Cliente</Label>
+                                    <p className="text-base text-blue-600 font-semibold">{quotationData?.cliente?.cliente}</p>
+                                </div>
+                                <div>
+                                    <Label>Dirección</Label>
+                                    <p>{formatCell(quotationData?.cliente?.direccion)}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <Label>Número de cotizacion</Label>
-                                        <p className="font-bold">{quotationData?.nro}</p>
+                                        <Label>Contacto</Label>
+                                        <p>{formatCell(quotationData?.cliente?.contacto)}</p>
                                     </div>
                                     <div>
-                                        <Label>Fecha</Label>
-                                        <p className="font-semibold flex items-center gap-2">
-                                            <Calendar className="size-4 text-gray-600" />
-                                            {formatDate(quotationData?.fecha ?? '')}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <Label>Total</Label>
-                                        <br />
-                                        <Badge
-                                            className="rounded font-bold text-base"
-                                            variant={'success'}>
-                                            {formatCurrency(totalQuotation)}
-                                        </Badge>
-                                    </div>
-                                    <div>
-                                        <Label>Tipo de cotizacion</Label>
-                                        <br />
-                                        <Badge
-                                            variant={getContextColor(quotationData?.tipo_cotizacion ?? '')}
-                                            className="rounded w-max"
-                                        >
-                                            {quotationData?.tipo_cotizacion}
-                                        </Badge>
-                                    </div>
-                                    <div>
-                                        <Label>Forma de cotizacion</Label>
-                                        <br />
-                                        <Badge variant="secondary" className="rounded w-max">
-                                            {quotationData?.forma_cotizacion}
-                                        </Badge>
-                                    </div>
-                                    <div>
-                                        <Label>Productos</Label>
-                                        <br />
-                                        <p className="text-base">
-                                            {quotationData?.cantidad_detalles}{' '}
-                                            {quotationData?.cantidad_detalles === 1 ? 'producto' : 'productos'}
-                                        </p>
+                                        <Label>NIT</Label>
+                                        <p>{formatCell(quotationData?.cliente?.nit)}</p>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                        <div className="grid md:grid-cols-2 gap-2">
-                            <Card className="bg-white border border-gray-200 shadow-none">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                                        <Building2 className="h-5 w-5 text-gray-700" />
-                                        Información del cliente
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-xs text-gray-900 space-y-4">
-                                        <div>
-                                            <Label>Cliente</Label>
-                                            <p className="text-base text-blue-600 font-semibold">{quotationData?.cliente?.cliente}</p>
-                                        </div>
-                                        <div>
-                                            <Label>Dirección</Label>
-                                            <p>{formatCell(quotationData?.cliente?.direccion)}</p>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <Label>Contacto</Label>
-                                                <p>{formatCell(quotationData?.cliente?.contacto)}</p>
-                                            </div>
-                                            <div>
-                                                <Label>NIT</Label>
-                                                <p>{formatCell(quotationData?.cliente?.nit)}</p>
-                                            </div>
-                                        </div>
+                    <Card className="bg-white border border-gray-200 shadow-none">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                                <User className="h-5 w-5 text-gray-700" />
+                                Responsable de cotizacion
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-xs text-gray-900 space-y-4">
+                                <div>
+                                    <Label>Nombre</Label>
+                                    <p className="text-base font-semibold">
+                                        {[
+                                            quotationData?.responsable_cotizacion?.nombre,
+                                            quotationData?.responsable_cotizacion?.apellido_paterno,
+                                            quotationData?.responsable_cotizacion?.apellido_materno
+                                        ]
+                                            .filter(Boolean)
+                                            .join(" ")}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <Label>DNI</Label>
+                                        <p>{formatCell(quotationData?.responsable_cotizacion?.dni)}</p>
                                     </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="bg-white border border-gray-200 shadow-none">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                                        <User className="h-5 w-5 text-gray-700" />
-                                        Responsable de cotizacion
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-xs text-gray-900 space-y-4">
-                                        <div>
-                                            <Label>Nombre</Label>
-                                            <p className="text-base font-semibold">
-                                                {[
-                                                    quotationData?.responsable_cotizacion?.nombre,
-                                                    quotationData?.responsable_cotizacion?.apellido_paterno,
-                                                    quotationData?.responsable_cotizacion?.apellido_materno
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(" ")}
-                                            </p>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <Label>DNI</Label>
-                                                <p>{formatCell(quotationData?.responsable_cotizacion?.dni)}</p>
-                                            </div>
-                                            <div>
-                                                <Label>Celular</Label>
-                                                <p>{formatCell(quotationData?.responsable_cotizacion?.celular)}</p>
-                                            </div>
-                                        </div>
+                                    <div>
+                                        <Label>Celular</Label>
+                                        <p>{formatCell(quotationData?.responsable_cotizacion?.celular)}</p>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                        <QuotationProductsSection
-                            products={quotationData?.detalles ?? []}
-                            isLoading={isLoadingQuotation}
-                            totalAmount={totalQuotation}
-                        />
-                    </div >
-                )
-            }
+                <QuotationProductsSection
+                    products={quotationData?.detalles ?? []}
+                    isLoading={isLoadingQuotation}
+                    totalAmount={totalQuotation}
+                />
+            </div >
 
             <ConfirmationModal
                 isOpen={showDeleteAlert}
