@@ -1,21 +1,6 @@
 import { z } from "zod";
-
-export const customerGetAllSchema = z.object({
-    id: z.number().int(),
-    cliente: z.string(),
-    direccion: z.string().nullable(),
-    nit: z.number().nullable(),
-    contacto: z.string().nullable(),
-});
-
-export const responsibleGetAllSchema = z.object({
-    id: z.number().int(),
-    nombre: z.string(),
-    apellido_paterno: z.string().nullable(),
-    apellido_materno: z.string().nullable(),
-    dni: z.number().int().nullable(),
-    celular: z.string().nullable(),
-});
+import { SaleResponsibleSchema } from "./saleResponsibles.schema";
+import { SaleCustomerGetSchema } from "./saleCustomer.schema";
 
 export const saleGetAllSchema = z.object({
     id: z.number().int(),
@@ -23,8 +8,8 @@ export const saleGetAllSchema = z.object({
     fecha: z.string(),
     comprobantes: z.string().nullable(),
     contexto: z.string().nullable(),
-    cliente: customerGetAllSchema.nullable(),
-    responsable: responsibleGetAllSchema.nullable(),
+    cliente: SaleCustomerGetSchema.nullable(),
+    responsable: SaleResponsibleSchema.nullable(),
     total: z.number(),
     comentarios: z.string().nullable(),
 });

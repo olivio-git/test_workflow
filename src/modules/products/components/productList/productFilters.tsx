@@ -49,13 +49,18 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
     }, [debouncedModelo])
 
     useEffect(() => {
-        if (!filters.codigo_oem && !filters.codigo_upc && !filters.nro_motor && !filters.medida) {
-            setCodigoOEM("")
-            setCodigoUPC("")
-            setNroMotor("")
-            setMedida("")
+        const { codigo_oem, codigo_upc, nro_motor, medida } = filters;
+
+        const allEmpty = !codigo_oem && !codigo_upc && !nro_motor && !medida;
+
+        if (allEmpty) {
+            setCodigoOEM("");
+            setCodigoUPC("");
+            setNroMotor("");
+            setMedida("");
         }
-    }, [filters])
+    }, [filters.codigo_oem, filters.codigo_upc, filters.nro_motor, filters.medida]);
+
     return (
         <>
             {/* Búsquedas individuales */}

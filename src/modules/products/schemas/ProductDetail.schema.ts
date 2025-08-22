@@ -68,7 +68,7 @@ export const ProductDetailSchema = z.object({
     subcategoria: ProductSubcategoriaSchema,
 
     id_marca: z.number(),
-    marca: ProductMarcaSchema,
+    marca: ProductMarcaSchema.nullable(),
 
     id_procedencia: z.number(),
     procedencia: ProductProcedenciaSchema,
@@ -77,5 +77,5 @@ export const ProductDetailSchema = z.object({
     unidad_medida: ProductUnidadMedidaSchema,
 
     id_marca_vehiculo: z.number(),
-    marca_vehiculo: ProductMarcaVehiculoSchema,
+    marca_vehiculo: ProductMarcaVehiculoSchema.nullable(),
 });

@@ -2,6 +2,8 @@ import { useCartStore } from "./useCartStore";
 import type { CartProduct, CartSummary } from "../types/cart.types";
 import { useStore } from "zustand";
 import { showErrorToast, showInfoToast, showSuccessToast, showWarningToast } from "@/hooks/use-toast-enhanced";
+import { CartProductSchema } from "../schemas/cartProduct.schema";
+import type { ProductGet } from "@/modules/products/types/ProductGet";
 
 export interface CartOperationResult {
     success: boolean;
@@ -41,8 +43,9 @@ export const useCartWithUtils = (user: string, branch: string) => {
         }
     };
 
-    const addItemToCart = (product: CartProduct): CartOperationResult => {
-        const result = state.addItem(product);
+    const addItemToCart = (product: ProductGet): CartOperationResult => {
+        const productForCart = CartProductSchema.parse(product)
+        const result = state.addItem(productForCart);
 
         if (result.success) {
             showSuccessToast({
@@ -75,13 +78,14 @@ export const useCartWithUtils = (user: string, branch: string) => {
         return result;
     };
 
-    const addMultipleItems = (products: CartProduct[]): BulkAddResult => {
+    const addMultipleItems = (products: ProductGet[]): BulkAddResult => {
         let totalAdded = 0;
         let totalFailed = 0;
         const failedProducts: BulkAddResult['failedProducts'] = [];
 
         products.forEach(product => {
-            const result = state.addItem(product);
+            const productForCart = CartProductSchema.parse(product)
+            const result = state.addItem(productForCart);
 
             if (result.success) {
                 totalAdded++;
@@ -128,7 +132,8 @@ export const useCartWithUtils = (user: string, branch: string) => {
         return bulkResult;
     };
 
-    const addItemWithQuantity = (product: CartProduct, quantity: number): CartOperationResult => {
+    const addItemWithQuantity = (product: ProductGet, quantity: number): CartOperationResult => {
+        const productForCart = CartProductSchema.parse(product)
         const existingQuantity = state.getItemQuantity(product.id);
         const totalQuantity = existingQuantity + quantity;
 
@@ -167,7 +172,7 @@ export const useCartWithUtils = (user: string, branch: string) => {
 
         let addedCount = 0;
         for (let i = 0; i < quantity; i++) {
-            const result = state.addItem(product);
+            const result = state.addItem(productForCart);
             if (result.success) {
                 addedCount++;
             } else {
