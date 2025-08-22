@@ -84,6 +84,10 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
         navigate(`/dashboard/quotations/${quotationId}`)
     }
 
+    const handleUpdateQuotation = (quotationId: number) => {
+        navigate(`/dashboard/quotations/${quotationId}/update`)
+    }
+
     const columns = useMemo<ColumnDef<QuotationGetAll>[]>(() => [
         {
             id: "Select",
@@ -155,7 +159,7 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onKeyDown={(e) => e.stopPropagation()}
-                                    onClick={() => { }}>
+                                    onClick={() => handleUpdateQuotation(row.original.id)}>
                                     <Edit className="size-4 mr-2" />
                                     Editar cotizacion
                                 </DropdownMenuItem>

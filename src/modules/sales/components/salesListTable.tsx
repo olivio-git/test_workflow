@@ -84,6 +84,10 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         navigate(`/dashboard/sales/${saleId}`)
     }
 
+    const handleUpdateSale = (saleId: number) => {
+        navigate(`/dashboard/sales/${saleId}/update`)
+    }
+
     const columns = useMemo<ColumnDef<SaleGetAll>[]>(() => [
         {
             id: "Select",
@@ -155,7 +159,7 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onKeyDown={(e) => e.stopPropagation()}
-                                    onClick={() => { }}>
+                                    onClick={() => handleUpdateSale(row.original.id)}>
                                     <Edit className="size-4 mr-2" />
                                     Editar venta
                                 </DropdownMenuItem>
