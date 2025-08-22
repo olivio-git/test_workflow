@@ -16,6 +16,7 @@ import { UserDetailScreen } from "@/modules/users";
 import UserListScreen from "@/modules/users/screens/UserListScreen";
 import SaleDetailScreen from "@/modules/sales/screens/saleDetailScreen";
 import QuotationListScreen from "@/modules/quotations/screens/quotationListScreen";
+import QuotationDetailScreen from "@/modules/quotations/screens/quotationDetailScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -293,18 +294,18 @@ const protectedRoutes: RouteType[] = [
         isHeader: false,
         showSidebar: true
       },
-      // {
-      //   path: "/dashboard/sales/:id",
-      //   name: "Detalle de venta",
-      //   type: "protected",
-      //   element: SaleDetailScreen,
-      //   isAdmin: true,
-      //   role: ["admin"],
-      //   icon: Package,
-      //   isHeader: false,
-      //   showSidebar: false,
-      //   showInCommandPalette: false
-      // },
+      {
+        path: "/dashboard/quotations/:id",
+        name: "Detalle de cotizacion",
+        type: "protected",
+        element: QuotationDetailScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: Package,
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: false
+      },
     ]
   },
 ];
