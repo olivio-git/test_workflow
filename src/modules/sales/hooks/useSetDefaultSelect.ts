@@ -11,7 +11,7 @@ export function useSetDefaultSelect<T extends object>(
     const defaultKey = useMemo(() => {
         if (!data) return undefined;
 
-        if (explicitDefaultValue !== undefined && data.hasOwnProperty(String(explicitDefaultValue))) {
+        if (explicitDefaultValue !== undefined && Object.prototype.hasOwnProperty.call(data, String(explicitDefaultValue))) {
             return String(explicitDefaultValue);
         }
 
@@ -20,7 +20,7 @@ export function useSetDefaultSelect<T extends object>(
 
     useEffect(() => {
         if (defaultKey && !getValues(fieldName)) {
-            setValue(fieldName, defaultKey as any);
+            setValue(fieldName, defaultKey as unknown as Parameters<typeof setValue>[1]);
         }
-    }, [defaultKey]);
+    }, [defaultKey, fieldName, getValues, setValue]);
 }

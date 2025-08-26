@@ -65,7 +65,7 @@ export const useKeyboardNavigation = <T, E extends HTMLElement = HTMLElement>({
                 });
             }
         }
-    }, [selectedIndex, isFocused]);
+    }, [selectedIndex, isFocused, containerRef]);
 
     // Resetear índice cuando cambien los items
     useEffect(() => {
@@ -86,7 +86,7 @@ export const useKeyboardNavigation = <T, E extends HTMLElement = HTMLElement>({
         );
 
         return Array.from(focusableElements) as HTMLElement[];
-    }, [selectedIndex]);
+    }, [selectedIndex, containerRef]);
 
     // Función para verificar si debemos bloquear las hotkeys
     const isInRestrictedContext = (): boolean => {
@@ -273,7 +273,7 @@ export const useKeyboardNavigation = <T, E extends HTMLElement = HTMLElement>({
 
         document.addEventListener('click', handleClick);
         return () => document.removeEventListener('click', handleClick);
-    }, [getFocusableElementsInSelectedRow]);
+    }, [getFocusableElementsInSelectedRow, containerRef]);
 
     // Funciones de utilidad
     const handleContainerClick = () => {

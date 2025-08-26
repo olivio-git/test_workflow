@@ -1,9 +1,8 @@
-import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
+import { Card, CardContent } from "@/components/atoms/card";
 import { Label } from "@/components/atoms/label";
-import { Loader2, Save, ShoppingCart } from "lucide-react";
-import type { UseFormReset, UseFormWatch } from "react-hook-form";
+import { Loader2, Save } from "lucide-react";
+import type { UseFormReset } from "react-hook-form";
 import type { Sale } from "../types/sale";
 import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice";
 import { EditablePercentage } from "@/modules/shoppingCart/components/EditablePercentage";
@@ -15,13 +14,11 @@ interface SalesSummaryProps {
     clearCart: () => void
     setDiscountPercent: (percent: number) => void
     setDiscountAmount: (amount: number) => void
-    watch: UseFormWatch<Sale>
     reset: UseFormReset<Sale>
     discountPercent: number
     discountAmount: number
     subtotal: number
     total: number
-    responsibleName?: string
     hasProducts?: boolean
 }
 const SalesSummary: React.FC<SalesSummaryProps> = ({
@@ -29,34 +26,16 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
     clearCart,
     setDiscountPercent,
     setDiscountAmount,
-    watch,
     reset,
     discountPercent,
     discountAmount,
     subtotal,
     total,
-    responsibleName,
     hasProducts = true
 }) => {
     return (
         <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-medium flex items-center">
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    Resumen de Venta
-                </CardTitle>
-            </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Cliente:</span>
-                    <Badge variant={'secondary'}>{watch("cliente_nombre")}</Badge>
-                </div>
-
-                <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Responsable:</span>
-                    <span className="text-sm font-medium">{responsibleName ?? ''}</span>
-                </div>
-
                 <div className="space-y-3 py-4 border-t border-b border-gray-200">
                     {/* Descuento */}
                     <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
@@ -68,7 +47,6 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                             <div>
                                 <Label className="text-xs text-gray-600">Porcentaje (%)</Label>
                                 <EditablePercentage
-                                    key={discountPercent}
                                     value={discountPercent}
                                     onSubmit={(value) => setDiscountPercent(value as number)}
                                     className="w-full"
@@ -80,7 +58,6 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                             <div>
                                 <Label className="text-xs text-gray-600">Monto (Bs)</Label>
                                 <EditablePrice
-                                    key={discountAmount}
                                     value={discountAmount}
                                     onSubmit={(value) => setDiscountAmount(value as number)}
                                     className="w-full"
@@ -106,21 +83,21 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                         </div>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Subtotal:</span>
+                        <Label>Subtotal:</Label>
                         <span className="font-medium">{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Descuento ({discountPercent?.toFixed(2)}%):</span>
+                        <Label>Descuento ({discountPercent?.toFixed(2)}%):</Label>
                         <span className="font-medium text-orange-600">-{formatCurrency(discountAmount)}</span>
                     </div>
                 </div>
 
-                <div className="flex justify-between items-center py-2">
-                    <span className="text-lg font-semibold">TOTAL:</span>
-                    <span className="text-2xl font-bold text-gray-900">{formatCurrency(total)}</span>
+                <div className="flex justify-between items-center bg-white rounded-lg p-2 border border-green-200">
+                    <Label className="text-base font-bold text-gray-700">TOTAL:</Label>
+                    <span className="text-xl font-bold text-green-600 tabular-nums">{formatCurrency(total)}</span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="flex gap-3">
                     {/* Botón de submit */}
                     <TooltipButton
                         buttonProps={{
@@ -160,7 +137,7 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                         Nueva Venta
                     </Button>
 
-                    <Button
+                    {/* <Button
                         size={'sm'}
                         type="button"
                         disabled
@@ -168,7 +145,7 @@ const SalesSummary: React.FC<SalesSummaryProps> = ({
                         className="w-full py-3 font-medium text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                         Eliminar
-                    </Button>
+                    </Button> */}
                 </div>
             </CardContent>
         </Card>

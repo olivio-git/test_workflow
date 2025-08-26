@@ -4,19 +4,27 @@ import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { formatCell } from '@/utils/formatCell';
 import CustomizableTable from '@/components/common/CustomizableTable';
-import type { SaleItemGetById } from '../../types/salesGetResponse';
 import { EditableQuantity } from '@/modules/shoppingCart/components/editableQuantity';
 import { EditablePrice } from '@/modules/shoppingCart/components/editablePrice';
+import type { SaleUpdateDetailUI } from '../../types/saleUpdate.type';
 
 type TableSaleProductsProps = {
-    products: SaleItemGetById[]
+    products: SaleUpdateDetailUI[]
+    removeItem: (id: number) => void
+    updateQuantity: (productId: number, quantity: number) => void
+    updatePrice: (productId: number, price: number) => void
+    updateCustomSubtotal: (productId: number, customSubtotal: number) => void
 };
 
 export const TableSaleProducts = forwardRef<
     { focusFirstQuantityInput: () => void }, // tipo del ref
     TableSaleProductsProps                     // tipo de props
 >(({
-    products
+    products,
+    removeItem,
+    updateQuantity,
+    updatePrice,
+    updateCustomSubtotal
 }, ref) => {
     // refs para inputs de cantidad
     const firstQuantityInputRef = useRef<HTMLInputElement | null>(null);
@@ -30,7 +38,7 @@ export const TableSaleProducts = forwardRef<
         }
     }));
 
-    const columns = useMemo<ColumnDef<SaleItemGetById>[]>(() => [
+    const columns = useMemo<ColumnDef<SaleUpdateDetailUI>[]>(() => [
         {
             accessorFn: row => row.producto.descripcion,
             id: "descripcion",
@@ -54,9 +62,15 @@ export const TableSaleProducts = forwardRef<
             ),
         },
         {
-            accessorFn: row => row.producto.marca?.marca,
+            accessorFn: row => row.producto.marca,
             id: "marca",
             header: "Marca",
+            cell: ({ getValue }) => {
+                const marca = getValue<string>()
+                return (
+                    <span>{marca}</span>
+                )
+            }
         },
         {
             accessorKey: "cantidad",
@@ -73,8 +87,7 @@ export const TableSaleProducts = forwardRef<
                         value={quantity}
                         className="w-full"
                         buttonClassName="w-full"
-                        onSubmit={(value) => {}}
-                        // onSubmit={(value) => updateQuantity(product.id, value as number)}
+                        onSubmit={(value) => updateQuantity(product.id, value as number)}
                         validate={(val) => {
                             const num = parseInt(val);
                             return !isNaN(num) && num > 0;
@@ -95,8 +108,7 @@ export const TableSaleProducts = forwardRef<
                 return (
                     <EditablePrice
                         value={basePrice}
-                        onSubmit={(value) => {}}
-                        // onSubmit={(value) => updateCustomPrice(product.id, value as number)}
+                        onSubmit={(value) => updatePrice(product.id, value as number)}
                         className="w-full"
                         buttonClassName="w-full"
                         numberProps={{ min: 0, step: 0.01 }}
@@ -104,25 +116,25 @@ export const TableSaleProducts = forwardRef<
                 )
             },
         },
-        // {
-        //     accessorKey: "customSubtotal",
-        //     id: 'customSubtotal',
-        //     header: "Subtotal",
-        //     minSize: 110,
-        //     cell: ({ getValue, row }) => {
-        //         const itemSubtotal = getValue<number>()
-        //         const product = row.original.product
-        //         return (
-        //             <EditablePrice
-        //                 value={itemSubtotal}
-        //                 onSubmit={(value) => updateCustomSubtotal(product.id, value as number)}
-        //                 className="w-full"
-        //                 inputClassName="hover:bg-green-50 text-green-600 hover:text-green-600 border-green-200"
-        //                 numberProps={{ min: 0, step: 0.01 }}
-        //             />
-        //         )
-        //     },
-        // },
+        {
+            id: 'customSubtotal',
+            header: "Subtotal",
+            minSize: 110,
+            cell: ({ row }) => {
+                const product = row.original.producto
+                const item = row.original
+                const subtotal = item.cantidad * item.precio
+                return (
+                    <EditablePrice
+                        value={subtotal}
+                        onSubmit={(value) => updateCustomSubtotal(product.id, value as number)}
+                        className="w-full"
+                        inputClassName="hover:bg-green-50 text-green-600 hover:text-green-600 border-green-200"
+                        numberProps={{ min: 0, step: 0.01 }}
+                    />
+                )
+            },
+        },
         {
             id: "action",
             header: "Acciones",
@@ -136,7 +148,7 @@ export const TableSaleProducts = forwardRef<
                             type="button"
                             variant="outline"
                             size="sm"
-                            // onClick={() => removeItem(product.id)}
+                            onClick={() => removeItem(product.id)}
                             className="text-red-500 hover:text-red-500 size-7
                     "
                         >
@@ -146,8 +158,8 @@ export const TableSaleProducts = forwardRef<
                 )
             }
         }
-    ], [])
-    const table = useReactTable<SaleItemGetById>({
+    ], [removeItem, updateQuantity, updatePrice, updateCustomSubtotal]);
+    const table = useReactTable<SaleUpdateDetailUI>({
         data: products,
         columns,
         getCoreRowModel: getCoreRowModel(),

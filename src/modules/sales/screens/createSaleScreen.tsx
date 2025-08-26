@@ -4,13 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/car
 import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
-import { Textarea } from "@/components/atoms/textarea";
 import ProductSelectorModal from "@/modules/products/components/ProductSelectorModal";
 import type { ProductGet } from "@/modules/products/types/ProductGet";
 import authSDK from "@/services/sdk-simple-auth";
 import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils";
 import { useCreateSale } from "../hooks/useCreateSale";
-import { FormProvider, useForm, Controller } from "react-hook-form";
+import { FormProvider, useForm, Controller, type FieldErrors } from "react-hook-form";
 import { SaleSchema } from "../schemas/sales.schema";
 import type { Sale, SaleDetail } from "../types/sale";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,22 +24,19 @@ import { ComboboxSelect } from "@/components/common/SelectCombobox";
 import { useSaleCustomers } from "../hooks/useSaleCustomers";
 import { PaginatedCombobox } from "@/components/common/paginatedCombobox";
 import { useBranchStore } from "@/states/branchStore";
-import type { SaleResponsible } from "../types/saleResponsible";
 import { useHotkeys } from "react-hotkeys-hook";
 import TooltipButton from "@/components/common/TooltipButton";
 import { format, parse } from "date-fns";
-import { useQueryClient } from "@tanstack/react-query";
 import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
 import TableShoppingCart from "@/modules/shoppingCart/components/tableShoppingCart";
 import { useDebounce } from "use-debounce";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 const CreateSaleScreen = () => {
-    const queryClient = useQueryClient();
     const navigate = useNavigate();
     const user = authSDK.getCurrentUser()
     const { selectedBranchId } = useBranchStore()
     const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
-    const [responsible, setResponsible] = useState<SaleResponsible | null>(null);
 
     const [debouncedCustomerSearchTerm] = useDebounce<string>(customerSearchTerm, 500)
 
@@ -65,6 +61,8 @@ const CreateSaleScreen = () => {
         mutate: createSale,
         isPending
     } = useCreateSale();
+
+    const { handleError } = useErrorHandler()
 
     const methods = useForm<Sale>({
         resolver: zodResolver(SaleSchema),
@@ -127,7 +125,7 @@ const CreateSaleScreen = () => {
             id_producto: item.product.id,
             cantidad: item.quantity,
             precio: item.customPrice,
-            descuento: (item.customPrice ?? 0) * ((discountPercent ?? 0) / 100),
+            descuento: ((item.customPrice ?? 0) * item.quantity) * ((discountPercent ?? 0) / 100),
             porcentaje_descuento: discountPercent ?? 0
         }));
 
@@ -137,7 +135,7 @@ const CreateSaleScreen = () => {
         } else {
             // setValue("detalles", []);
         }
-    }, [items, discountAmount, discountPercent, setValue]);
+    }, [items, discountAmount, discountPercent, setValue, clearErrors]);
 
     const validateBeforeSubmit = (): boolean => {
         let isValid = true;
@@ -255,7 +253,7 @@ const CreateSaleScreen = () => {
         if (tipoVenta !== "VC") {
             resetField("plazo_pago");
         }
-    }, [watch("tipo_venta"), watch("plazo_pago"), resetField]);
+    }, [watch("tipo_venta"), watch("plazo_pago"), resetField, setError, clearErrors, watch]);
 
     const handleCheckout = () => {
         clearCart();
@@ -304,21 +302,14 @@ const CreateSaleScreen = () => {
                     duration: 5000
                 });
                 handleCheckout();
-
-                queryClient.invalidateQueries({ queryKey: ["sales"] });
-                queryClient.invalidateQueries({ queryKey: ["products"] });
             },
-            onError: (error: any) => {
-                showErrorToast({
-                    title: "Error en la venta",
-                    description: error.message || "No se pudo procesar la venta. Intenta nuevamente.",
-                    duration: 5000
-                });
+            onError: (error: unknown) => {
+                handleError(error, 'Error al realizar la venta');
             }
         });
     };
 
-    const onError = (errors: any) => {
+    const onError = (errors: FieldErrors<Sale>) => {
         if (errors.id_cliente || errors.tipo_venta || errors.forma_venta || errors.id_responsable) {
             showErrorToast({
                 title: "Error de validación",
@@ -327,7 +318,7 @@ const CreateSaleScreen = () => {
             });
             return;
         }
-        const firstErrorKey = Object.keys(errors)[0];
+        const firstErrorKey = Object.keys(errors)[0] as keyof Sale;
         const firstError = errors[firstErrorKey];
 
         if (firstError?.message) {
@@ -351,15 +342,8 @@ const CreateSaleScreen = () => {
         if (!user?._id && saleResponsiblesData && saleResponsiblesData.length > 0) {
             const firstResponsible = saleResponsiblesData[0];
             setValue("id_responsable", firstResponsible.id);
-            setResponsible(firstResponsible);
         }
-        else if (user?._id && saleResponsiblesData) {
-            const currentResponsible = saleResponsiblesData.find(res => res.id === Number(user._id));
-            if (currentResponsible) {
-                setResponsible(currentResponsible);
-            }
-        }
-    }, [saleResponsiblesData, setValue]);
+    }, [saleResponsiblesData, setValue, user?._id]);
 
     useEffect(() => {
         const clientId = getValues("id_cliente");
@@ -370,13 +354,7 @@ const CreateSaleScreen = () => {
             setValue("cliente_nombre", firstCustomer.nombre);
             setValue("cliente_nit", firstCustomer.nit?.toString() || "");
         }
-    }, [saleCustomersData, setValue]);
-
-    // const canProceedWithSale = (): boolean => {
-    //     if (items.length === 0) return false;
-    //     const validation = validateCartWithToast();
-    //     return validation.isValid;
-    // };
+    }, [saleCustomersData, setValue, getValues]);
 
     // Shortcuts
     useHotkeys('escape', handleGoBack, {
@@ -402,14 +380,14 @@ const CreateSaleScreen = () => {
                         <h1 className="text-lg font-bold text-gray-900">Nueva Venta</h1>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <div className="grid  gap-3">
                         {/* Formulario de información de venta - Columna izquierda */}
-                        <div className="lg:col-span-2 space-y-3">
+                        <div className="space-y-3">
                             {/* 1. Datos de la Venta */}
                             <Card className="border-0 shadow-sm h-full">
 
                                 <CardContent className="space-y-3 py-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                         <div>
                                             <Label htmlFor="fechaVenta" className="text-sm font-medium text-gray-700 mb-2">Fecha de Venta *</Label>
                                             <Input
@@ -431,10 +409,6 @@ const CreateSaleScreen = () => {
                                                         value={field.value}
                                                         onChange={(value) => {
                                                             field.onChange(Number(value));
-                                                            const selected = saleResponsiblesData?.find((c) => c.id.toString() === value.toString());
-                                                            if (selected) {
-                                                                setResponsible(selected);
-                                                            }
                                                         }}
                                                         options={saleResponsiblesData || []}
                                                         optionTag={"nombre"}
@@ -576,36 +550,20 @@ const CreateSaleScreen = () => {
                                                 placeholder="Tipo de motor"
                                             />
                                         </div>
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="comentarios" className="text-sm font-medium text-gray-700 mb-2">Comentarios</Label>
-                                        <Textarea
-                                            id="comentarios"
-                                            {...register("comentario")}
-                                            placeholder="Comentarios adicionales sobre la venta"
-                                            className="min-h-[100px]"
-                                        />
+                                        <div>
+                                            <Label htmlFor="comentarios" className="text-sm font-medium text-gray-700 mb-2">Comentarios</Label>
+                                            <Input
+                                                id="comentarios"
+                                                {...register("comentario")}
+                                                placeholder="Comentarios adicionales sobre la venta"
+                                            />
+                                        </div>
                                     </div>
                                     <span className="text-xs text-gray-500">* Campos requeridos</span>
                                 </CardContent>
                             </Card>
                         </div>
 
-                        {/* Resumen de venta - Columna derecha */}
-                        <SalesSummary
-                            clearCart={clearCart}
-                            discountAmount={discountAmount || 0}
-                            discountPercent={discountPercent || 0}
-                            isPending={isPending}
-                            reset={reset}
-                            setDiscountAmount={setDiscountAmount}
-                            setDiscountPercent={setDiscountPercent}
-                            subtotal={subtotal}
-                            total={total}
-                            watch={watch}
-                            responsibleName={responsible?.nombre || ''}
-                            hasProducts={items.length > 0}
-                        />
                     </div>
                     {/* 2. Productos */}
                     <Card className="border-0 shadow-sm">
@@ -634,6 +592,19 @@ const CreateSaleScreen = () => {
                             </div>
                         </CardContent>
                     </Card>
+                    {/* Resumen de venta - Columna derecha */}
+                    <SalesSummary
+                        clearCart={clearCart}
+                        discountAmount={discountAmount || 0}
+                        discountPercent={discountPercent || 0}
+                        isPending={isPending}
+                        reset={reset}
+                        setDiscountAmount={setDiscountAmount}
+                        setDiscountPercent={setDiscountPercent}
+                        subtotal={subtotal}
+                        total={total}
+                        hasProducts={items.length > 0}
+                    />
                 </form>
             </FormProvider>
         </div>

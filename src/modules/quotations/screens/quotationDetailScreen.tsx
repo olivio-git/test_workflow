@@ -22,26 +22,13 @@ const QuotationDetailScreen = () => {
     const navigate = useNavigate()
     const { id: quotationId } = useParams()
 
-    if (!(Number(quotationId))) {
-        return (
-            <ErrorDataComponent
-                errorMessage="No se pudo cargar la cotizacion."
-                showButtonIcon={false}
-                buttonText="Ir a lista de cotizaciones"
-                onRetry={() => {
-                    navigate("/dashboard/quotations")
-                }}
-            />
-        )
-    }
-
     const {
         data: quotationData,
         isLoading: isLoadingQuotation,
         isError: isErrorQuotation
     } = useQuotationGetById(Number(quotationId))
 
-    const handleDeleteSuccess = (_data: any, quotationId: number) => {
+    const handleDeleteSuccess = (_data: unknown, quotationId: number) => {
         showSuccessToast({
             title: "Cotizacion eliminada",
             description: `La cotizacion #${quotationId} se eliminó exitosamente`,
@@ -50,7 +37,7 @@ const QuotationDetailScreen = () => {
         handleGoBack()
     };
 
-    const handleDeleteError = (_error: any, quotationId: number) => {
+    const handleDeleteError = (_error: unknown, quotationId: number) => {
         showErrorToast({
             title: "Error al eliminar cotizacion",
             description: `No se pudo eliminar la cotizacion #${quotationId}. Por favor, intenta nuevamente`,
@@ -110,7 +97,7 @@ const QuotationDetailScreen = () => {
         return <SaleDetailSkeleton />;
     }
 
-    if (isErrorQuotation) {
+    if (isErrorQuotation || !(Number(quotationId))) {
         return <ErrorDataComponent
             errorMessage="No se pudo cargar la cotización."
             showButtonIcon={false}

@@ -1,12 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Sale } from "../types/sale";
+import type { SaleUpdate } from "../types/saleUpdate.type";
 import { salesService } from "../services/salesService";
 
-export const useCreateSale = () => {
+type UpdateSaleParams = {
+    saleId: number;
+    data: SaleUpdate;
+};
+
+export const useUpdateSale = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (data: Sale) => salesService.create(data),
+        mutationFn: ({ saleId, data }: UpdateSaleParams) => salesService.update(saleId, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["sales"] });
             queryClient.invalidateQueries({ queryKey: ["products"] });

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 
 interface Option {
     id: string | number
-    [key: string]: any
+    [key: string]: string | number | null | undefined
 }
 
 interface ComboboxSelectProps {
@@ -41,15 +41,12 @@ export function ComboboxSelect({
     const [query, setQuery] = useState('')
     const comboboxInputRef = useRef<HTMLInputElement>(null)
 
-    // Validación temprana
-    if (!optionTag) {
-        console.warn('ComboboxSelect: optionTag is required')
-        return null
-    }
+    const baseOptions = useMemo(() => {
+        return enableAllOption
+            ? [{ id: "all", [optionTag]: "TODAS" }, ...options]
+            : options
+    }, [enableAllOption, options, optionTag])
 
-    const baseOptions = enableAllOption
-        ? [{ id: "all", [optionTag]: "TODAS" }, ...options]
-        : options
 
     const filteredOptions =
         query === ''
@@ -72,6 +69,12 @@ export function ComboboxSelect({
     const selectedOption = useMemo(() => {
         return baseOptions.find((opt) => opt.id.toString() === internalValue.toString()) ?? null
     }, [internalValue, baseOptions])
+
+    // Validación temprana
+    if (!optionTag) {
+        console.warn('ComboboxSelect: optionTag is required')
+        return null
+    }
 
     return (
         <Combobox
@@ -96,7 +99,7 @@ export function ComboboxSelect({
                                     error ? 'border-red-500 focus:ring-red-500' : 'border-input',
                                     'pr-10'
                                 )}
-                                displayValue={() => selectedOption?.[optionTag] || (enableAllOption ? 'TODAS' : '')}
+                                displayValue={() => String(selectedOption?.[optionTag] || (enableAllOption ? 'TODAS' : ''))}
                                 onChange={handleInputChange}
                                 autoComplete="off"
                             />

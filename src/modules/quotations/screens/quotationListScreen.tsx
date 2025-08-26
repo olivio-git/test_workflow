@@ -57,14 +57,14 @@ const QuotationListScreen = () => {
         } else {
             setQuotations(quotationData.data);
         }
-    }, [quotationData?.data, isInfiniteScroll, filters.pagina]);
+    }, [quotationData?.data, isInfiniteScroll, filters.pagina, error, isFetching]);
 
     const handleResetFilters = () => {
         resetFilters()
         setSearchKeywords("")
     }
 
-    const handleDeleteSuccess = (_data: any, quotationId: number) => {
+    const handleDeleteSuccess = (_data: unknown, quotationId: number) => {
         showSuccessToast({
             title: "Cotizacion eliminada",
             description: `La cotizacion #${quotationId} se eliminó exitosamente`,
@@ -72,7 +72,7 @@ const QuotationListScreen = () => {
         })
     };
 
-    const handleDeleteError = (_error: any, quotationId: number) => {
+    const handleDeleteError = (_error: unknown, quotationId: number) => {
         showErrorToast({
             title: "Error al eliminar cotizacion",
             description: `No se pudo eliminar la cotizacion #${quotationId}. Por favor, intenta nuevamente`,
@@ -95,7 +95,7 @@ const QuotationListScreen = () => {
 
     useEffect(() => {
         updateFilter("keywords", debouncedSearchKeywords);
-    }, [debouncedSearchKeywords]);
+    }, [debouncedSearchKeywords, updateFilter]);
 
     const handleRefetchQuotations = () => {
         refetchQuotations();

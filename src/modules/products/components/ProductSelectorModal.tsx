@@ -20,6 +20,7 @@ import { formatCurrency } from "@/utils/formaters";
 import { useDebounce } from "use-debounce";
 import NoDataComponent from "@/components/common/noDataComponent";
 import { Checkbox } from "@/components/atoms/checkbox";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 interface ProductSelectorModalProps {
     isSearchOpen: boolean
@@ -129,7 +130,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
     const hasMoreProducts = filters.pagina < totalPages;
 
     return (
-        <section className="flex items-center justify-between">
+        <section className="flex flex-wrap items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">
                 Detalle de Productos
             </h3>
@@ -143,10 +144,13 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                         Seleccionar Productos
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl border-gray-200">
+                <DialogContent className="max-w-4xl border-gray-200" aria-describedby="Seleccionar productos">
                     <AlertDialogHeader>
                         <DialogTitle>Buscar Productos</DialogTitle>
                     </AlertDialogHeader>
+                    <DialogDescription className="text-gray-500 text-sm -mt-2">
+                        Seleccionar productos para agregar
+                    </DialogDescription>
                     <div className="space-y-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
