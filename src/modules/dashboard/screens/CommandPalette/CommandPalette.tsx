@@ -1,4 +1,5 @@
 import protectedRoutes from "@/navigation/Protected.Route";
+import type RouteType from "@/navigation/RouteType";
 import {
   Command,
   CommandEmpty,
@@ -10,28 +11,34 @@ import {
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
-const processRoutes = (routes: any[]) => {
-  const flatRoutes: any[] = [];
+interface RouteTypeWithParent extends RouteType {
+  parentName?: string | null;
+}
+
+const processRoutes = (routes: RouteType[]) => {
+  const flatRoutes: RouteTypeWithParent[] = [];
 
   routes.forEach((route) => {
     // Verificar si la ruta debe mostrarse en el command palette
     if (route.path && !route.isHeader && route.showInCommandPalette !== false) {
       flatRoutes.push({
-        name: route.name,
         path: route.path,
+        name: route.name,
         icon: route.icon,
+        type: route.type,
         parentName: null,
       });
     }
 
     if (route.subRoutes) {
-      route.subRoutes.forEach((subRoute: any) => {
+      route.subRoutes.forEach((subRoute: RouteType) => {
         // Verificar si la subruta debe mostrarse en el command palette
         if (subRoute.path && subRoute.showInCommandPalette !== false) {
           flatRoutes.push({
-            name: subRoute.name,
             path: subRoute.path,
+            name: subRoute.name,
             icon: subRoute.icon,
+            type: subRoute.type,
             parentName: route.name,
           });
         }
@@ -86,7 +93,7 @@ export default function CommandPalette({
               <CommandItem
                 key={route.path}
                 value={`${route.name} ${route.path} ${route.parentName || ''}`}
-                onSelect={() => handleSelect(route.path)}
+                onSelect={() => route.path && handleSelect(route.path)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-100 aria-selected:bg-gray-100"
               >
                 {route.icon && (

@@ -118,15 +118,15 @@ const QuotationsFiltersComponent: React.FC<QuotationsFiltersProps> = ({
     // Sync debounced values al filtro global
     useEffect(() => {
         updateFilter("codigo_oem_producto", debouncedCodigoOEM)
-    }, [debouncedCodigoOEM])
+    }, [debouncedCodigoOEM, updateFilter])
 
     useEffect(() => {
         updateFilter("codigo_interno", debouncedCodigoInterno)
-    }, [debouncedCodigoInterno])
+    }, [debouncedCodigoInterno, updateFilter])
 
     useEffect(() => {
         updateFilter("cliente", debouncedClientId)
-    }, [debouncedClientId])
+    }, [debouncedClientId, updateFilter])
 
     useEffect(() => {
         const { codigo_oem_producto, codigo_interno, cliente, fecha_inicio, fecha_fin } = filters;
@@ -140,13 +140,7 @@ const QuotationsFiltersComponent: React.FC<QuotationsFiltersProps> = ({
             setFechaInicio(undefined);
             setFechaFin(undefined);
         }
-    }, [
-        filters.codigo_oem_producto,
-        filters.codigo_interno,
-        filters.cliente,
-        filters.fecha_inicio,
-        filters.fecha_fin
-    ]);
+    }, [filters]);
 
     return (
         <section className="space-y-2">

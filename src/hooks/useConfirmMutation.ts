@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 type UseConfirmMutationReturn<TVariables> = {
     isOpen: boolean;
@@ -8,41 +8,41 @@ type UseConfirmMutationReturn<TVariables> = {
     variables: TVariables | undefined;
 };
 
-const useConfirmMutation = <TVariables = void>(
+const useConfirmMutation = <TData = unknown, TVariables = unknown>(
     mutateFn: (vars: TVariables, options?: {
-        onSuccess?: (data: any, variables: TVariables) => void;
-        onError?: (error: any, variables: TVariables) => void;
+        onSuccess?: (data: TData, variables: TVariables, context: unknown) => void;
+        onError?: (error: unknown, variables: TVariables, context: unknown) => void;
     }) => void,
-    onSuccess?: (data: any, variables: TVariables) => void,
-    onError?: (error: any, variables: TVariables) => void
+    onSuccess?: (data: TData, variables: TVariables, context: unknown) => void,
+    onError?: (error: unknown, variables: TVariables, context: unknown) => void
 ): UseConfirmMutationReturn<TVariables> => {
     const [isOpen, setIsOpen] = useState(false);
     const [variables, setVariables] = useState<TVariables | undefined>();
 
-    const open = (vars?: TVariables) => {
+    const open = useCallback((vars?: TVariables) => {
         setVariables(vars);
         setIsOpen(true);
-    };
+    }, []);
 
-    const close = () => {
+    const close = useCallback(() => {
         setIsOpen(false);
         setVariables(undefined);
-    };
+    }, []);
 
-    const confirm = () => {
+    const confirm = useCallback(() => {
         if (variables !== undefined) {
             mutateFn(variables, {
-                onSuccess: (data, vars) => {
-                    onSuccess?.(data, vars);
+                onSuccess: (data, vars, context) => {
+                    onSuccess?.(data, vars, context);
                     close();
                 },
-                onError: (error, vars) => {
-                    onError?.(error, vars);
+                onError: (error, vars, context) => {
+                    onError?.(error, vars, context);
                     close();
                 }
             });
         }
-    };
+    }, [variables, mutateFn, onSuccess, onError, close]);
 
     return {
         isOpen,

@@ -46,6 +46,7 @@ import { useDeleteProduct } from "../hooks/useDeleteProduct"
 import useConfirmMutation from "@/hooks/useConfirmMutation"
 import ConfirmationModal from "@/components/common/confirmationModal"
 import ShortcutKey from "@/components/common/ShortcutKey"
+import { useErrorHandler } from "@/hooks/useErrorHandler"
 
 const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
 
@@ -81,13 +82,15 @@ const ProductListScreen = () => {
     const [searchDescription, setSearchDescription] = useState("");
     const [debouncedSearchDescription] = useDebounce(searchDescription, 500);
 
+    const { handleError } = useErrorHandler()
+
     useEffect(() => {
         updateFilter("descripcion", debouncedSearchDescription);
-    }, [debouncedSearchDescription]);
+    }, [debouncedSearchDescription, updateFilter]);
 
     useEffect(() => {
         updateFilter("sucursal", Number(selectedBranchId))
-    }, [selectedBranchId])
+    }, [selectedBranchId, updateFilter])
 
     useEffect(() => {
         if (!user?.name) return;
@@ -128,14 +131,14 @@ const ProductListScreen = () => {
         } else {
             setProducts(productData.data);
         }
-    }, [productData?.data, isInfiniteScroll, filters.pagina]);
+    }, [productData?.data, isInfiniteScroll, filters.pagina, error, isFetching]);
 
     const handleResetFilters = () => {
         resetFilters()
         setSearchDescription("")
     }
 
-    const handleDeleteSuccess = (_data: any, productId: number) => {
+    const handleDeleteSuccess = (_data: unknown, productId: number) => {
         showSuccessToast({
             title: "Producto eliminado",
             description: `El producto #${productId} se eliminó exitosamente`,
@@ -143,12 +146,13 @@ const ProductListScreen = () => {
         })
     };
 
-    const handleDeleteError = (_error: any, productId: number) => {
-        showErrorToast({
-            title: "Error al eliminar el producto",
-            description: `No se pudo eliminar el producto #${productId}. Por favor, intenta nuevamente`,
-            duration: 5000
-        })
+    const handleDeleteError = (error: unknown, _productId: number) => {
+        handleError(error, 'Error al eliminar el producto');
+        // showErrorToast({
+        //     title: "Error al eliminar el producto",
+        //     description: `No se pudo eliminar el producto #${productId}. Por favor, intenta nuevamente`,
+        //     duration: 5000
+        // })
     };
 
     const {
@@ -171,13 +175,19 @@ const ProductListScreen = () => {
         if (stock <= (stockMin + 10)) return "warning"
         return "success"
     }
-    const handleProductDetail = (productId: number) => {
-        navigate(`/dashboard/productos/${productId}`);
-    }
+    const handleProductDetail = useCallback(
+        (productId: number) => {
+            navigate(`/dashboard/productos/${productId}`);
+        },
+        [navigate]
+    );
 
-    const handleAddItemCart = (product: ProductGet) => {
-        addItemToCart(product)
-    }
+    const handleAddItemCart = useCallback(
+        (product: ProductGet) => {
+            addItemToCart(product);
+        },
+        [addItemToCart]
+    );
 
     const columns = useMemo<ColumnDef<ProductGet>[]>(() => [
         {
@@ -440,7 +450,7 @@ const ProductListScreen = () => {
                 </div>
             ),
         },
-    ], [])
+    ], [handleAddItemCart, handleProductDetail, handleOpenDeleteAlert]);
 
     const table = useReactTable<ProductGet>({
         data: products,

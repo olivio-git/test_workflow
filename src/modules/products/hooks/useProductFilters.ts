@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { ProductFilters } from "../types/productFilters";
 
 export const useProductFilters = (defaultSucursal: number) => {
@@ -9,25 +9,25 @@ export const useProductFilters = (defaultSucursal: number) => {
         descripcion: "",
     });
 
-    const updateFilter = (key: keyof ProductFilters, value: any) => {
+    const updateFilter = useCallback((key: keyof ProductFilters, value: unknown) => {
         setFilters((prev) => ({
             ...prev,
             [key]: value,
             pagina: 1, // Reset to page 1 when any filter is updated
         }));
-    };
+    }, []);
 
-    const setPage = (page: number) => {
+    const setPage = useCallback((page: number) => {
         setFilters((prev) => ({ ...prev, pagina: page }));
-    };
+    }, []);
 
-    const resetFilters = () => {
+    const resetFilters = useCallback(() => {
         setFilters({
             pagina: 1,
-            pagina_registros: 20,
+            pagina_registros: 25,
             sucursal: defaultSucursal,
         });
-    };
+    }, [defaultSucursal]);
 
     return {
         filters,

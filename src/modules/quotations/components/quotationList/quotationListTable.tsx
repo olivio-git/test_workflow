@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type RowSelectionState } from "@tanstack/react-table";
 import { Checkbox } from "@/components/atoms/checkbox";
 import { format } from "date-fns";
@@ -80,13 +80,13 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
         }
     }, [columnVisibility, user?.name]);
 
-    const handleSeeDetails = (quotationId: number) => {
+    const handleSeeDetails = useCallback((quotationId: number) => {
         navigate(`/dashboard/quotations/${quotationId}`)
-    }
+    }, [navigate])
 
-    const handleUpdateQuotation = (quotationId: number) => {
+    const handleUpdateQuotation = useCallback((quotationId: number) => {
         navigate(`/dashboard/quotations/${quotationId}/update`)
-    }
+    }, [navigate])
 
     const columns = useMemo<ColumnDef<QuotationGetAll>[]>(() => [
         {
@@ -338,7 +338,7 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
                 );
             },
         },
-    ], []);
+    ], [handleSeeDetails, handleUpdateQuotation, handleDeleteSale]);
 
     const table = useReactTable<QuotationGetAll>({
         data: quotations,

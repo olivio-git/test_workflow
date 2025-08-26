@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SaleGetAll, SalesGetAllResponse } from "../types/salesGetResponse";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type RowSelectionState } from "@tanstack/react-table";
 import { Checkbox } from "@/components/atoms/checkbox";
@@ -80,13 +80,13 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         }
     }, [columnVisibility, user?.name]);
 
-    const handleSeeDetails = (saleId: number) => {
+    const handleSeeDetails = useCallback((saleId: number) => {
         navigate(`/dashboard/sales/${saleId}`)
-    }
+    }, [navigate]);
 
-    const handleUpdateSale = (saleId: number) => {
+    const handleUpdateSale = useCallback((saleId: number) => {
         navigate(`/dashboard/sales/${saleId}/update`)
-    }
+    }, [navigate]);
 
     const columns = useMemo<ColumnDef<SaleGetAll>[]>(() => [
         {
@@ -338,7 +338,7 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                 );
             },
         },
-    ], []);
+    ], [handleDeleteSale, handleSeeDetails, handleUpdateSale, navigate]);
 
     const table = useReactTable<SaleGetAll>({
         data: sales,

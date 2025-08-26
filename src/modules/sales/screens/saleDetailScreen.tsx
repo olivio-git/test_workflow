@@ -22,26 +22,13 @@ const SaleDetailScreen = () => {
     const navigate = useNavigate()
     const { id: saleId } = useParams()
 
-    if (!(Number(saleId))) {
-        return (
-            <ErrorDataComponent
-                errorMessage="No se pudo cargar la venta."
-                showButtonIcon={false}
-                buttonText="Ir a lista de ventas"
-                onRetry={() => {
-                    navigate("/dashboard/sales")
-                }}
-            />
-        )
-    }
-
     const {
         data: saleData,
         isLoading: isLoadingSale,
         isError: isErrorSale
     } = useSaleGetById(Number(saleId))
 
-    const handleDeleteSuccess = (_data: any, saleId: number) => {
+    const handleDeleteSuccess = (_data: unknown, saleId: number) => {
         showSuccessToast({
             title: "Venta eliminada",
             description: `La venta #${saleId} se eliminó exitosamente`,
@@ -50,7 +37,7 @@ const SaleDetailScreen = () => {
         handleGoBack()
     };
 
-    const handleDeleteError = (_error: any, saleId: number) => {
+    const handleDeleteError = (_error: unknown, saleId: number) => {
         showErrorToast({
             title: "Error al eliminar venta",
             description: `No se pudo eliminar la venta #${saleId}. Por favor, intenta nuevamente`,
@@ -110,7 +97,7 @@ const SaleDetailScreen = () => {
         return <SaleDetailSkeleton />;
     }
 
-    if (isErrorSale) {
+    if (isErrorSale || !(Number(saleId))) {
         return <ErrorDataComponent
             errorMessage="No se pudo cargar la venta."
             showButtonIcon={false}

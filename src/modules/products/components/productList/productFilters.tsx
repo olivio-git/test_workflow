@@ -34,19 +34,19 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
     // Sync debounced values al filtro global
     useEffect(() => {
         updateFilter("codigo_oem", debouncedCodigoOEM)
-    }, [debouncedCodigoOEM])
+    }, [debouncedCodigoOEM, updateFilter])
 
     useEffect(() => {
         updateFilter("codigo_upc", debouncedCodigoUPC)
-    }, [debouncedCodigoUPC])
+    }, [debouncedCodigoUPC, updateFilter])
 
     useEffect(() => {
         updateFilter("nro_motor", debouncedNroMotor)
-    }, [debouncedNroMotor])
+    }, [debouncedNroMotor, updateFilter])
 
     useEffect(() => {
         updateFilter("medida", debouncedModelo)
-    }, [debouncedModelo])
+    }, [debouncedModelo, updateFilter])
 
     useEffect(() => {
         const { codigo_oem, codigo_upc, nro_motor, medida } = filters;
@@ -59,7 +59,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
             setNroMotor("");
             setMedida("");
         }
-    }, [filters.codigo_oem, filters.codigo_upc, filters.nro_motor, filters.medida]);
+    }, [filters]);
 
     return (
         <>
@@ -118,7 +118,10 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                                 updateFilter("subcategoria", undefined);
                                 updateFilter("categoria", parsedValue);
                             }}
-                            options={categoriesData || []}
+                            options={(categoriesData || []).map((cat) => ({
+                                id: String(cat.id),
+                                categoria: cat.categoria,
+                            }))}
                             optionTag={"categoria"}
                             enableAllOption={true}
                         />
@@ -133,9 +136,12 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                                 const parsedValue = value === "all" ? undefined : Number(value);
                                 updateFilter("subcategoria", parsedValue);
                             }}
-                            options={categoriesData
+                            options={(categoriesData
                                 ?.find((cat) => cat.id === filters.categoria)
-                                ?.subcategorias || []}
+                                ?.subcategorias || []).map((subcat) => ({
+                                    id: String(subcat.id),
+                                    subcategoria: subcat.subcategoria,
+                                }))}
                             optionTag={"subcategoria"}
                             enableAllOption={true}
                         />
@@ -148,7 +154,10 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                             onChange={(value) => {
                                 updateFilter("marca", value === "all" ? "" : value);
                             }}
-                            options={brandsData || []}
+                            options={(brandsData || []).map((brand) => ({
+                                id: brand.id,
+                                marca: brand.marca,
+                            }))}
                             optionTag={"marca"}
                             enableAllOption={true}
                         />
