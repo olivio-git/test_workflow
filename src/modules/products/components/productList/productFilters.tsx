@@ -24,14 +24,20 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
     const [codigoUPC, setCodigoUPC] = useState("")
     const [nroMotor, setNroMotor] = useState("")
     const [medida, setMedida] = useState("")
+    const [searchDescription, setSearchDescription] = useState("");
 
     // Debounce
+    const [debouncedSearchDescription] = useDebounce(searchDescription, 500);
     const [debouncedCodigoOEM] = useDebounce(codigoOEM, 500)
     const [debouncedCodigoUPC] = useDebounce(codigoUPC, 500)
     const [debouncedNroMotor] = useDebounce(nroMotor, 500)
     const [debouncedModelo] = useDebounce(medida, 500)
 
     // Sync debounced values al filtro global
+    useEffect(() => {
+        updateFilter("descripcion", debouncedSearchDescription);
+    }, [debouncedSearchDescription, updateFilter]);
+
     useEffect(() => {
         updateFilter("codigo_oem", debouncedCodigoOEM)
     }, [debouncedCodigoOEM, updateFilter])
@@ -49,15 +55,16 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
     }, [debouncedModelo, updateFilter])
 
     useEffect(() => {
-        const { codigo_oem, codigo_upc, nro_motor, medida } = filters;
+        const { codigo_oem, codigo_upc, nro_motor, medida, descripcion } = filters;
 
-        const allEmpty = !codigo_oem && !codigo_upc && !nro_motor && !medida;
+        const allEmpty = !codigo_oem && !codigo_upc && !nro_motor && !medida && !descripcion;
 
         if (allEmpty) {
             setCodigoOEM("");
             setCodigoUPC("");
             setNroMotor("");
             setMedida("");
+            setSearchDescription("");
         }
     }, [filters]);
 
@@ -65,50 +72,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
         <>
             {/* Búsquedas individuales */}
             <div className="p-2">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <div className="space-y-2">
-                        <Label className="text-gray-700 text-sm font-medium">Buscar Código OEM</Label>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input
-                                placeholder="11122-10040-D..."
-                                value={codigoOEM}
-                                onChange={(e) => setCodigoOEM(e.target.value)}
-                                className="pl-10 font-mono text-xs"
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-gray-700 text-sm font-medium">Buscar Código UPC</Label>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input
-                                placeholder="11122-10040..."
-                                value={codigoUPC}
-                                onChange={(e) => setCodigoUPC(e.target.value)}
-                                className="pl-10 font-mono text-xs"
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-gray-700 text-sm font-medium">Buscar Número de Motor</Label>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input
-                                placeholder="1ZZ-FE..."
-                                value={nroMotor}
-                                onChange={(e) => setNroMotor(e.target.value)}
-                                className="pl-10 font-mono text-xs"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="px-2 pb-2 border-b border-gray-200">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-
                     <div>
                         <Label>Categorias</Label>
                         <ComboboxSelect
@@ -126,6 +90,50 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                             enableAllOption={true}
                         />
                     </div>
+
+                    <div className="space-y-2">
+                        <Label>Buscar por Descripción</Label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                            <Input
+                                placeholder="Buscar por descripcion..."
+                                value={searchDescription}
+                                onChange={(e) => setSearchDescription(e.target.value)}
+                                className="pl-10 w-full"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Buscar Código OEM</Label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Input
+                                placeholder="11122-10040-D..."
+                                value={codigoOEM}
+                                onChange={(e) => setCodigoOEM(e.target.value)}
+                                className="pl-10 font-mono text-xs"
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Buscar Código UPC</Label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Input
+                                placeholder="11122-10040..."
+                                value={codigoUPC}
+                                onChange={(e) => setCodigoUPC(e.target.value)}
+                                className="pl-10 font-mono text-xs"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Filters */}
+            <div className="px-2 pb-2 border-b border-gray-200">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
 
                     <div>
                         <Label>Subcategorias</Label>
@@ -164,13 +172,26 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-gray-700 text-sm font-medium">Buscar Medida</Label>
+                        <Label>Buscar Medida</Label>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <Input
                                 placeholder="11X6X40.6..."
                                 value={medida}
                                 onChange={(e) => setMedida(e.target.value)}
+                                className="pl-10 font-mono text-xs"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Buscar Número de Motor</Label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Input
+                                placeholder="1ZZ-FE..."
+                                value={nroMotor}
+                                onChange={(e) => setNroMotor(e.target.value)}
                                 className="pl-10 font-mono text-xs"
                             />
                         </div>

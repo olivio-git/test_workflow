@@ -361,7 +361,6 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         selectedIndex,
         setSelectedIndex,
         isFocused,
-        handleContainerClick: handleTableClick,
         // setIsFocused: setIsFocusedTable,
         hotkeys
     } = useKeyboardNavigation<SaleGetAll, HTMLTableElement>({
@@ -545,7 +544,6 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                     <div
                         className="overflow-auto h-full">
                         <div
-                            onClick={handleTableClick}
                             className="overflow-x-hidden">
                             <CustomizableTable
                                 table={table}

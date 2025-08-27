@@ -1,5 +1,4 @@
 import type { ProductGet } from "@/modules/products/types/ProductGet";
-import type { CartItem } from "@/modules/shoppingCart/types/cart.types";
 import { validatePrice, validateQuantity } from "../utils/validators";
 
 export class CartValidation {
@@ -8,14 +7,6 @@ export class CartValidation {
       product.id &&
       product.descripcion &&
       validatePrice(product.precio_venta)
-    );
-  }
-
-  static validateCartItem(item: CartItem): boolean {
-    return !!(
-      this.validateProduct(item.product) &&
-      validateQuantity(item.quantity) &&
-      validatePrice(item.customSubtotal)
     );
   }
 

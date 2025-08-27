@@ -1,3 +1,4 @@
+import { Kbd } from "@/components/atoms/kbd";
 import protectedRoutes from "@/navigation/Protected.Route";
 import type RouteType from "@/navigation/RouteType";
 import {
@@ -8,6 +9,7 @@ import {
   CommandItem,
   CommandList,
 } from "cmdk";
+import { Search } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
@@ -76,25 +78,29 @@ export default function CommandPalette({
     >
       <Command
         onMouseDown={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-white border border-gray-200 shadow-2xl rounded-xl animate-in fade-in-0 zoom-in-95 overflow-hidden"
+        className="w-full max-w-2xl bg-white p-2 border border-gray-200 shadow-2xl rounded-xl animate-in fade-in-0 zoom-in-95 overflow-hidden"
       >
-        <CommandInput
-          autoFocus
-          placeholder="Busca una ruta o escribe un comando..."
-          className="w-full h-12 px-4 text-sm text-gray-800 bg-transparent placeholder:text-gray-400 focus:outline-none border-b border-gray-200"
-        />
-        <CommandList className="max-h-[300px] overflow-y-auto">
-          <CommandEmpty className="py-6 text-center text-sm text-gray-500">
+        <div className="flex items-center px-2 border-b border-gray-200">
+          <Search className="size-4 text-gray-400" />
+          <CommandInput
+            autoFocus
+            placeholder="Busca una ruta o escribe un comando..."
+            className="w-full h-12 px-2 text-sm text-gray-800 bg-transparent placeholder:text-gray-400 focus:outline-none"
+          />
+          <Kbd>esc</Kbd>
+        </div>
+        <CommandList className="max-h-[350px] overflow-y-auto">
+          <CommandEmpty className="py-6 min-h-40 flex items-center justify-center font-medium text-center text-base text-gray-500">
             No se encontraron resultados.
           </CommandEmpty>
 
-          <CommandGroup className="px-2" heading="Navegación">
+          <CommandGroup className="px-2 py-1 font-medium" heading="Navegación">
             {routes.map((route) => (
               <CommandItem
                 key={route.path}
                 value={`${route.name} ${route.path} ${route.parentName || ''}`}
                 onSelect={() => route.path && handleSelect(route.path)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-100 aria-selected:bg-gray-100"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-accent aria-selected:bg-accent rounded"
               >
                 {route.icon && (
                   <route.icon size={16} className="text-gray-500" />
@@ -102,7 +108,7 @@ export default function CommandPalette({
                 <div className="flex flex-col">
                   <span>{route.name}</span>
                   {route.parentName && (
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-400 font-normal">
                       {route.parentName}
                     </span>
                   )}

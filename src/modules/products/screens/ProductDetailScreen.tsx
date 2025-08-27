@@ -183,7 +183,7 @@ const ProductDetailScreen = () => {
                 </div>
 
                 {/* Navigation Tabs */}
-                <Tabs defaultValue="overview" className="space-y-4">
+                <Tabs defaultValue="sales" className="space-y-4">
                     <div className="flex flex-wrap-reverse gap-2 justify-between">
                         <TabsList className="bg-white border border-gray-200 gap-2 h-10">
                             <TabsTrigger

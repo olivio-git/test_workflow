@@ -52,7 +52,6 @@ export const useKeyboardNavigation = <T, E extends HTMLElement = HTMLElement>({
     // Auto-scroll al elemento seleccionado
     useEffect(() => {
         if (!isFocused) return;
-
         if (containerRef.current) {
             const selectedRow = containerRef.current.querySelector(
                 `[data-row-index="${selectedIndex}"]`
@@ -276,9 +275,6 @@ export const useKeyboardNavigation = <T, E extends HTMLElement = HTMLElement>({
     }, [getFocusableElementsInSelectedRow, containerRef]);
 
     // Funciones de utilidad
-    const handleContainerClick = () => {
-        setIsFocused(true);
-    };
 
     const navigateToItem = (index: number) => {
         if (index >= 0 && index < items.length) {
@@ -311,7 +307,6 @@ export const useKeyboardNavigation = <T, E extends HTMLElement = HTMLElement>({
         setIsFocused,
 
         // Funciones de utilidad
-        handleContainerClick,
         navigateToItem,
         navigateToItemById,
         getFocusableElementsInSelectedRow,

@@ -1,6 +1,4 @@
-// src/components/SearchButton.tsx
 import { Button } from "@/components/atoms/button";
-import ShortcutKey from "@/components/common/ShortcutKey";
 import { SearchIcon } from "lucide-react";
 
 export default function SearchButton({ onClick }: { onClick: () => void }) {
@@ -11,10 +9,10 @@ export default function SearchButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       size={'sm'}
       variant={'outline'}
-      className="bg-white border border-gray-200 rounded-lg"
+      className="rounded-full text-gray-400 flex items-center justify-center"
     >
-      <SearchIcon className="w-4 h-4 text-gray-400" />
-      <ShortcutKey combo="ctrl+k" />
+      <SearchIcon className="w-4 h-4" />
+      <span className="font-normal text-xs">Ctrl K</span>
     </Button>
   );
 }

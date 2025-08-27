@@ -361,7 +361,6 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
         selectedIndex,
         setSelectedIndex,
         isFocused,
-        handleContainerClick: handleTableClick,
         // setIsFocused: setIsFocusedTable,
         hotkeys
     } = useKeyboardNavigation<QuotationGetAll, HTMLTableElement>({
@@ -545,7 +544,6 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
                     <div
                         className="overflow-auto h-full">
                         <div
-                            onClick={handleTableClick}
                             className="overflow-x-hidden">
                             <CustomizableTable
                                 table={table}
