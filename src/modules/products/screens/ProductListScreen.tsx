@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
-    Search,
     Filter,
     Settings,
     Eye,
@@ -14,7 +13,6 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/atoms/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
-import { Input } from "@/components/atoms/input"
 import { Checkbox } from "@/components/atoms/checkbox"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/atoms/dropdown-menu"
 import type { ProductGet } from "../types/ProductGet"
@@ -35,13 +33,12 @@ import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
 import TooltipButton from "@/components/common/TooltipButton"
 import { TooltipWrapper } from "@/components/common/TooltipWrapper "
 import { Kbd } from "@/components/atoms/kbd"
-import { useDebounce } from "use-debounce"
 import { formatCell } from "@/utils/formatCell"
 import BottomShoppingCartBar from "@/modules/shoppingCart/components/BottomShoppingCartBar"
 import ResizableBox from "@/components/atoms/resizable-box"
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation"
 import { formatCurrency } from "@/utils/formaters"
-import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced"
+import { showSuccessToast } from "@/hooks/use-toast-enhanced"
 import { useDeleteProduct } from "../hooks/useDeleteProduct"
 import useConfirmMutation from "@/hooks/useConfirmMutation"
 import ConfirmationModal from "@/components/common/confirmationModal"
@@ -79,14 +76,8 @@ const ProductListScreen = () => {
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
     const [columnVisibility, setColumnVisibility] = useState({})
-    const [searchDescription, setSearchDescription] = useState("");
-    const [debouncedSearchDescription] = useDebounce(searchDescription, 500);
 
     const { handleError } = useErrorHandler()
-
-    useEffect(() => {
-        updateFilter("descripcion", debouncedSearchDescription);
-    }, [debouncedSearchDescription, updateFilter]);
 
     useEffect(() => {
         updateFilter("sucursal", Number(selectedBranchId))
@@ -135,7 +126,6 @@ const ProductListScreen = () => {
 
     const handleResetFilters = () => {
         resetFilters()
-        setSearchDescription("")
     }
 
     const handleDeleteSuccess = (_data: unknown, productId: number) => {
@@ -476,7 +466,6 @@ const ProductListScreen = () => {
         setSelectedIndex,
         isFocused,
         containerRef,
-        handleContainerClick: handleTableClick,
         setIsFocused: setIsFocusedTable,
         hotkeys
     } = useKeyboardNavigation<ProductGet, HTMLTableElement>({
@@ -551,19 +540,9 @@ const ProductListScreen = () => {
             <div className="bg-white rounded-lg shadow-sm">
                 {/* Header */}
                 <header className="p-2 border-b border-gray-200">
-                    <h1 className="text-lg font-bold text-gray-900">Productos</h1>
                     <section className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
                         <div className="flex items-center gap-2 md:gap-4 grow">
-
-                            <div className="relative w-full">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                <Input
-                                    placeholder="Buscar por descripcion..."
-                                    value={searchDescription}
-                                    onChange={(e) => setSearchDescription(e.target.value)}
-                                    className="pl-10 w-full"
-                                />
-                            </div>
+                            <h1 className="text-lg font-bold text-gray-900">Productos</h1>
                         </div>
 
                         <div className="flex items-center gap-2 flex-wrap">
@@ -615,7 +594,7 @@ const ProductListScreen = () => {
                     />
                 }
                 {/* Results Info */}
-                <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
+                <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
                     {
                         products.length > 0 ? (
                             isInfiniteScroll ? (
@@ -636,19 +615,21 @@ const ProductListScreen = () => {
                         )
                     }
 
-                    <div className="flex items-center gap-2">
-                        <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
-                        <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="shadow-lg">
-                                <SelectItem value={"10"}>10</SelectItem>
-                                <SelectItem value={"25"}>25</SelectItem>
-                                <SelectItem value={"50"}>50</SelectItem>
-                                <SelectItem value={"100"}>100</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                            <Label>Mostrar:</Label>
+                            <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="shadow-lg">
+                                    <SelectItem value={"10"}>10</SelectItem>
+                                    <SelectItem value={"25"}>25</SelectItem>
+                                    <SelectItem value={"50"}>50</SelectItem>
+                                    <SelectItem value={"100"}>100</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm">
@@ -756,7 +737,7 @@ const ProductListScreen = () => {
                             selectedRowIndex={selectedIndex}
                             onRowClick={handleRowClick}
                             onRowDoubleClick={handleRowDoubleClick}
-                            tableRef={containerRef}
+                            tableRef={tableRef}
                             focused={isFocused}
                             keyboardNavigationEnabled={true}
                         />
@@ -770,7 +751,6 @@ const ProductListScreen = () => {
                         <div
                             className="overflow-auto h-full">
                             <div
-                                onClick={handleTableClick}
                                 className="overflow-x-hidden">
                                 <CustomizableTable
                                     table={table}

@@ -3,7 +3,7 @@ import CommandPalette from "./CommandPalette/CommandPalette";
 import SearchButton from "./CommandPalette/SearchButton";
 import { useState } from "react";
 import protectedRoutes from "@/navigation/Protected.Route";
-import { Link, useLocation,matchPath } from "react-router";
+import { Link, useLocation, matchPath } from "react-router";
 import { useHotkeys } from "react-hotkeys-hook";
 import SelectBranch from "../components/SelectBranch";
 import type RouteType from "@/navigation/RouteType";
@@ -76,7 +76,7 @@ const TopNav: React.FC<TopNavProps> = ({
 
   // const currentRoute = flatRoutes.find((route) => route.path === location.pathname);
   const currentRoute = matchRoute(routes, location.pathname);
-  
+
   // const parentRoute = findParentRoute(routes, location.pathname);
   const parentRoute = findParentRoute(routes, location.pathname);
   const {
@@ -159,12 +159,12 @@ const TopNav: React.FC<TopNavProps> = ({
       </div>
 
       <div className="flex items-center gap-2 ml-auto sm:gap-3 sm:ml-0">
-        <div className="flex items-center gap-4 w-full">
-          <SelectBranch></SelectBranch>
-        </div>
         <div className="flex items-center gap-4">
           <SearchButton onClick={() => setOpen(true)} />
           <CommandPalette open={open} setOpen={setOpen} />
+        </div>
+        <div className="flex items-center gap-4 w-full">
+          <SelectBranch></SelectBranch>
         </div>
         <TooltipWrapper
           tooltip={
