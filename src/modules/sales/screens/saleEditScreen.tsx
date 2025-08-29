@@ -24,7 +24,7 @@ import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced"
 import { parse } from "date-fns"
 import { useHotkeys } from "react-hotkeys-hook"
 import ProductSelectorModal from "@/modules/products/components/ProductSelectorModal"
-import TableSaleProducts from "../components/saleEdit/saleProductsEditTable"
+import SaleDetailsEditingTable from "../components/saleEdit/saleDetailsEditingTable"
 import { SaleUpdateFormSchema, SaleUpdateSchema } from "../schemas/saleUpdate.schema"
 import useSaleProductDetailsWithForm from "../hooks/useSaleProductDetails"
 import { useUpdateSale } from "../hooks/useUpdateSale"
@@ -164,7 +164,6 @@ const SaleEditScreen = () => {
     const validateBeforeSubmit = (): boolean => {
         let isValid = true;
         const formData = getValues();
-        console.log("Form Data before submit:", formData);
 
         if (formData.detalles.length === 0) {
             setError("detalles", {
@@ -442,7 +441,7 @@ const SaleEditScreen = () => {
                             <CardContent className="">
                                 <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 xl:gap-x-2 xl:gap-y-3">
                                     <div>
-                                        <Label htmlFor="fechaVenta">Fecha de Venta *</Label>
+                                        <Label htmlFor="fechaVenta">Fecha *</Label>
                                         <Input
                                             id="fechaVenta"
                                             type="date"
@@ -453,7 +452,7 @@ const SaleEditScreen = () => {
                                         {errors.fecha && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
                                     </div>
                                     <div>
-                                        <Label htmlFor="responsable">Responsable de Venta *</Label>
+                                        <Label htmlFor="responsable">Responsable *</Label>
                                         <Controller
                                             name="id_responsable"
                                             control={control}
@@ -522,7 +521,7 @@ const SaleEditScreen = () => {
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="nroComprobanteSecundario">N° Comprobante Secundario</Label>
+                                        <Label htmlFor="nroComprobanteSecundario">N° Comprobante Sec.</Label>
                                         <Input
                                             id="nroComprobanteSecundario"
                                             {...register("nro_comprobante2")}
@@ -582,7 +581,10 @@ const SaleEditScreen = () => {
                                         {errors.tipo_venta && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
                                     </div>
                                     <div>
-                                        <Label htmlFor="fechaPlazo">Fecha Plazo (Venta Crédito)</Label>
+                                        <Label htmlFor="fechaPlazo">
+                                            Fecha Plazo
+                                            <span className="text-xs ml-1 text-gray-500">(Crédito)</span>
+                                        </Label>
                                         <Input
                                             id="plazo_pago"
                                             type="date"
@@ -643,7 +645,7 @@ const SaleEditScreen = () => {
                                         <p className="text-sm">Haz clic en "Seleccionar Productos" para agregar</p>
                                     </div>
                                 ) :
-                                    <TableSaleProducts
+                                    <SaleDetailsEditingTable
                                         products={watch("detalles")}
                                         removeItem={removeProduct}
                                         updatePrice={updatePrice}

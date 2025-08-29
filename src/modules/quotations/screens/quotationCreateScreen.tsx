@@ -131,7 +131,7 @@ const QuotationCreateScreen = () => {
             porcentaje_descuento: discountPercent ?? 0,
             descripcion: item.customDescription,
             nueva_marca: item.customBrand,
-            orden: index,
+            orden: index + 1,
         }));
 
         if (detalles.length > 0) {
@@ -431,7 +431,7 @@ const QuotationCreateScreen = () => {
                                         {errors.fecha && <p className="text-red-500 text-sm mt-1">{errors.fecha.message}</p>}
                                     </div>
                                     <div>
-                                        <Label htmlFor="responsable">Responsable *</Label>
+                                        <Label htmlFor="id_responsable">Responsable *</Label>
                                         <Controller
                                             name="id_responsable"
                                             control={control}

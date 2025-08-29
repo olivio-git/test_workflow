@@ -19,6 +19,7 @@ import QuotationListScreen from "@/modules/quotations/screens/quotationListScree
 import QuotationDetailScreen from "@/modules/quotations/screens/quotationDetailScreen";
 import SaleEditScreen from "@/modules/sales/screens/saleEditScreen";
 import QuotationCreateScreen from "@/modules/quotations/screens/quotationCreateScreen";
+import QuotationEditScreen from "@/modules/quotations/screens/quotationEditScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -314,6 +315,17 @@ const protectedRoutes: RouteType[] = [
         isAdmin: true,
         role: ["admin"],
         icon: Package,
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: false
+      },
+      {
+        path: "/dashboard/quotations/:quotationId/update",
+        name: "Editar cotización",
+        type: "protected",
+        element: QuotationEditScreen,
+        isAdmin: true,
+        role: ["admin"],
         isHeader: false,
         showSidebar: false,
         showInCommandPalette: false

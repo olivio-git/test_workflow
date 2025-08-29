@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/atoms/card"
 import { Skeleton } from "@/components/atoms/skeleton"
 
-const SaleEditSkeleton = () => {
+const QuotationEditSkeleton = () => {
     return (
         <main className="flex flex-col items-center">
             <div className="max-w-7xl w-full space-y-2">
@@ -23,8 +23,8 @@ const SaleEditSkeleton = () => {
                 {/* Formulario de datos */}
                 <Card className="border-gray-200 shadow-none pt-4">
                     <CardContent>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                            {Array.from({ length: 12 }).map((_, i) => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {Array.from({ length: 10 }).map((_, i) => (
                                 <div key={i} className="space-y-2">
                                     <Skeleton className="h-4 w-24" />
                                     <Skeleton className="h-10 w-full rounded-lg" />
@@ -83,4 +83,4 @@ const SaleEditSkeleton = () => {
     )
 }
 
-export default SaleEditSkeleton
+export default QuotationEditSkeleton
