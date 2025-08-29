@@ -18,6 +18,7 @@ import SaleDetailScreen from "@/modules/sales/screens/saleDetailScreen";
 import QuotationListScreen from "@/modules/quotations/screens/quotationListScreen";
 import QuotationDetailScreen from "@/modules/quotations/screens/quotationDetailScreen";
 import SaleEditScreen from "@/modules/sales/screens/saleEditScreen";
+import QuotationCreateScreen from "@/modules/quotations/screens/quotationCreateScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -281,18 +282,18 @@ const protectedRoutes: RouteType[] = [
     isHeader: true,
     showSidebar: true,
     subRoutes: [
-      // {
-      //   path: "/dashboard/create-sale",
-      //   name: "Registrar venta",
-      //   type: "protected",
-      //   element: CreateSaleScreen,
-      //   isAdmin: true,
-      //   role: ["admin"],
-      //   icon: ShoppingBag,
+      {
+        path: "/dashboard/create-quotation",
+        name: "Registrar cotización",
+        type: "protected",
+        element: QuotationCreateScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: ShoppingBag,
 
-      //   isHeader: false,
-      //   showSidebar: true
-      // },
+        isHeader: false,
+        showSidebar: true
+      },
       {
         path: "/dashboard/quotations",
         name: "Lista de cotizaciones",

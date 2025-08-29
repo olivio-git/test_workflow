@@ -10,6 +10,7 @@ import BranchSelection from "@/modules/auth/screens/BranchScreen";
 import { environment } from "@/utils/environment";
 import type RouteType from "./RouteType";
 import SplashScreen from "@/components/common/SplashScreen";
+import NotFound from "@/modules/shared/screens/NotFound";
 
 const Navigation = () => {
   const [authState, setAuthState] = useState<{
@@ -86,7 +87,7 @@ const Navigation = () => {
           }
         />
       ))}
-      <Route path="*" element={<div>404 - Página no encontrada</div>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

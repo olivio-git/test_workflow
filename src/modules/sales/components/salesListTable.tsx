@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/atoms/checkbox";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Badge } from "@/components/atoms/badge";
-import { Clock, Edit, Eye, HelpCircle, Loader2, MoreVertical, Settings, Trash2 } from "lucide-react";
+import { Clock, Edit, Eye, HelpCircle, Loader2, MoreVertical, Phone, Settings, Trash2 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import CustomizableTable from "@/components/common/CustomizableTable";
 import ResizableBox from "@/components/atoms/resizable-box";
@@ -234,7 +234,11 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                             cliente &&
                             <div className="text-xs text-muted-foreground space-y-0.5">
                                 {cliente.nit && <div>NIT: {cliente.nit}</div>}
-                                {cliente.contacto && <div>Tel: {cliente.contacto}</div>}
+                                {cliente.contacto &&
+                                    <div className="flex items-center gap-1">
+                                        <Phone className="size-3" />
+                                        {cliente.contacto}
+                                    </div>}
                             </div>
                         }
                     </div>
@@ -338,7 +342,7 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                 );
             },
         },
-    ], [handleDeleteSale, handleSeeDetails, handleUpdateSale, navigate]);
+    ], [handleDeleteSale, handleSeeDetails, handleUpdateSale]);
 
     const table = useReactTable<SaleGetAll>({
         data: sales,

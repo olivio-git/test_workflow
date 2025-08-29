@@ -3,7 +3,7 @@ import ErrorDataComponent from "@/components/common/errorDataComponent";
 import { useMemo } from "react";
 import TooltipButton from "@/components/common/TooltipButton";
 import { Kbd } from "@/components/atoms/kbd";
-import { Building2, Calendar, CornerUpLeft, Edit, FileText, Loader2, Trash2, User } from "lucide-react";
+import { Building2, Calendar, CornerUpLeft, Edit, FileText, Loader2, MapPin, Phone, Trash2, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Label } from "@/components/atoms/label";
 import { formatCurrency, formatDate } from "@/utils/formaters";
@@ -59,8 +59,8 @@ const QuotationDetailScreen = () => {
     } = useConfirmMutation(deleteQuotation, handleDeleteSuccess, handleDeleteError)
 
     const getContextColor = (tipo: string) => {
-        if (tipo === 'C') return 'warning'; // Credito
-        if (tipo === 'P') return 'success'; // Pagado
+        if (tipo === 'VC') return 'warning'; // Credito
+        if (tipo === 'V') return 'success'; // Pagado
         return 'secondary';
     };
 
@@ -250,10 +250,6 @@ const QuotationDetailScreen = () => {
                                     <Label>Cliente</Label>
                                     <p className="text-base text-blue-600 font-semibold">{quotationData?.cliente?.cliente}</p>
                                 </div>
-                                <div>
-                                    <Label>Dirección</Label>
-                                    <p>{formatCell(quotationData?.cliente?.direccion)}</p>
-                                </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
                                         <Label>Contacto</Label>
@@ -263,6 +259,18 @@ const QuotationDetailScreen = () => {
                                         <Label>NIT</Label>
                                         <p>{formatCell(quotationData?.cliente?.nit)}</p>
                                     </div>
+                                </div>
+                                {
+                                    quotationData?.cliente_telefono && (
+                                        <div className="flex items-center gap-2">
+                                            <Phone className="size-3.5 text-gray-400" />
+                                            <p>{formatCell(quotationData?.cliente_telefono)}</p>
+                                        </div>
+                                    )
+                                }
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="size-3.5 text-gray-400" />
+                                    <p>{formatCell(quotationData?.cliente?.direccion)}</p>
                                 </div>
                             </div>
                         </CardContent>

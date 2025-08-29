@@ -9,6 +9,8 @@ export type CartItem = {
     quantity: number;
     customPrice: number;
     customSubtotal: number;
+    customDescription: string;
+    customBrand: string | null;
 };
 
 export interface CartOperationResult {
@@ -49,6 +51,8 @@ export type CartState = {
     updateQuantity: (productId: number, quantity: number) => CartOperationResult
     updateCustomPrice: (productId: number, price: number) => void
     updateCustomSubtotal: (productId: number, subtotal: number) => void
+    updateCustomDescription: (productId: number, description: string) => void
+    updateCustomBrand: (productId: number, brand: string) => void
     clearCart: () => void
 
     setDiscountAmount: (amount: number) => void

@@ -12,9 +12,12 @@ export const useUpdateSale = () => {
 
     return useMutation({
         mutationFn: ({ saleId, data }: UpdateSaleParams) => salesService.update(saleId, data),
-        onSuccess: () => {
+        onSuccess: (updatedSale, { saleId }) => {
             queryClient.invalidateQueries({ queryKey: ["sales"] });
             queryClient.invalidateQueries({ queryKey: ["products"] });
+            queryClient.setQueryData(["sale-detail", saleId], updatedSale); // Actualiza los detalles de la venta en caché
+            // queryClient.invalidateQueries({ queryKey: ["sale-detail", saleId] });
+
         }
     });
 };

@@ -1,7 +1,7 @@
 import { SALECOMMONS_ENDPOINTS } from "./saleCommonsEndpoints"
-import type { SaleTypes } from "../types/typeSale"
-import { SaleTypesSchema } from "../schemas/salesTypes.schema"
-import type { SaleModalities } from "../types/modalitiesSale"
+import type { SaleTypesList, SaleTypesResponse } from "../types/typeSale.types"
+import { SaleTypesResponseSchema } from "../schemas/salesTypes.schema"
+import type { SaleModalitiesList } from "../types/modalitiesSale.types"
 import type { SaleResponsibleListResponse } from "../types/saleResponsible"
 import { SaleResponsibleListResponseSchema } from "../schemas/saleResponsibles.schema"
 import type { SaleCustomerListResponse } from "../types/saleCustomer.types"
@@ -15,34 +15,34 @@ export const saleCommonsService = {
     /**
      * Obtener tipos de venta
      */
-    async getSaleTypes(): Promise<SaleTypes> {
+    async getSaleTypes(): Promise<SaleTypesList> {
         Logger.info("Fetching sale types", undefined, MODULE_NAME);
 
         const response = await ApiService.get(
             SALECOMMONS_ENDPOINTS.types,
-            SaleTypesSchema
+            SaleTypesResponseSchema
         );
 
         Logger.info("Sale types fetched successfully", { count: Object.keys(response).length }, MODULE_NAME);
 
-        return response;
+        return this.convertToOptions(response);
     },
 
     /**
      * Obtener modalidades de venta
      */
-    async getSaleModalities(): Promise<SaleModalities> {
+    async getSaleModalities(): Promise<SaleModalitiesList> {
         Logger.info("Fetching sale modalities", undefined, MODULE_NAME);
 
         // ⚠️ Si tienes un schema para modalidades, cámbialo aquí
         const response = await ApiService.get(
             SALECOMMONS_ENDPOINTS.modalities,
-            SaleTypesSchema
+            SaleTypesResponseSchema
         );
 
         Logger.info("Sale modalities fetched successfully", undefined, MODULE_NAME);
 
-        return response as SaleModalities;
+        return this.convertToOptions(response);
     },
 
     /**
@@ -84,12 +84,10 @@ export const saleCommonsService = {
     /**
      * Convertir tipos de venta en opciones para selects
      */
-    convertToOptions(ventaTypes: SaleTypes) {
-        return Object.entries(ventaTypes).map(([code, description]) => ({
-            value: code,
-            label: description,
+    convertToOptions(saleTypes: SaleTypesResponse): SaleTypesList {
+        return Object.entries(saleTypes).map(([code, label]) => ({
             code,
-            description,
+            label
         }));
     },
 };

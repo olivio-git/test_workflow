@@ -23,7 +23,6 @@ import { useBranchStore } from "@/states/branchStore"
 import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced"
 import { parse } from "date-fns"
 import { useHotkeys } from "react-hotkeys-hook"
-import SaleDetailSkeleton from "../components/saleDetail/saleDetailSkeleton"
 import ProductSelectorModal from "@/modules/products/components/ProductSelectorModal"
 import TableSaleProducts from "../components/saleEdit/saleProductsEditTable"
 import { SaleUpdateFormSchema, SaleUpdateSchema } from "../schemas/saleUpdate.schema"
@@ -36,6 +35,8 @@ import { formatCurrency } from "@/utils/formaters"
 import { EditablePercentage } from "@/modules/shoppingCart/components/EditablePercentage"
 import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
+import SaleEditSkeleton from "../components/saleEdit/saleEditSkeleton"
+import ShortcutKey from "@/components/common/ShortcutKey"
 
 const SaleEditScreen = () => {
     const navigate = useNavigate()
@@ -44,17 +45,21 @@ const SaleEditScreen = () => {
     const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
     const [debouncedCustomerSearchTerm] = useDebounce<string>(customerSearchTerm, 500)
     const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+    const [hasInitialized, setHasInitialized] = useState<boolean>(false);
 
     const {
         data: saleTypesData,
+        isLoading: isLoadingSaleTypes,
     } = useSaleTypes()
 
     const {
         data: saleModalitiesData,
+        isLoading: isLoadingSaleModalities,
     } = useSaleModalities()
 
     const {
         data: saleResponsiblesData,
+        isLoading: isLoadingSaleResponsibles
     } = useSaleResponsibles()
 
     const {
@@ -113,7 +118,7 @@ const SaleEditScreen = () => {
     } = formMethods
 
     useEffect(() => {
-        if (saleData) {
+        if (saleData && saleTypesData && saleModalitiesData) {
             const detallesTransformados: SaleUpdateDetailUI[] =
                 (saleData.detalles ?? []).map((d) => ({
                     cantidad: d.cantidad,
@@ -132,32 +137,34 @@ const SaleEditScreen = () => {
                         precio_venta: d.producto.precio_venta
                     }
                 }));
-            reset({
+
+            const resetData: SaleUpdateForm = {
                 fecha: saleData.fecha?.slice(0, 10) ?? "",
                 nro_comprobante2: saleData.comprobante2 ?? "",
                 nro_comprobante: saleData.comprobante ?? "",
-                id_cliente: saleData.cliente?.id ?? undefined,
+                id_cliente: saleData.cliente?.id ?? 0,
                 comentario: saleData.comentarios ?? "",
-                plazo_pago: saleData.plazo_pago ?? "",
+                plazo_pago: saleData.plazo_pago?.slice(0, 10) ?? "",
                 vehiculo: saleData.vehiculo ?? "",
                 nro_motor: saleData.nmotor ?? "",
                 cliente_nombre: saleData.cliente?.cliente ?? "",
                 cliente_nit: saleData.cliente?.nit?.toString() ?? "",
                 usuario: 1,
                 sucursal: 1,
-                id_responsable: saleData.responsable_venta?.id ?? undefined,
-                detalles: detallesTransformados
-            });
-            queueMicrotask(() => {
-                setValue("tipo_venta", saleData.tipo_venta);
-                setValue("forma_venta", saleData.forma_venta);
-            });
+                id_responsable: saleData.responsable_venta?.id ?? 0,
+                detalles: detallesTransformados,
+                tipo_venta: saleData.tipo_venta,
+                forma_venta: saleData.forma_venta,
+            };
+            reset(resetData);
+            setHasInitialized(true);
         }
-    }, [saleData, reset, setValue]);
+    }, [saleData, saleTypesData, saleModalitiesData, reset]);
 
     const validateBeforeSubmit = (): boolean => {
         let isValid = true;
         const formData = getValues();
+        console.log("Form Data before submit:", formData);
 
         if (formData.detalles.length === 0) {
             setError("detalles", {
@@ -218,10 +225,10 @@ const SaleEditScreen = () => {
     };
 
     // VALIDACIÓN DE FECHA DE PLAZO
+    const tipoVenta = watch("tipo_venta");
+    const plazoPago = watch("plazo_pago");
     useEffect(() => {
-        const tipoVenta = watch("tipo_venta");
-        const plazoPago = watch("plazo_pago");
-
+        if (!hasInitialized) return;
         if (tipoVenta === "VC" && plazoPago) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -245,9 +252,9 @@ const SaleEditScreen = () => {
             }
         }
         if (tipoVenta !== "VC") {
-            resetField("plazo_pago");
+            resetField("plazo_pago", { defaultValue: "" });
         }
-    }, [watch("tipo_venta"), watch("plazo_pago"), resetField, setError, clearErrors]);
+    }, [tipoVenta, plazoPago, resetField, setError, clearErrors, hasInitialized]);
 
     const {
         addProduct,
@@ -261,7 +268,7 @@ const SaleEditScreen = () => {
         calculateTotalBeforeDiscount,
         getDiscountPercentage,
     } = useSaleProductDetailsWithForm({ formMethods });
-    
+
     const onSubmit = (data: SaleUpdate) => {
         if (!validateBeforeSubmit()) return;
 
@@ -277,7 +284,6 @@ const SaleEditScreen = () => {
         }
 
         const transformedData = result.data;
-
         updateSale(
             { saleId: Number(saleId), data: transformedData },
             {
@@ -290,7 +296,7 @@ const SaleEditScreen = () => {
                     setTimeout(handleGoBack, 200);
                 },
                 onError: (error: unknown) => {
-                    handleError(error, 'Error al actualizar venta');
+                    handleError({ error, customTitle: "No se pudo modificar la venta" });
                 }
             }
         );
@@ -323,13 +329,21 @@ const SaleEditScreen = () => {
     };
 
     // Shortcuts
-    useHotkeys('escape', handleGoBack, {
+    useHotkeys('escape', (e) => {
+        e.preventDefault();
+        handleGoBack();
+    }, {
         scopes: ["esc-key"],
         enabled: true
     });
 
-    if (isLoadingSale) {
-        return <SaleDetailSkeleton />;
+    useHotkeys('alt+s', (e) => {
+        e.preventDefault();
+        handleSubmit(onSubmit, onError)();
+    })
+
+    if (isLoadingSale || isLoadingSaleTypes || isLoadingSaleModalities || isLoadingSaleResponsibles) {
+        return <SaleEditSkeleton />;
     }
 
     if (isErrorSale || isNaN(Number(saleId))) {
@@ -345,13 +359,13 @@ const SaleEditScreen = () => {
 
     return (
         <main className="flex flex-col items-center">
-            <div className="max-w-7xl w-full space-y-2">
+            <div className="w-full space-y-2">
                 <FormProvider {...formMethods}>
                     <form
                         className="space-y-2"
                         onSubmit={handleSubmit(onSubmit, onError)}
                     >
-                        <header className="border-gray-200 border bg-white rounded-lg p-2 sm:p-6">
+                        <header className="border-gray-200 border bg-white rounded-lg p-2 sm:p-3">
                             <div className="flex flex-wrap gap-2 items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <TooltipButton
@@ -359,7 +373,7 @@ const SaleEditScreen = () => {
                                             align: 'start'
                                         }}
                                         onClick={handleGoBack}
-                                        tooltip={<p className="flex gap-1">Presiona <Kbd>esc</Kbd> para volver atrás</p>}
+                                        tooltip={<p className="flex items-center gap-1">Presiona <Kbd>esc</Kbd> para volver atrás</p>}
                                         buttonProps={{
                                             variant: 'default',
                                             type: 'button'
@@ -395,7 +409,9 @@ const SaleEditScreen = () => {
                                     </TooltipButton>
 
                                     <TooltipButton
-                                        tooltip="Guardar cambios"
+                                        tooltip={
+                                            <span className="flex items-center gap-1">Guardar Cambios <ShortcutKey combo="alt+s" /></span>
+                                        }
                                         buttonProps={{
                                             variant: 'default',
                                             size: 'sm',
@@ -424,7 +440,7 @@ const SaleEditScreen = () => {
                         {/* 1. Datos de la Venta */}
                         <Card className="border-gray-200 shadow-none pt-4">
                             <CardContent className="">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 xl:gap-x-2 xl:gap-y-3">
                                     <div>
                                         <Label htmlFor="fechaVenta">Fecha de Venta *</Label>
                                         <Input
@@ -519,15 +535,17 @@ const SaleEditScreen = () => {
                                             name="forma_venta"
                                             control={control}
                                             render={({ field }) => (
-                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                <Select
+                                                    onValueChange={field.onChange}
+                                                    value={field.value || saleData?.forma_venta || ""}>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Selecciona una forma" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {
-                                                            saleModalitiesData && Object.entries(saleModalitiesData || {}).map(([code, description]) => (
-                                                                <SelectItem key={code} value={code}>
-                                                                    {description}
+                                                            saleModalitiesData && saleModalitiesData.map((modality) => (
+                                                                <SelectItem key={modality.code} value={modality.code}>
+                                                                    {modality.label}
                                                                 </SelectItem>
                                                             ))
                                                         }
@@ -544,15 +562,16 @@ const SaleEditScreen = () => {
                                             name="tipo_venta"
                                             control={control}
                                             render={({ field }) => (
-                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                <Select
+                                                    onValueChange={field.onChange} value={field.value || saleData?.tipo_venta || ""}>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Selecciona un tipo" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {
-                                                            saleTypesData && Object.entries(saleTypesData).map(([code, description]) => (
-                                                                <SelectItem key={code} value={code}>
-                                                                    {description}
+                                                            saleTypesData && saleTypesData.map((type) => (
+                                                                <SelectItem key={type.code} value={type.code}>
+                                                                    {type.label}
                                                                 </SelectItem>
                                                             ))
                                                         }
@@ -565,7 +584,7 @@ const SaleEditScreen = () => {
                                     <div>
                                         <Label htmlFor="fechaPlazo">Fecha Plazo (Venta Crédito)</Label>
                                         <Input
-                                            id="fechaPlazo"
+                                            id="plazo_pago"
                                             type="date"
                                             {...register("plazo_pago")}
                                             disabled={watch("tipo_venta") !== "VC"}
@@ -636,7 +655,7 @@ const SaleEditScreen = () => {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-sm pt-6">
+                    <Card className="border shadow-none border-gray-200 pt-3">
                         <CardContent>
                             <div className="grid md:grid-cols-2 gap-3">
                                 <section className="space-y-2 bg-gray-50 p-3 rounded-lg">
