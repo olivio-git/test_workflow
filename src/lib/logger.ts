@@ -77,17 +77,17 @@ export class Logger {
         // pero puedes cambiar esta lógica según tus necesidades
     }
 
-    private static sendToLoggingService(entry: LogEntry) {
+    private static sendToLoggingService(_entry: LogEntry) {
         // Implementar según tu proveedor de logging
         try {
             // Ejemplo con fetch a tu servicio de logging
-            fetch('/api/logs', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(entry),
-            }).catch(() => {
-                // Silenciar errores de logging para no afectar UX
-            });
+            // fetch('/api/logs', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(entry),
+            // }).catch(() => {
+            //     // Silenciar errores de logging para no afectar UX
+            // });
 
             // O enviar a Sentry:
             // Sentry.addBreadcrumb({

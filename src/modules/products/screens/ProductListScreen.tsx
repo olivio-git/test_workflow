@@ -137,7 +137,7 @@ const ProductListScreen = () => {
     };
 
     const handleDeleteError = (error: unknown, _productId: number) => {
-        handleError(error, 'Error al eliminar el producto');
+        handleError({ error, customTitle: "Error al eliminar el producto" });
         // showErrorToast({
         //     title: "Error al eliminar el producto",
         //     description: `No se pudo eliminar el producto #${productId}. Por favor, intenta nuevamente`,

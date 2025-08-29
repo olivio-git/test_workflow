@@ -5,10 +5,32 @@ import { QuotationGetAllResponseSchema } from "../schemas/quotationGet.schema";
 import { QuotationGetByIdSchema } from "../schemas/quotationGetById.schema";
 import { Logger } from "@/lib/logger";
 import { ApiService } from "@/lib/apiService";
+import type { QuotationCreate } from "../types/quotationCreate.types";
 
 const MODULE_NAME = 'QUOTATION_SERVICE';
 
 export const quotationService = {
+    /**
+     * Crear una nueva cotización
+     * @param data - Datos de la cotización a crear
+    */
+    async create(data: QuotationCreate): Promise<unknown> {
+        Logger.info('Creating quotation', { data }, MODULE_NAME);
+
+        const response = await ApiService.post(
+            QUOTATION_ENDPOINTS.create,
+            data,
+        );
+
+        Logger.info(
+            "Quotation created successfully",
+            undefined,
+            // response.data.id && { id: response.data.id },
+            MODULE_NAME
+        );
+        return response
+    },
+
     /**
      * Obtener todas las cotizaciones con filtros opcionales
      */

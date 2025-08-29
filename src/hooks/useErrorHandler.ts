@@ -1,46 +1,57 @@
 import { ErrorHandler } from "@/utils/errorHandler";
 import { showErrorToast, showWarningToast } from "./use-toast-enhanced";
 
+interface HandleErrorProps {
+    error: unknown,
+    customTitle?: string,
+    customDescription?: string,
+    duration?: number;
+}
+
 export const useErrorHandler = () => {
 
-    const handleError = (error: unknown, customTitle?: string) => {
+    const handleError = ({
+        error,
+        customTitle,
+        customDescription,
+        duration = 5000
+    }: HandleErrorProps) => {
         const result = ErrorHandler.handle(error);
-        const duration = 5000
-
+        const description = customDescription ?? result.userMessage;
         // Mostrar toast según categoría
         switch (result.category) {
             case 'validation':
                 showWarningToast({
                     title: customTitle || 'Revisa los datos',
-                    description: result.userMessage,
+                    description: description,
                     duration: duration
                 })
                 break;
             case 'authentication':
                 showErrorToast({
                     title: customTitle || 'Autenticación',
-                    description: result.userMessage,
+                    description: description,
                     duration: duration
                 })
                 break;
             case 'network':
                 showWarningToast({
                     title: customTitle || 'Conexión',
-                    description: result.userMessage,
+                    description: description,
                     duration: duration
                 })
                 break;
             case 'server':
                 showErrorToast({
                     title: customTitle || 'Error temporal',
-                    description: result.userMessage,
+                    description: description,
                     duration: duration
                 })
                 break;
             default:
                 showErrorToast({
                     title: customTitle || 'Error',
-                    description: result.userMessage,
+                    description: description,
                     duration: duration
                 })
         }

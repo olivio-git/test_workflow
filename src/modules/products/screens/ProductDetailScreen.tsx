@@ -162,7 +162,7 @@ const ProductDetailScreen = () => {
         <div className="min-h-screen">
             <div className="max-w-7xl mx-auto space-y-4">
                 {/* Header Simple - Solo nombre del producto */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
                     <div className="flex items-center gap-3">
                         <TooltipButton
                             tooltipContentProps={{

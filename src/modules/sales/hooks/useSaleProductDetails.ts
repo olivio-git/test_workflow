@@ -42,7 +42,8 @@ const useSaleProductDetailsWithForm = ({ formMethods }: UseSaleProductDetailsPro
     const [globalDiscount, setGlobalDiscount] = useState<number>(0);
     const [hasDiscount, setHasDiscount] = useState<boolean>(false)
 
-    const products = useMemo(() => watch("detalles") || [], [watch]);
+    const watchedDetalles = watch("detalles");
+    const products = useMemo(() => watchedDetalles || [], [watchedDetalles]);
 
     useEffect(() => {
         if (products.length <= 0) return
@@ -57,7 +58,7 @@ const useSaleProductDetailsWithForm = ({ formMethods }: UseSaleProductDetailsPro
     const addProduct = useCallback((input: ProductGet | ProductGet[]) => {
         const productsToAdd = Array.isArray(input) ? input : [input];
         const currentProducts = getValues("detalles") || [];
-        let updated = [...currentProducts];
+        const updated = [...currentProducts];
         let addedCount = 0;
         let skippedCount = 0;
 
@@ -108,7 +109,7 @@ const useSaleProductDetailsWithForm = ({ formMethods }: UseSaleProductDetailsPro
                     cantidad: 1,
                     descuento: descuento,
                     porcentaje_descuento: porcentaje_descuento,
-                    id_detalle_venta: 0,
+                    id_detalle_venta: null,
                     precio: product.precio_venta,
                     producto: {
                         id: product.id,

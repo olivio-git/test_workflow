@@ -13,7 +13,7 @@ export const SaleProductDetailSchema = z.object({
 
 export const SaleUpdateDetailSchema = SaleDetailSchema
     .extend({
-        id_detalle_venta: z.number(),
+        id_detalle_venta: z.number().nullable(),
     })
 
 export const SaleUpdateSchema = SaleSchema

@@ -13,7 +13,11 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({ tooltip, childre
             <TooltipTrigger asChild>
                 {children}
             </TooltipTrigger>
-            <TooltipContent {...tooltipContentProps}>{tooltip}</TooltipContent>
+            <TooltipContent {...tooltipContentProps}>
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                    {tooltip}
+                </div>
+            </TooltipContent>
         </Tooltip>
     );
 };

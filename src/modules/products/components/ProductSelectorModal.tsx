@@ -139,13 +139,14 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                     <Button
                         className="bg-black hover:bg-gray-800 text-white"
                         size="sm"
+                        title="Seleccionar Productos"
                     >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Seleccionar Productos
+                        <Plus className="size-4" />
+                        <span className="hidden sm:block">Seleccionar Productos</span>
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl border-gray-200" aria-describedby="Seleccionar productos">
-                    <AlertDialogHeader>
+                    <AlertDialogHeader className="text-start">
                         <DialogTitle>Buscar Productos</DialogTitle>
                     </AlertDialogHeader>
                     <DialogDescription className="text-gray-500 text-sm -mt-2">
@@ -212,32 +213,33 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                                                             />
                                                         </div>
                                                         <div className="flex-1">
-                                                            <h4 className="font-medium text-sm">
+                                                            <h4 className="font-medium text-xs sm:text-sm">
                                                                 {product.descripcion}
                                                             </h4>
-                                                            <p className="text-xs text-gray-500">
+                                                            <p className="text-xs text-gray-500 hidden sm:block">
                                                                 OEM: {product.codigo_oem} | UPC:{" "}
                                                                 {product.codigo_upc}
                                                             </p>
                                                             <div className="flex items-center gap-2 mt-1">
                                                                 <Badge
                                                                     variant="accent"
+                                                                    className="text-[10px] sm:text-xs"
                                                                 >
                                                                     {product.categoria}
                                                                 </Badge>
                                                                 <Badge
                                                                     variant="outline"
-                                                                    className="border-gray-200"
+                                                                    className="border-gray-200 text-[10px] sm:text-xs"
                                                                 >
                                                                     {product.marca}
                                                                 </Badge>
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-sm font-bold text-green-600">
+                                                            <p className="text-xs sm:text-sm font-bold text-green-600">
                                                                 {formatCurrency(product.precio_venta)}
                                                             </p>
-                                                            <Badge variant={'default'}>
+                                                            <Badge className="text-[10px] sm:text-xs" variant={'default'}>
                                                                 {`${product.stock_actual} ${product.unidad_medida}`}
                                                             </Badge>
                                                         </div>
@@ -261,7 +263,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                             )}
                         </div>
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="gap-1">
                         <Button
                             variant={'outline'}
                             onClick={() => setIsSearchOpen(false)}
@@ -270,6 +272,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                         </Button>
                         <Button
                             onClick={handleAddMultipleItems}
+                            disabled={selectedProducts.length === 0}
                         >
                             <Plus className="size-4" />
                             {`Agregar ${selectedProducts.length > 0 ? `(${selectedProducts.length})` : ''}`}

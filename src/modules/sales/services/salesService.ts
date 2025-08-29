@@ -13,6 +13,7 @@ const MODULE_NAME = 'SALES_SERVICE';
 export const salesService = {
     /**
      * Crear una nueva venta
+     * @param data - Datos de la venta a crear
      */
     async create(data: Sale): Promise<unknown> {
         Logger.info('Creating sale', { data }, MODULE_NAME);
@@ -76,19 +77,21 @@ export const salesService = {
      * @param id - ID de la venta
      * @param data - Datos para actualizar la venta
      */
-    async update(id: number, data: SaleUpdate): Promise<unknown> {
+    async update(id: number, data: SaleUpdate): Promise<SaleGetById> {
         Logger.info('Updating sale', { id, data }, MODULE_NAME);
 
         const response = await ApiService.put(
             SALE_ENDPOINTS.update(id),
             data,
+            SaleGetByIdSchema,
+            undefined,
+            { unwrapData: true }
         );
 
         Logger.info('Sale updated successfully', {
             id
         }, MODULE_NAME);
-
-        return response;
+        return response as SaleGetById;
     },
 
     /**

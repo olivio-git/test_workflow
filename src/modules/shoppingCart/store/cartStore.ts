@@ -64,6 +64,8 @@ export const createCartStore = (user: string) => {
                                 quantity,
                                 customPrice: basePrice,
                                 customSubtotal: subtotal,
+                                customDescription: product.descripcion,
+                                customBrand: product.marca
                             };
 
                             set({ items: [...get().items, newItem] });
@@ -154,6 +156,32 @@ export const createCartStore = (user: string) => {
                             ),
                         });
                         get().recalculateDiscount();
+                    },
+
+                    updateCustomDescription: (productId, description) => {
+                        set({
+                            items: get().items.map((i) =>
+                                i.product.id === productId
+                                    ? {
+                                        ...i,
+                                        customDescription: description
+                                    }
+                                    : i
+                            ),
+                        });
+                    },
+
+                    updateCustomBrand: (productId, brand) => {
+                        set({
+                            items: get().items.map((i) =>
+                                i.product.id === productId
+                                    ? {
+                                        ...i,
+                                        customBrand: brand
+                                    }
+                                    : i
+                            ),
+                        });
                     },
 
                     clearCart: () => set({ items: [], discountAmount: 0, discountPercent: 0, discountMode: null }),
