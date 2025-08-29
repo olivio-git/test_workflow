@@ -6,6 +6,7 @@ import { QuotationGetByIdSchema } from "../schemas/quotationGetById.schema";
 import { Logger } from "@/lib/logger";
 import { ApiService } from "@/lib/apiService";
 import type { QuotationCreate } from "../types/quotationCreate.types";
+import type { QuotationUpdate } from "../types/quotationUpdate.types";
 
 const MODULE_NAME = 'QUOTATION_SERVICE';
 
@@ -66,6 +67,28 @@ export const quotationService = {
 
         Logger.info('Quotation detail fetched successfully', { id }, MODULE_NAME);
 
+        return response as QuotationGetById;
+    },
+
+    /**
+     * Actualizar una cotizacion por ID
+     * @param id - ID de la cotizacion
+     * @param data - Datos para actualizar la cotizacion
+     */
+    async update(id: number, data: QuotationUpdate): Promise<QuotationGetById> {
+        Logger.info('Updating quotation', { id, data }, MODULE_NAME);
+
+        const response = await ApiService.put(
+            QUOTATION_ENDPOINTS.update(id),
+            data,
+            QuotationGetByIdSchema,
+            undefined,
+            { unwrapData: true }
+        );
+
+        Logger.info('Quotation updated successfully', {
+            id
+        }, MODULE_NAME);
         return response as QuotationGetById;
     },
 

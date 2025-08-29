@@ -131,7 +131,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
 
     return (
         <section className="flex flex-wrap items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-base font-semibold text-gray-900">
                 Detalle de Productos
             </h3>
             <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
