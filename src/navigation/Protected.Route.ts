@@ -20,6 +20,7 @@ import QuotationDetailScreen from "@/modules/quotations/screens/quotationDetailS
 import SaleEditScreen from "@/modules/sales/screens/saleEditScreen";
 import QuotationCreateScreen from "@/modules/quotations/screens/quotationCreateScreen";
 import QuotationEditScreen from "@/modules/quotations/screens/quotationEditScreen";
+import ProductEditScreen from "@/modules/products/screens/ProductEditScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -117,6 +118,17 @@ const protectedRoutes: RouteType[] = [
         isAdmin: true,
         role: ["admin"],
         icon: Package,
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: false
+      },
+      {
+        path: "/dashboard/productos/:productId/update",
+        name: "Editar producto",
+        type: "protected",
+        element: ProductEditScreen,
+        isAdmin: true,
+        role: ["admin"],
         isHeader: false,
         showSidebar: false,
         showInCommandPalette: false

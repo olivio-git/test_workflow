@@ -172,6 +172,10 @@ const ProductListScreen = () => {
         [navigate]
     );
 
+    const handleUpdateProduct = useCallback((productId: number) => {
+        navigate(`/dashboard/productos/${productId}/update`)
+    }, [navigate])
+
     const handleAddItemCart = useCallback(
         (product: ProductGet) => {
             addItemToCart(product);
@@ -256,7 +260,7 @@ const ProductListScreen = () => {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onKeyDown={(e) => e.stopPropagation()}
-                                    onClick={() => { }}>
+                                    onClick={() => handleUpdateProduct(row.original.id)}>
                                     <Edit className="mr-2 h-4 w-4" />
                                     Editar producto
                                 </DropdownMenuItem>
@@ -440,7 +444,7 @@ const ProductListScreen = () => {
                 </div>
             ),
         },
-    ], [handleAddItemCart, handleProductDetail, handleOpenDeleteAlert]);
+    ], [handleAddItemCart, handleProductDetail, handleOpenDeleteAlert, handleUpdateProduct]);
 
     const table = useReactTable<ProductGet>({
         data: products,

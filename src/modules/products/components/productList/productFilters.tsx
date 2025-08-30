@@ -7,6 +7,7 @@ import type { useProductFilters } from "../../hooks/useProductFilters";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { ComboboxSelect } from "@/components/common/SelectCombobox";
+import { useCommonSubcategories } from "@/modules/shared/hooks/useCommonSubcategories";
 
 interface ProductFiltersProps {
     filters: ReturnType<typeof useProductFilters>["filters"]
@@ -18,6 +19,12 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
 }) => {
     const { data: categoriesData } = useCategoriesWithSubcategories();
     const { data: brandsData } = useCommonBrands()
+    const {
+        data: subcategoriesData
+    } = useCommonSubcategories({
+        categoria: filters.categoria,
+        enabled: !!filters.categoria
+    })
 
     // Inputs locales
     const [codigoOEM, setCodigoOEM] = useState("")
@@ -144,12 +151,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                                 const parsedValue = value === "all" ? undefined : Number(value);
                                 updateFilter("subcategoria", parsedValue);
                             }}
-                            options={(categoriesData
-                                ?.find((cat) => cat.id === filters.categoria)
-                                ?.subcategorias || []).map((subcat) => ({
-                                    id: String(subcat.id),
-                                    subcategoria: subcat.subcategoria,
-                                }))}
+                            options={subcategoriesData || []}
                             optionTag={"subcategoria"}
                             enableAllOption={true}
                         />

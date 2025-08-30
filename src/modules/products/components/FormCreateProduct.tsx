@@ -3,16 +3,16 @@ import { Package, Wand2, Save } from "lucide-react";
 import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";
 import { Button } from "@/components/atoms/button";
-import { useQuery } from "@tanstack/react-query";
 import { apiConstructor } from "../services/api";
 import { ComboboxSelect } from "@/components/common/SelectCombobox";
 import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
-
-interface Category {
-  id: number;
-  categoria: string;
-  subcategorias: [any];
-}
+import { useCategoriesWithSubcategories } from "@/modules/shared/hooks/useCategories";
+import type { CategoriesWithSubcategories } from "@/modules/shared/types/category.types";
+import { useCommonBrands } from "@/modules/shared/hooks/useCommonBrands";
+import { useCommonVehicleBrands } from "@/modules/shared/hooks/useCommonVehicleBrands";
+import { useCommonOrigins } from "@/modules/shared/hooks/useCommonOrigins";
+import { useCommonMeasurements } from "@/modules/shared/hooks/useCommonMeasurements";
+import { useCommonSubcategories } from "@/modules/shared/hooks/useCommonSubcategories";
 
 interface FormData {
   descripcion: string;
@@ -46,40 +46,17 @@ const FormCreateProduct: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<FormTouched>({});
-  const [allCategorys, setAllCategorys] = useState<Category[] | null>(null);
+  const [allCategorys, setAllCategorys] = useState<CategoriesWithSubcategories | null>(null);
 
-  const { data: categorys } = useQuery({
-    queryKey: ["categorys"],
-    queryFn: () =>
-      apiConstructor({ url: "/categories?pagina=1&pagina_registros=9999" }),
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: categorys } = useCategoriesWithSubcategories()
 
-  const { data: brands } = useQuery({
-    queryKey: ["brands"],
-    queryFn: () =>
-      apiConstructor({ url: "/products/commons/brands", method: "GET" }),
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: brands } = useCommonBrands()
 
-  const { data: vehicleBrands } = useQuery({
-    queryKey: ["vehicleBrands"],
-    queryFn: () =>
-      apiConstructor({ url: "/products/commons/vehicle-brands", method: "GET" }),
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: vehicleBrands } = useCommonVehicleBrands()
 
-  const { data: procedencia } = useQuery({
-    queryKey: ["procedencia"],
-    queryFn: () => apiConstructor({ url: "/products/commons/origins", method: "GET" }),
-    staleTime: 5 * 60 * 1000
-  });
+  const { data: procedencia } = useCommonOrigins()
 
-  const { data: unidades } = useQuery({
-    queryKey: ["unidades"],
-    queryFn: () => apiConstructor({ url: "/products/commons/measurements", method: "GET" }),
-    staleTime: 5 * 60 * 1000
-  });
+  const { data: unidades } = useCommonMeasurements()
 
   useEffect(() => {
     if (categorys) {
@@ -107,16 +84,13 @@ const FormCreateProduct: React.FC = () => {
     id_unidad: 0,
   });
 
-  const { data: subcategorias, refetch: fetchSubcategories } = useQuery({
-    queryKey: ["subCategorias", formData.id_categoria],
-    queryFn: () =>
-      apiConstructor({
-        url: `/products/commons/subcategories?categoria=${formData?.id_categoria}`,
-        method: "GET"
-      }),
-    enabled: false,
-    staleTime: 5 * 60 * 1000
-  });
+  const {
+    data: subcategorias,
+    refetch: fetchSubcategories
+  } = useCommonSubcategories({
+    categoria: formData.id_categoria,
+    enabled: !!formData.id_categoria
+  })
 
   useEffect(() => {
     if (formData.id_categoria && formData.id_categoria !== 0) {
@@ -390,7 +364,7 @@ const FormCreateProduct: React.FC = () => {
   };
 
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-3">
       <div className="p-3 bg-white border border-gray-200 rounded-lg sm:p-4">
         <h2 className="flex items-center gap-2 mb-3 text-base font-semibold text-gray-900">
           <Package className="w-4 h-4" />
@@ -406,7 +380,7 @@ const FormCreateProduct: React.FC = () => {
               onChange={(value: any) => {
                 handleFieldChange("id_categoria", value);
               }}
-              options={allCategorys || []}
+              options={(allCategorys || []).map(category => ({ id: category.id, categoria: category.categoria }))}
               optionTag={"categoria"}
               placeholder="Seleccionar categoría"
               searchPlaceholder="Buscar categorías..."
