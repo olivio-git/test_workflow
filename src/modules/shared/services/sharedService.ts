@@ -9,6 +9,8 @@ import { BrandsSchema } from "../schemas/brand.schema";
 import { MeasurementListSchema } from "../schemas/measurements.schema";
 import type { OriginsList } from "../types/origins.types";
 import { OriginListSchema } from "../schemas/origins.schema";
+import type { VehicleBrandList } from "../types/vehicleBrand.types";
+import { VehicleBrandListSchema } from "../schemas/vehicleBrands.schema";
 
 const MODULE_NAME = "COMMON_SERVICE";
 
@@ -36,10 +38,10 @@ export const commonService = {
 
     /**
      * Obtener subcategorías con filtros opcionales
-     * @param categoria - Filtro opcional por ID de categoría
      * @param subcategoria - Filtro opcional por nombre de subcategoría
+     * @param categoria - Filtro opcional por ID de categoría
      */
-    async getSubcategories(categoria?: string, subcategoria?: string): Promise<Subcategories> {
+    async getSubcategories(subcategoria?: string, categoria?: number): Promise<Subcategories> {
         Logger.info("Fetching subcategories", { categoria, subcategoria }, MODULE_NAME);
 
         const response = await ApiService.get(
@@ -47,8 +49,8 @@ export const commonService = {
             SubcategoriesSchema,
             {
                 params: {
-                    ...(categoria && { categoria }),
                     ...(subcategoria && { subcategoria }),
+                    ...(categoria && { categoria }),
                 },
             },
             { unwrapData: true }
@@ -118,6 +120,27 @@ export const commonService = {
         );
 
         Logger.info("Measurements fetched successfully", {
+            count: response.length,
+        }, MODULE_NAME);
+
+        return response;
+    },
+
+    /**
+     * Obtener marcas de vehiculo con filtros opcionales
+     * @param marca_vehicule - Filtro opcional por nombre de marca de vehiculo
+     */
+    async getVehicleBrands(marca_vehicule?: string): Promise<VehicleBrandList> {
+        Logger.info("Fetching vehicle brands", { marca_vehicule }, MODULE_NAME);
+
+        const response = await ApiService.get(
+            COMMON_ENDPOINTS.vehicle_brands,
+            VehicleBrandListSchema,
+            { params: marca_vehicule ? { marca_vehicule } : {} },
+            { unwrapData: true }
+        );
+
+        Logger.info("Behicle brands fetched successfully", {
             count: response.length,
         }, MODULE_NAME);
 

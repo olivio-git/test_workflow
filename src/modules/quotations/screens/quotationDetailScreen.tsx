@@ -109,7 +109,7 @@ const QuotationDetailScreen = () => {
     return (
         <main className="flex flex-col items-center">
             <div className="max-w-7xl w-full space-y-2">
-                <header className="border-gray-200 border bg-white rounded-lg p-6">
+                <header className="border-gray-200 border bg-white rounded-lg p-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <TooltipButton
@@ -186,7 +186,7 @@ const QuotationDetailScreen = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 text-base font-semibold text-gray-900">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 text-base font-semibold text-gray-900">
                             <div>
                                 <Label>Número de cotizacion</Label>
                                 <p className="font-bold">{quotationData?.nro}</p>

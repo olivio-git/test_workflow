@@ -3,114 +3,188 @@ import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/atoms/card";
 import { Button } from "@/components/atoms/button";
 import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";
-import { GalleryVerticalEnd } from "lucide-react";
-import authSdk from "@/services/sdk-simple-auth";
+import { AlertCircle, Eye, EyeOff, GalleryVerticalEnd, Loader2, Lock, User } from "lucide-react";
 import { useState } from "react";
-interface UserLogin {
-  usuario: string;
-  clave: string;
-}
+import { Alert, AlertDescription } from "@/components/atoms/alert";
+import { useLogin } from "../hooks/useLogin";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { LoginSchema } from "../schemas/login.schema";
+import type { Login } from "../types/login.types";
+import { useForm } from "react-hook-form";
+
 const LoginScreen = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) => {
 
-  const [user, setUser] = useState<UserLogin>({
-    usuario: "",
-    clave: "",
+  const [showPassword, setShowPassword] = useState(false)
+
+  const {
+    mutate: signIn,
+    isPending,
+    isError
+  } = useLogin()
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    clearErrors
+  } = useForm<Login>({
+    resolver: zodResolver(LoginSchema),
+    defaultValues: {
+      usuario: "",
+      clave: "",
+    },
+    // mode: "onChange"
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUser({
-      ...user,
-      [e.target.name]: e.target.value,
+  const onSubmit = async (data: Login) => {
+
+    clearErrors("root");
+    signIn(data, {
+      onSuccess: () => {
+        console.log('Login exitoso');
+      },
+      onError: (error: { message?: string }) => {
+        setError("root", {
+          type: "server",
+          message: error?.message || "Error al iniciar sesión. Verifica tus credenciales."
+        });
+        console.error("Error al iniciar sesión, verifica tus credenciales:", error?.message);
+      }
     });
+
   };
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      await authSdk.login({
-        usuario: user.usuario,
-        clave: user.clave,
-      }); 
-    } catch (error:any) {
-      console.error("Error al iniciar sesión, verifica tus credenciales:", error?.message);
-    }
-  };
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-      <div className="flex w-full max-w-sm flex-col gap-6">
-        <div className="flex items-center gap-2 self-center font-medium">
+    <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-3 md:p-10">
+      <div className="flex w-full max-w-md flex-col gap-6">
+        <header className="flex items-center gap-2 self-center font-medium">
           <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <GalleryVerticalEnd className="size-4" />
           </div>
-          TPS Intermotors
-        </div>
+          <h1 className="font-bold">INTERMOTORS</h1>
+        </header>
 
-        <div className={cn("flex flex-col gap-6", className)} {...props}>
-          <Card className="border border-gray-200">
-            <CardHeader className="text-center">
-              <CardTitle className="text-xl text-gray-600">
-                Bienvenido de nuevo
+        <div className={cn("flex flex-col", className)} {...props}>
+
+          <Card className="p-4">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-xl font-semibold text-gray-900">
+                Iniciar Sesión
+                {/* Bienvenido de nuevo */}
               </CardTitle>
+              <CardDescription className="text-gray-600 mt-2 text-xs">
+                Ingresa tus credenciales para acceder al sistema
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={onSubmit}>
-                <div className="grid gap-6">
-                  <div className="grid gap-6">
-                    <div className="grid gap-2">
-                      <Label htmlFor="usuario">Usuario</Label>
-                      <Input
-                        value={user.usuario}
-                        onChange={handleChange}
-                        autoComplete="username"
-                        name="usuario"
-                        id="usuario"
-                        type="text"
-                        placeholder="Ingrese su usuario"
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <div className="flex items-center">
-                        <Label htmlFor="password">Contraseña</Label>
-                        <a
-                          href="#"
-                          className="ml-auto text-xs underline-offset-4 hover:underline"
-                        >
-                          ¿Olvidaste tu contraseña?
-                        </a>
-                      </div>
-                      <Input
-                        name="clave"
-                        value={user.clave}
-                        onChange={handleChange}
-                        autoComplete="current-password"
-                        id="password"
-                        type="password"
-                        placeholder="Ingrese su contraseña"
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Iniciar sesión
-                    </Button>
+
+            <CardContent className="space-y-4">
+              {/* Error general del servidor */}
+              {(errors.root || isError) && (
+                <Alert className="border-red-200 bg-red-50 p-2">
+                  <AlertDescription className="text-red-700 flex items-center gap-2 text-xs">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    {errors.root?.message || "Error al iniciar sesión. Verifica tus credenciales."}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-sm font-medium text-gray-700">
+                    Usuario
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      required
+                      id="usuario"
+                      type="text"
+                      placeholder="Ingresa tu usuario"
+                      autoComplete="username"
+                      className={`pl-10 h-10 ${errors.usuario ? "border-red-300 focus:border-red-500 focus:ring-red-500" : ""}`}
+                      disabled={isPending || isSubmitting}
+                      {...register("usuario")}
+                    />
                   </div>
-                  {/* <div className="text-center text-sm">
-                    ¿No tienes una cuenta?{" "}
-                    <a href="#" className="underline underline-offset-4">
-                      Regístrate
-                    </a>
-                  </div> */}
+                  {errors.usuario && (
+                    <p className="text-xs text-red-600 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.usuario.message}
+                    </p>
+                  )}
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    Contraseña
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      required
+                      id="clave"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Ingresa tu contraseña"
+                      autoComplete="current-password"
+                      className={`px-10 h-10 ${errors.clave ? "border-red-300 focus:border-red-500 focus:ring-red-500" : ""}`}
+                      disabled={isPending || isSubmitting}
+                      {...register("clave")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      disabled={isPending || isSubmitting}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.clave && (
+                    <p className="text-xs text-red-600 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.clave.message}
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full h-10"
+                  disabled={isPending || isSubmitting}
+                >
+                  {(isPending || isSubmitting) ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Iniciando sesión...
+                    </div>
+                  ) : (
+                    "Iniciar Sesión"
+                  )}
+                </Button>
               </form>
+
+              <div className="text-center pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-600">
+                  ¿Olvidaste tu contraseña?{" "}
+                  <a
+                    href="#"
+                    className="text-xs underline-offset-4 hover:underline text-black font-medium"
+                  >
+                    Recuperar acceso
+                  </a>
+                </p>
+              </div>
             </CardContent>
           </Card>
           {/* <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary  ">
@@ -120,7 +194,7 @@ const LoginScreen = ({
           </div> */}
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Validator } from './validator';
-import apiClient from '@/lib/axios';
+import apiClient from '@/services/axios';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Logger } from './logger';
 

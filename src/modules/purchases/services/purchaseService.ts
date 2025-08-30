@@ -1,4 +1,4 @@
-import apiClient from "@/lib/axios";
+import apiClient from "@/services/axios";
 import type { PurchaseFilters } from "../types/purchaseFilters";
 import type { PurchaseListResponse } from "../types/purchaseListResponse";
 import type { PurchaseDetail } from "../types/PurchaseDetail";
