@@ -1,8 +1,8 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import type { ProductFilters } from "../types/productFilters";
+import type { ProductFilters } from "../../types/productFilters";
 import { cleanUndefined } from "@/utils/zodHelpers";
-import { productFiltersSchema } from "../schemas/productFilter.schema";
-import { productsService } from "../services/productService";
+import { productFiltersSchema } from "../../schemas/productFilter.schema";
+import { productsService } from "../../services/productService";
 
 export const useProductsPaginated = (filters: ProductFilters) => {
     const parsed = productFiltersSchema.safeParse(filters);

@@ -302,7 +302,7 @@ const SaleEditScreen = () => {
     };
 
     const onError = (errors: FieldErrors<SaleUpdateForm>) => {
-        console.log(errors)
+        // console.log(errors)
         if (errors.id_cliente || errors.tipo_venta || errors.forma_venta || errors.id_responsable) {
             showErrorToast({
                 title: "Error de validación",

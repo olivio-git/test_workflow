@@ -6,7 +6,7 @@ import { Button } from '../atoms/button'
 
 interface Option {
     id: string | number
-    [key: string]: any
+    [key: string]: string | number | null | undefined
 }
 
 interface MetaData {
@@ -82,9 +82,11 @@ export function PaginatedCombobox<T extends Record<string, any> & { id: string |
     const meta = metaData
 
     // Agregar opción "TODAS" si está habilitada
-    const allOptions = enableAllOption
-        ? [{ id: 'all', [displayField]: allOptionLabel } as T, ...options]
-        : options
+    const allOptions = useMemo(() => {
+        return enableAllOption
+            ? [{ id: 'all', [displayField]: allOptionLabel } as T, ...options]
+            : options
+    }, [enableAllOption, allOptionLabel, displayField, options])
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setQuery(event.target.value)
@@ -128,7 +130,7 @@ export function PaginatedCombobox<T extends Record<string, any> & { id: string |
     return (
         <Combobox
             value={internalValue.toString()}
-            onChange={(selectedValue: any) => {
+            onChange={(selectedValue: string) => {
                 if (selectedValue !== null) {
                     onChange(selectedValue)
                 }

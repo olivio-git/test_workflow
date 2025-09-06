@@ -1,6 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import type { SalesParams } from "../types/productDetailParams";
-import { productsService } from "../services/productService";
+import type { SalesParams } from "../../types/productDetailParams";
+import { productsService } from "../../services/productService";
 
 export const useProductSalesStats = (params: SalesParams) => {
     // const isAuthenticated = authSDK.isAuthenticated();

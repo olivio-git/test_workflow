@@ -92,7 +92,7 @@ export class ErrorHandler {
                 };
 
             case 422:
-                let message = serverMessage || "Corrige los siguientes errores:";
+                // let message = serverMessage || "Corrige los siguientes errores:";
 
                 // if (validationErrors?.length) {
                 //     const errors = validationErrors
@@ -102,7 +102,7 @@ export class ErrorHandler {
                 // }
 
                 return {
-                    userMessage: message,
+                    userMessage: serverMessage || "Algunos datos no son válidos, por favor revisa e intenta de nuevo.",
                     shouldRetry: false,
                     category: "validation",
                 };

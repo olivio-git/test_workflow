@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginSchema } from "../schemas/login.schema";
 import type { Login } from "../types/login.types";
 import { useForm } from "react-hook-form";
+import { useBranchStore } from "@/states/branchStore";
 
 const LoginScreen = ({
   className,
@@ -25,6 +26,7 @@ const LoginScreen = ({
 }: React.ComponentPropsWithoutRef<"div">) => {
 
   const [showPassword, setShowPassword] = useState(false)
+  const { selectedBranchId } = useBranchStore()
 
   const {
     mutate: signIn,
@@ -52,14 +54,14 @@ const LoginScreen = ({
     clearErrors("root");
     signIn(data, {
       onSuccess: () => {
-        console.log('Login exitoso');
+        // console.log('Login exitoso');
       },
       onError: (error: { message?: string }) => {
         setError("root", {
           type: "server",
           message: error?.message || "Error al iniciar sesión. Verifica tus credenciales."
         });
-        console.error("Error al iniciar sesión, verifica tus credenciales:", error?.message);
+        // console.error("Error al iniciar sesión, verifica tus credenciales:", error?.message);
       }
     });
 
@@ -80,10 +82,9 @@ const LoginScreen = ({
           <Card className="p-4">
             <CardHeader className="text-center pb-6">
               <CardTitle className="text-xl font-semibold text-gray-900">
-                Iniciar Sesión
-                {/* Bienvenido de nuevo */}
+                {selectedBranchId ? "Bienvenido de nuevo" : "Iniciar Sesión"}
               </CardTitle>
-              <CardDescription className="text-gray-600 mt-2 text-xs">
+              <CardDescription className="text-gray-600 mt-2 text-xs sm:text-sm">
                 Ingresa tus credenciales para acceder al sistema
               </CardDescription>
             </CardHeader>

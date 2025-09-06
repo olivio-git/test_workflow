@@ -72,6 +72,8 @@ const Pagination: React.FC<PaginationProps> = ({
         }
     };
 
+    if (totalPages <= 1) return null
+
     return (
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-1 items-center justify-between px-2 sm:px-4 py-3 border-t border-gray-200">
             {/* Left side - Show rows selector */}

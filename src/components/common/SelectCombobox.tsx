@@ -79,7 +79,7 @@ export function ComboboxSelect({
     return (
         <Combobox
             value={internalValue.toString()}
-            onChange={(selectedValue: any) => {
+            onChange={(selectedValue: string) => {
                 if (selectedValue !== null) {
                     onChange(selectedValue)
                 }

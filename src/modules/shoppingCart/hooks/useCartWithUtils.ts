@@ -10,7 +10,7 @@ export interface CartOperationResult {
     success: boolean;
     error?: string;
     message: string;
-    data?: any;
+    data?: unknown;
 }
 
 export interface BulkAddResult {
@@ -194,20 +194,18 @@ export const useCartWithUtils = (user: string, branch: string) => {
             message: `Se agregaron ${addedCount} de ${quantity} unidades de ${product.descripcion}`
         };
 
-        {
-            addedCount === quantity ? (
-                showSuccessToast({
-                    title: "Productos agregados",
-                    description: result.message,
-                    duration: 5000
-                })
-            ) : (
-                showWarningToast({
-                    title: "Agregado parcial",
-                    description: result.message,
-                    duration: 5000
-                })
-            )
+        if (addedCount === quantity) {
+            showSuccessToast({
+                title: "Productos agregados",
+                description: result.message,
+                duration: 5000
+            });
+        } else {
+            showWarningToast({
+                title: "Agregado parcial",
+                description: result.message,
+                duration: 5000
+            });
         }
 
         return result;

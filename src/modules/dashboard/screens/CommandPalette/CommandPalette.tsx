@@ -1,3 +1,4 @@
+import { Button } from "@/components/atoms/button";
 import { Kbd } from "@/components/atoms/kbd";
 import protectedRoutes from "@/navigation/Protected.Route";
 import type RouteType from "@/navigation/RouteType";
@@ -9,7 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "cmdk";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
@@ -73,7 +74,7 @@ export default function CommandPalette({
 
   const commandPalette = (
     <div
-      className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 sm:pt-24 bg-black/50"
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 sm:pt-24 px-2 bg-black/50"
       onMouseDown={() => setOpen(false)}
     >
       <Command
@@ -87,7 +88,14 @@ export default function CommandPalette({
             placeholder="Busca una ruta o escribe un comando..."
             className="w-full h-12 px-2 text-sm text-gray-800 bg-transparent placeholder:text-gray-400 focus:outline-none"
           />
-          <Kbd>esc</Kbd>
+          <Kbd onClick={() => setOpen(false)} className="hidden sm:block">esc</Kbd>
+          <Button
+            className="sm:hidden size-6"
+            variant={"outline"}
+            onClick={() => setOpen(false)}
+          >
+            <X className="size-4" />
+          </Button>
         </div>
         <CommandList className="max-h-[350px] overflow-y-auto">
           <CommandEmpty className="py-6 min-h-40 flex items-center justify-center font-medium text-center text-base text-gray-500">
