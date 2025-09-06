@@ -10,14 +10,28 @@ export const authService = {
      * @param credentials - Credenciales de login (username y password)
      */
     async login(credentials: Login): Promise<unknown> {
-        Logger.info('Attempting login', { user: credentials.usuario }, MODULE_NAME);
+        try {
+            Logger.info('Attempting login', { user: credentials.usuario }, MODULE_NAME);
 
-        const response = await authSDK.login(credentials)
+            const response = await authSDK.login(credentials)
 
-        Logger.info('Login successful', {
-            user: response.name,
-        }, MODULE_NAME);
+            Logger.info('Login successful', {
+                user: response.name,
+            }, MODULE_NAME);
 
-        return response;
+            return response;
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+
+            Logger.error('Login failed', errorMessage, MODULE_NAME);
+
+            // Verificamos si es un error de credenciales (ej. 4xx)
+            if (/4\d{2}/.test(errorMessage)) {
+                throw new Error("Error al iniciar sesión. Verifica tus credenciales.");
+            }
+
+            // Otro tipo de error (red, servidor, etc.)
+            throw new Error("Ocurrió un error inesperado al intentar iniciar sesión. Inténtalo de nuevo.");
+        }
     },
 };

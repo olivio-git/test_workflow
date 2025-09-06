@@ -75,9 +75,9 @@ export default function Layout({ children }: LayoutProps) {
             onOpenCartChange={toggle}
           />
         </header>
-        <main
+        <div
           id="main-scroll-container"
-          className="flex-1 overflow-auto p-2  bg-gray-50">{children}</main>
+          className="flex-1 overflow-auto p-2  bg-gray-50">{children}</div>
       </div>
       <CartSidebar
         open={isOpen}

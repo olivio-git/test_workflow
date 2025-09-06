@@ -8,7 +8,6 @@ import { Badge } from "@/components/atoms/badge";
 import { Clock, Edit, Eye, HelpCircle, Loader2, MoreVertical, Phone, Settings, Trash2 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import CustomizableTable from "@/components/common/CustomizableTable";
-import ResizableBox from "@/components/atoms/resizable-box";
 import type { useSalesFilters } from "../hooks/useSalesFilters";
 import Pagination from "@/components/common/pagination";
 import { TooltipWrapper } from "@/components/common/TooltipWrapper ";
@@ -541,46 +540,41 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                     />
                 </InfiniteScroll>
             ) : (
-                <ResizableBox
-                    direction="vertical"
-                    minSize={10}
-                >
+                <div
+                    className="overflow-auto h-full">
                     <div
-                        className="overflow-auto h-full">
-                        <div
-                            className="overflow-x-hidden">
-                            <CustomizableTable
-                                table={table}
-                                isError={isError}
-                                isFetching={isFetching}
-                                isLoading={isLoading}
-                                errorMessage="Ocurrió un error al cargar las ventas"
-                                noDataMessage="No se encontraron ventas"
-                                rows={filters.pagina_registros}
-                                selectedRowIndex={selectedIndex}
-                                onRowClick={handleRowClick}
-                                onRowDoubleClick={handleRowDoubleClick}
-                                tableRef={tableRef}
-                                focused={isFocused}
-                                keyboardNavigationEnabled={true}
-                            />
+                        className="overflow-x-hidden">
+                        <CustomizableTable
+                            table={table}
+                            isError={isError}
+                            isFetching={isFetching}
+                            isLoading={isLoading}
+                            errorMessage="Ocurrió un error al cargar las ventas"
+                            noDataMessage="No se encontraron ventas"
+                            rows={filters.pagina_registros}
+                            selectedRowIndex={selectedIndex}
+                            onRowClick={handleRowClick}
+                            onRowDoubleClick={handleRowDoubleClick}
+                            tableRef={tableRef}
+                            focused={isFocused}
+                            keyboardNavigationEnabled={true}
+                        />
 
-                        </div>
-
-                        {/* Pagination */}
-                        {
-                            (data?.data?.length ?? 0) > 0 && (
-                                <Pagination
-                                    currentPage={filters.pagina || 1}
-                                    onPageChange={onPageChange}
-                                    totalData={data?.meta?.total ?? 1}
-                                    onShowRowsChange={onShowRowsChange}
-                                    showRows={filters.pagina_registros}
-                                />
-                            )
-                        }
                     </div>
-                </ResizableBox>
+
+                    {/* Pagination */}
+                    {
+                        (data?.data?.length ?? 0) > 0 && (
+                            <Pagination
+                                currentPage={filters.pagina || 1}
+                                onPageChange={onPageChange}
+                                totalData={data?.meta?.total ?? 1}
+                                onShowRowsChange={onShowRowsChange}
+                                showRows={filters.pagina_registros}
+                            />
+                        )
+                    }
+                </div>
             )}
         </section>
     );

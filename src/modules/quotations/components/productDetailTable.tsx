@@ -12,10 +12,7 @@ import { EditablePrice } from '@/modules/shoppingCart/components/editablePrice';
 import type { CartItem } from '@/modules/shoppingCart/types/cart.types';
 import { Input } from '@/components/atoms/input';
 
-interface ProductDetailTableProps {
-}
-const ProductDetailTable = forwardRef(({
-}: ProductDetailTableProps, ref) => {
+const ProductDetailTable = forwardRef((_, ref) => {
     const user = authSDK.getCurrentUser()
     const { selectedBranchId } = useBranchStore()
     // refs para inputs de cantidad
@@ -171,7 +168,14 @@ const ProductDetailTable = forwardRef(({
                 )
             }
         }
-    ], [])
+    ], [
+        removeItem,
+        updateCustomBrand,
+        updateCustomDescription,
+        updateCustomPrice,
+        updateCustomSubtotal,
+        updateQuantity
+    ])
     const table = useReactTable<CartItem>({
         data: cart,
         columns,

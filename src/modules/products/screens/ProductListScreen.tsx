@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/atoms/checkbox"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/atoms/dropdown-menu"
 import type { ProductGet } from "../types/ProductGet"
 import { useProductFilters } from "../hooks/useProductFilters"
-import { useProductsPaginated } from "../hooks/useProductsPaginated"
+import { useProductsPaginated } from "../hooks/queries/useProductsPaginated"
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type RowSelectionState, type SortingState } from "@tanstack/react-table"
 import { Badge } from "@/components/atoms/badge"
 import Pagination from "@/components/common/pagination"
@@ -39,7 +39,7 @@ import ResizableBox from "@/components/atoms/resizable-box"
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation"
 import { formatCurrency } from "@/utils/formaters"
 import { showSuccessToast } from "@/hooks/use-toast-enhanced"
-import { useDeleteProduct } from "../hooks/useDeleteProduct"
+import { useDeleteProduct } from "../hooks/mutations/useDeleteProduct"
 import useConfirmMutation from "@/hooks/useConfirmMutation"
 import ConfirmationModal from "@/components/common/confirmationModal"
 import ShortcutKey from "@/components/common/ShortcutKey"
@@ -136,8 +136,8 @@ const ProductListScreen = () => {
         })
     };
 
-    const handleDeleteError = (error: unknown, _productId: number) => {
-        handleError({ error, customTitle: "Error al eliminar el producto" });
+    const handleDeleteError = (error: unknown, productId: number) => {
+        handleError({ error, customTitle: `Error al eliminar el producto #${productId}` });
         // showErrorToast({
         //     title: "Error al eliminar el producto",
         //     description: `No se pudo eliminar el producto #${productId}. Por favor, intenta nuevamente`,

@@ -13,6 +13,8 @@ import type { ProductListResponse } from "../types/productListResponse ";
 import { ProductDetailSchema } from "../schemas/ProductDetail.schema";
 import { ApiService } from "@/lib/apiService";
 import { Logger } from "@/lib/logger";
+import type { ProductUpdate } from "../types/ProductUpdate.types";
+import type { ProductCreate } from "../types/ProductCreate.types";
 
 const MODULE_NAME = "PRODUCTS_SERVICE";
 
@@ -103,5 +105,51 @@ export const productsService = {
 		Logger.info("Deleting product", { id }, MODULE_NAME);
 		await ApiService.delete(PRODUCT_ENDPOINTS.delete(id));
 		Logger.info("Product deleted successfully", { id }, MODULE_NAME);
+	},
+
+	/**	
+	 * Modificar producto
+	 * @param id - ID del producto
+	 * @param data - Datos para actualizar el producto
+	 */
+	async update(id: number, data: ProductUpdate): Promise<ProductDetail> {
+		Logger.info('Updating product', { id, data }, MODULE_NAME);
+
+		const response = await ApiService.put(
+			PRODUCT_ENDPOINTS.update(id),
+			data,
+			ProductDetailSchema,
+			undefined,
+			{ unwrapData: true }
+		);
+
+		Logger.info('Product updated successfully', {
+			id
+		}, MODULE_NAME);
+		return response as ProductDetail;
+	},
+
+	/**
+		 * Crear un nuevo producto
+		 * @param data - Datos del producto a crear
+		 */
+	async create(data: ProductCreate): Promise<ProductDetail> {
+		Logger.info('Creating product', { data }, MODULE_NAME);
+
+		const response = await ApiService.post(
+			PRODUCT_ENDPOINTS.create,
+			data,
+			ProductDetailSchema,
+			undefined,
+			{ unwrapData: true }
+		);
+
+		Logger.info(
+			"Product created successfully",
+			undefined,
+			// response.data.id && { id: response.data.id },
+			MODULE_NAME
+		);
+		return response as ProductDetail;
 	},
 };

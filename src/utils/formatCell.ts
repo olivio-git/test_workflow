@@ -1,5 +1,5 @@
 export const formatCell = (
-    value: any,
+    value: string | number | null | undefined,
     fallback?: string | number
 ): string | number => {
     if (value === null || value === undefined || value === "") {

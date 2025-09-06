@@ -10,9 +10,9 @@ import {
 } from "@/components/atoms/dialog";
 import { Input } from "@/components/atoms/input";
 import { Plus, Search, Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { ProductGet } from "../types/ProductGet";
-import { useProductsPaginated } from "../hooks/useProductsPaginated";
+import { useProductsPaginated } from "../hooks/queries/useProductsPaginated";
 import { useProductFilters } from "../hooks/useProductFilters";
 import { useBranchStore } from "@/states/branchStore";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -24,7 +24,7 @@ import { DialogDescription } from "@radix-ui/react-dialog";
 
 interface ProductSelectorModalProps {
     isSearchOpen: boolean
-    setIsSearchOpen: any
+    setIsSearchOpen: Dispatch<SetStateAction<boolean>>
     addItem: (product: ProductGet) => void
     addMultipleItem: (products: ProductGet[]) => void
     onlyWithStock?: boolean
@@ -47,13 +47,15 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
         setPage,
         updateFilter,
         resetFilters,
-    } = useProductFilters(Number(selectedBranchId) ?? 0)
+    } = useProductFilters(Number(selectedBranchId) || 0)
+
     const {
         data: productsResponse,
         isLoading,
         isFetching,
         error,
     } = useProductsPaginated(filters)
+
     // Agregar producto al detalle
     const addProduct = (product: ProductGet) => {
         addItem(product)
@@ -62,7 +64,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
 
     useEffect(() => {
         updateFilter("descripcion", debouncedSearchTerm)
-    }, [debouncedSearchTerm]);
+    }, [debouncedSearchTerm, updateFilter]);
 
     const filteredProducts = useMemo(() => {
         if (!productsResponse?.data) return [];
@@ -88,7 +90,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
         } else {
             setProducts(filteredProducts);
         }
-    }, [filteredProducts, filters.pagina]);
+    }, [filteredProducts, filters.pagina, error, isFetching]);
 
     useEffect(() => {
         if (!productsResponse?.meta) return;
@@ -102,14 +104,14 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
             // No hay scroll -> cargar más automáticamente
             setPage((filters.pagina || 1) + 1);
         }
-    }, [products]);
+    }, [products, filters.pagina, filters.pagina_registros, productsResponse?.meta, setPage]);
 
 
     useEffect(() => {
         resetFilters()
         setSearchTerm("")
         setSelectedProducts([])
-    }, [isSearchOpen])
+    }, [isSearchOpen, resetFilters])
 
     const handleToggleSelectedProduct = (product: ProductGet) => {
         setSelectedProducts((prev) => {
