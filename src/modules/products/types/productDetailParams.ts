@@ -12,4 +12,4 @@ export interface SalesParams extends BaseProductParams {
     gestion_2: number;
 }
 
-export interface ProvOrdersParams extends BaseProductParams { }
+export type ProvOrdersParams = BaseProductParams;

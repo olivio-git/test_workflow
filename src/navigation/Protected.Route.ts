@@ -3,7 +3,7 @@ import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
-import { BoxIcon, LayoutDashboardIcon, Package, ShoppingBag, Table2, Table2Icon, TableCellsMerge, UserCogIcon } from "lucide-react";
+import { BoxIcon, FileText, FolderOpen, LayoutDashboardIcon, Package, Receipt, Settings, ShoppingBag, ShoppingCart, Table2, Table2Icon, TableCellsMerge, UserCogIcon, Users } from "lucide-react";
 import type RouteType from "./RouteType";
 // import CreateCategory from "@/modules/categories/screens/CreateCategory";
 import TableCreateCategory from "@/modules/categories/components/TableCreateCategory";
@@ -21,6 +21,7 @@ import SaleEditScreen from "@/modules/sales/screens/saleEditScreen";
 import QuotationCreateScreen from "@/modules/quotations/screens/quotationCreateScreen";
 import QuotationEditScreen from "@/modules/quotations/screens/quotationEditScreen";
 import ProductEditScreen from "@/modules/products/screens/ProductEditScreen";
+import SettingsScreen from "@/modules/settings/screens/settingsScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -31,6 +32,7 @@ const protectedRoutes: RouteType[] = [
     isAdmin: false,
     role: ["user"],
     icon: LayoutDashboardIcon,
+    showSidebar: true,
   },
   {
     name: "Usuarios",
@@ -38,7 +40,7 @@ const protectedRoutes: RouteType[] = [
     role: ["admin"],
     isHeader: true,
     showSidebar: true,
-    // icon:BoxIcon,
+    icon: Users,
     subRoutes: [
       {
         path: "/dashboard/user",
@@ -85,7 +87,7 @@ const protectedRoutes: RouteType[] = [
     role: ["admin"],
     isHeader: true,
     showSidebar: true,
-    // icon:BoxIcon,
+    icon: Package,
     subRoutes: [
       {
         path: "/dashboard/create-product",
@@ -141,7 +143,7 @@ const protectedRoutes: RouteType[] = [
     //element: Content,
     isAdmin: false,
     role: ["user"],
-    // icon: HomeIcon,
+    icon: FolderOpen,
 
     isHeader: true,
     showSidebar: true,
@@ -176,7 +178,8 @@ const protectedRoutes: RouteType[] = [
     name: "Compras",
     type: "protected",
     isAdmin: false,
-    role: ["user"],
+    role: ["admin"],
+    icon: ShoppingCart,
     isHeader: true,
     showSidebar: true,
     subRoutes: [
@@ -235,7 +238,8 @@ const protectedRoutes: RouteType[] = [
     name: "Ventas",
     type: "protected",
     isAdmin: false,
-    role: ["user"],
+    role: ["admin"],
+    icon: Receipt,
     isHeader: true,
     showSidebar: true,
     subRoutes: [
@@ -291,7 +295,8 @@ const protectedRoutes: RouteType[] = [
     name: "Cotizaciones",
     type: "protected",
     isAdmin: false,
-    role: ["user"],
+    role: ["admin"],
+    icon: FileText,
     isHeader: true,
     showSidebar: true,
     subRoutes: [
@@ -343,6 +348,17 @@ const protectedRoutes: RouteType[] = [
         showInCommandPalette: false
       },
     ]
+  },
+  {
+    path: "/dashboard/settings",
+    name: "Configuración",
+    type: "protected",
+    element: SettingsScreen,
+    isAdmin: true,
+    role: ["admin"],
+    isHeader: false,
+    showSidebar: false,
+    icon: Settings,
   },
 ];
 

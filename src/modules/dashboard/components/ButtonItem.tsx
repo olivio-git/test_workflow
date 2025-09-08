@@ -12,7 +12,7 @@ const ButtonItem = ({
   return (
     <div
       onClick={onClick}
-      className="flex items-center px-3 py-2 text-sm rounded-md transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50 cursor-pointer"
+      className="flex items-center px-3 py-2 text-sm rounded-md transition-colors text-gray-700 hover:bg-secondary hover:text-secondary-foreground cursor-pointer"
     >
       <Icon className="h-4 w-4 mr-3 flex-shrink-0" />
       {children}
