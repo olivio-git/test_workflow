@@ -75,9 +75,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           <div className="px-4 py-4 border-t border-gray-200">
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <NavItem
-                href="/dashboard"
+                href="/dashboard/settings"
                 handleNavigation={handleNavigation}
                 icon={Settings}
               >

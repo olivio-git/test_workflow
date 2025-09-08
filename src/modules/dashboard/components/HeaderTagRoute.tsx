@@ -1,20 +1,31 @@
 import type RouteType from "@/navigation/RouteType";
 import NavItem from "./NavItem";
-import { ChevronDown, ChevronRight } from "lucide-react"; 
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { useLocation } from "react-router";
 
 const HeaderTagRoute = ({
-    route,
-    expandedHeaders,
-    toggleHeader,
-    handleNavigation
-  }: {
-    route: RouteType;
-    expandedHeaders:string[]
-    toggleHeader:(headerName:string)=>void
-    handleNavigation:()=>void
-  }) => {
-  const isExpanded = expandedHeaders.includes(route.name);
+  route,
+  expandedHeaders,
+  toggleHeader,
+  handleNavigation
+}: {
+  route: RouteType;
+  expandedHeaders: string[]
+  toggleHeader: (headerName: string) => void
+  handleNavigation: () => void
+}) => {
+  const location = useLocation();
   const hasSubRoutes = route.subRoutes && route.subRoutes.length > 0;
+
+  const isInSubRoute = hasSubRoutes
+    ? (route.subRoutes ?? []).some(
+        (subRoute) => subRoute.path && location.pathname.startsWith(subRoute.path)
+      )
+    : false;
+
+  const isExpanded = expandedHeaders.includes(route.name) || isInSubRoute;
+
+  if (!route.showSidebar) return null
 
   if (!route.isHeader) {
     return (
@@ -33,8 +44,14 @@ const HeaderTagRoute = ({
     <div className="mb-2">
       <div
         onClick={() => toggleHeader(route.name)}
-        className="flex items-center justify-start gap-2 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 cursor-pointer rounded-md transition-colors"
+        className="flex items-center justify-between gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-secondary hover:text-secondary-foreground cursor-pointer rounded-md transition-colors"
       >
+        <div className="flex items-center gap-2">
+          {route.icon && <route.icon className="h-4 w-4 flex-shrink-0" />}
+          <span className="text-xs font-semibold uppercase tracking-wider">
+            {route.name}
+          </span>
+        </div>
         {hasSubRoutes && (
           <div className="ml-2">
             {isExpanded ? (
@@ -44,18 +61,12 @@ const HeaderTagRoute = ({
             )}
           </div>
         )}
-        <div className="flex items-center">
-          {route.icon && <route.icon className="h-4 w-4 mr-3 flex-shrink-0" />}
-          <span className="text-xs text-gray-600 font-semibold uppercase tracking-wider">
-            {route.name}
-          </span>
-        </div>
       </div>
 
       {hasSubRoutes && isExpanded && (
         <div className="ml-4 mt-1 space-y-1">
           {route.subRoutes
-            ?.filter((subRoute) => subRoute.showSidebar && subRoute.path) 
+            ?.filter((subRoute) => subRoute.showSidebar && subRoute.path)
             .map((subRoute, index) => (
               <NavItem
                 key={`${subRoute.path}-${index}`}
