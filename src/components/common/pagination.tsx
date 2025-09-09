@@ -1,8 +1,8 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../atoms/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../atoms/select";
 import { cn } from "@/lib/utils";
+import RowsPerPageSelect from "./RowsPerPageSelect";
 
 interface PaginationProps {
     currentPage: number;
@@ -84,17 +84,10 @@ const Pagination: React.FC<PaginationProps> = ({
         )}>
             {/* Left side - Show rows selector */}
             <div className="flex items-center">
-                <Select value={showRows.toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                    <SelectTrigger className="space-x-2">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="border border-gray-200 shadow-lg">
-                        <SelectItem className="hover:bg-gray-50" value={"10"}>10 registros</SelectItem>
-                        <SelectItem className="hover:bg-gray-50" value={"25"}>25 registros</SelectItem>
-                        <SelectItem className="hover:bg-gray-50" value={"50"}>50 registros</SelectItem>
-                        <SelectItem className="hover:bg-gray-50" value={"100"}>100 registros</SelectItem>
-                    </SelectContent>
-                </Select>
+                <RowsPerPageSelect
+                    value={showRows}
+                    onChange={(value) => onShowRowsChange?.(Number(value))}
+                />
             </div>
 
             {/* Page numbers */}

@@ -1,46 +1,46 @@
 import { Kbd } from "@/components/atoms/kbd";
 import TooltipButton from "@/components/common/TooltipButton";
 import { useGoBack } from "@/hooks/useGoBack";
-import { CornerUpLeft, Edit, Filter, MapPin, RefreshCcw, Search, Trash2 } from "lucide-react";
+import { CornerUpLeft, Edit, Filter, RefreshCcw, Search, Tag, Trash2 } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useGetAllOrigins } from "../hooks/origin/useGetAllOrigins";
-import { useOriginFilters } from "../hooks/origin/useOriginFilters";
 import { Input } from "@/components/atoms/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Button } from "@/components/atoms/button";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
-import type { CreateOrigin, Origin, UpdateOrigin } from "../types/origin.types";
 import CustomizableTable from "@/components/common/CustomizableTable";
 import Pagination from "@/components/common/pagination";
 import type { DialogConfig } from "../types/configFormDialog.types";
 import { useForm } from "react-hook-form";
-import { CreateOriginSchema, UpdateOriginSchema } from "../schemas/origin.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useGetOriginById } from "../hooks/origin/useGetOriginById";
-import { useCreateOrigin } from "../hooks/origin/useCreateOrigin";
-import { useUpdateOrigin } from "../hooks/origin/useUpdateOrigin";
 import { ConfigFormDialog } from "../components/configFormDialog";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
 import { useLocation, useNavigate } from "react-router";
 import ConfirmationModal from "@/components/common/confirmationModal";
-import { useDeleteOrigin } from "../hooks/origin/useDeleteOrigin";
 import useConfirmMutation from "@/hooks/useConfirmMutation";
+import { useGetAllBrands } from "../hooks/brand/useGetAllBrands";
+import { useGetBrandById } from "../hooks/brand/useGetBrandById";
+import { useCreateBrand } from "../hooks/brand/useCreateBrand";
+import { useUpdateBrand } from "../hooks/brand/useUpdateBrand";
+import { useDeleteBrand } from "../hooks/brand/useDeleteBrand";
+import type { Brand, CreateBrand, UpdateBrand } from "../types/brand.types";
+import { CreateBrandSchema, UpdateBrandSchema } from "../schemas/brand.schema";
+import { useBrandFilters } from "../hooks/brand/useBrandFilters";
 import RowsPerPageSelect from "@/components/common/RowsPerPageSelect";
 
-const ORIGINS_DIALOG_CONFIG: DialogConfig = {
-    title: "Procedencia",
-    description: "una procedencia",
+const BRANDS_DIALOG_CONFIG: DialogConfig = {
+    title: "Marca",
+    description: "una marca",
     field: {
-        name: "procedencia",
-        label: "Procedencia",
-        placeholder: "Ingresa el nombre de la procedencia...",
+        name: "marca",
+        label: "Marca",
+        placeholder: "Ingresa el nombre de la marca...",
         required: true,
     }
 };
 
-const OriginsScreen = () => {
+const BrandsScreen = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,31 +52,31 @@ const OriginsScreen = () => {
         debouncedFilters,
         resetFilters,
         setPage,
-    } = useOriginFilters()
+    } = useBrandFilters()
 
     const {
-        data: originsData,
-        refetch: handleRefetchOriginsData,
-        isFetching: isFetchingOriginsData,
-        isRefetching: isRefetchingOriginsData,
-        isLoading: isLoadingOriginsData,
-        isError: isErrorOriginsData,
-    } = useGetAllOrigins(debouncedFilters)
+        data: brandsData,
+        refetch: handleRefetchBrandsData,
+        isFetching: isFetchingBrandsData,
+        isRefetching: isRefetchingBrandsData,
+        isLoading: isLoadingBrandsData,
+        isError: isErrorBrandsData,
+    } = useGetAllBrands(debouncedFilters)
 
     const {
-        data: originById,
-        isLoading: isLoadingOriginById
-    } = useGetOriginById(editingId || 0)
+        data: brandById,
+        isLoading: isLoadingBrandById
+    } = useGetBrandById(editingId || 0)
 
     const {
-        mutate: handleCreateOrigin,
+        mutate: handleCreateBrand,
         isPending: isCreating
-    } = useCreateOrigin()
+    } = useCreateBrand()
 
     const {
-        mutate: handleUpdateOrigin,
+        mutate: handleUpdateBrand,
         isPending: isUpdating
-    } = useUpdateOrigin()
+    } = useUpdateBrand()
 
     const { handleError } = useErrorHandler()
 
@@ -84,21 +84,21 @@ const OriginsScreen = () => {
 
     const handleDeleteSuccess = useCallback((_data: unknown, id: number) => {
         showSuccessToast({
-            title: "Procedencia eliminada",
-            description: `La procedencia #${id} se eliminó exitosamente`,
+            title: "Marca eliminada",
+            description: `La marca #${id} se eliminó exitosamente`,
             duration: 5000
-        })
-        setEditingId(null)
-    }, [])
-
-    const handleDeleteError = useCallback((error: unknown, id: number) => {
-        handleError({ error, customTitle: `Error al eliminar procedencia #${id}` });
+        });
+        setEditingId(null);
     }, []);
 
+    const handleDeleteError = useCallback((error: unknown, id: number) => {
+        handleError({ error, customTitle: `Error al eliminar marca #${id}` });
+    }, [handleError]);
+
     const {
-        mutate: deleteOrigin,
+        mutate: deleteBrand,
         isPending: isDeleting
-    } = useDeleteOrigin()
+    } = useDeleteBrand()
 
     const {
         close: handleCloseDeleteAlert,
@@ -106,51 +106,51 @@ const OriginsScreen = () => {
         isOpen: showDeleteAlert,
         open: handleOpenDeleteAlert,
         variables: itemToDelete
-    } = useConfirmMutation(deleteOrigin, handleDeleteSuccess, handleDeleteError)
+    } = useConfirmMutation(deleteBrand, handleDeleteSuccess, handleDeleteError)
 
     // Forms
-    const createForm = useForm<CreateOrigin>({
-        resolver: zodResolver(CreateOriginSchema),
+    const createForm = useForm<CreateBrand>({
+        resolver: zodResolver(CreateBrandSchema),
         defaultValues: {
-            procedencia: ''
+            marca: ''
         },
     });
 
-    const updateForm = useForm<UpdateOrigin>({
-        resolver: zodResolver(UpdateOriginSchema),
+    const updateForm = useForm<UpdateBrand>({
+        resolver: zodResolver(UpdateBrandSchema),
         defaultValues: {
-            procedencia: ''
+            marca: ''
         },
     });
 
     const isEditing = useMemo(() => editingId !== null, [editingId]);
     const currentForm = useMemo(() => isEditing ? updateForm : createForm, [isEditing, updateForm, createForm]);
     const isSaving = useMemo(() => isCreating || isUpdating, [isCreating, isUpdating]);
-    const totalRecords = useMemo(() => originsData?.meta?.total || 0, [originsData?.meta?.total]);
-    const isRefreshing = useMemo(() => isRefetchingOriginsData || isFetchingOriginsData, [isRefetchingOriginsData, isFetchingOriginsData]);
+    const totalRecords = useMemo(() => brandsData?.meta?.total || 0, [brandsData?.meta?.total]);
+    const isRefreshing = useMemo(() => isRefetchingBrandsData || isFetchingBrandsData, [isRefetchingBrandsData, isFetchingBrandsData]);
 
     useEffect(() => {
         if (location.state?.openModal) {
-            handleAddOrigin()
+            handleAddBrand()
             navigate(location.pathname, { replace: true });
         }
     }, [location, navigate]);
 
     useEffect(() => {
-        if (originById && isEditing) {
+        if (brandById && isEditing) {
             updateForm.reset({
-                procedencia: originById.procedencia
+                marca: brandById.marca
             });
         }
-    }, [originById, isEditing, updateForm]);
+    }, [brandById, isEditing, updateForm]);
 
-    const handleAddOrigin = useCallback(() => {
+    const handleAddBrand = useCallback(() => {
         setEditingId(null);
         createForm.reset();
         setIsDialogOpen(true);
     }, [createForm]);
 
-    const handleEditOrigin = useCallback((id: number) => {
+    const handleEditBrand = useCallback((id: number) => {
         setEditingId(id);
         setIsDialogOpen(true);
     }, []);
@@ -164,56 +164,56 @@ const OriginsScreen = () => {
         }
     }, [createForm, updateForm]);
 
-    const handleCreateSubmit = useCallback(createForm.handleSubmit(async (data: CreateOrigin) => {
-        handleCreateOrigin(data, {
+    const handleCreateSubmit = useCallback(createForm.handleSubmit(async (data: CreateBrand) => {
+        handleCreateBrand(data, {
             onSuccess: () => {
                 showSuccessToast({
-                    title: "Procedencia Agregada",
-                    description: `Procedencia agregada exitosamente`,
+                    title: "Marca Agregada",
+                    description: "Marca agregada exitosamente",
                     duration: 5000
                 });
-                handleDialogToggle(false)
+                handleDialogToggle(false);
             },
             onError: (error: unknown) => {
-                handleError({ error, customTitle: "No se pudo agregar la procedencia" });
+                handleError({ error, customTitle: "No se pudo agregar la marca" });
             }
         });
-    }), [createForm, handleCreateOrigin, handleDialogToggle, handleError]);
+    }), [createForm, handleCreateBrand, handleDialogToggle, handleError]);
 
-    const handleUpdateSubmit = useCallback(updateForm.handleSubmit(async (data: UpdateOrigin) => {
-        if (editingId) {
-            handleUpdateOrigin({ data, id: editingId }, {
-                onSuccess: () => {
-                    showSuccessToast({
-                        title: "Procedencia Modificada",
-                        description: `Procedencia modificada exitosamente`,
-                        duration: 5000
-                    });
-                    handleDialogToggle(false)
-                },
-                onError: (error: unknown) => {
-                    handleError({ error, customTitle: "No se pudo modificar la procedencia" });
-                }
-            });
-        }
-        else {
+    const handleUpdateSubmit = useCallback(updateForm.handleSubmit(async (data: UpdateBrand) => {
+        if (!editingId) {
             showErrorToast({
-                title: "Error al eliminar procedencia",
-                description: `No se pudo eliminar la procedencia. Por favor, intenta nuevamente`,
+                title: "Error al modificar marca",
+                description: "No se pudo modificar la marca. Por favor, intenta nuevamente",
                 duration: 5000
-            })
+            });
+            return;
         }
-    }), [updateForm, editingId, handleUpdateOrigin, handleDialogToggle, handleError]);
+
+        handleUpdateBrand({ data, id: editingId }, {
+            onSuccess: () => {
+                showSuccessToast({
+                    title: "Marca Modificada",
+                    description: "Marca modificada exitosamente",
+                    duration: 5000
+                });
+                handleDialogToggle(false);
+            },
+            onError: (error: unknown) => {
+                handleError({ error, customTitle: "No se pudo modificar la marca" });
+            }
+        });
+    }), [updateForm, editingId, handleUpdateBrand, handleDialogToggle, handleError]);
 
     const handleRowsChange = useCallback((rows: number) => {
         updateFilter("pagina_registros", rows);
     }, [updateFilter]);
 
     const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        updateFilter("procedencia", e.target.value);
+        updateFilter("marca", e.target.value);
     }, [updateFilter]);
 
-    const columns = useMemo<ColumnDef<Origin>[]>(() => [
+    const columns = useMemo<ColumnDef<Brand>[]>(() => [
         {
             accessorKey: "id",
             header: "ID",
@@ -226,8 +226,8 @@ const OriginsScreen = () => {
             )
         },
         {
-            accessorKey: "procedencia",
-            header: "Procedencia",
+            accessorKey: "marca",
+            header: "Marca",
             cell: ({ getValue }) => (
                 <h3 className="font-medium text-gray-700">
                     {getValue<string>()}
@@ -245,7 +245,7 @@ const OriginsScreen = () => {
                         <Button
                             className="w-8 cursor-pointer"
                             variant={"outline"}
-                            onClick={() => handleEditOrigin(id)}
+                            onClick={() => handleEditBrand(id)}
                         >
                             <Edit className="size-4" />
                         </Button>
@@ -261,10 +261,10 @@ const OriginsScreen = () => {
                 )
             },
         },
-    ], [handleEditOrigin, handleOpenDeleteAlert]);
+    ], [handleEditBrand, handleOpenDeleteAlert]);
 
-    const table = useReactTable<Origin>({
-        data: originsData?.data || [],
+    const table = useReactTable<Brand>({
+        data: brandsData?.data || [],
         columns,
         state: {},
         getCoreRowModel: getCoreRowModel(),
@@ -305,9 +305,9 @@ const OriginsScreen = () => {
                         </TooltipButton>
                         <div>
                             <h1 className="text-lg lg:text-xl font-bold text-gray-900 leading-tight">
-                                Procedencias
+                                Marcas
                             </h1>
-                            <p className="text-sm text-gray-500">Origen de los productos</p>
+                            <p className="text-sm text-gray-500">Marcas de productos</p>
                         </div>
                     </div >
                 </div >
@@ -325,8 +325,8 @@ const OriginsScreen = () => {
                         <div className="flex w-full relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Buscar procedencia..."
-                                value={filters.procedencia}
+                                placeholder="Buscar marca..."
+                                value={filters.marca}
                                 onChange={handleSearchChange}
                                 className="pl-10"
                             />
@@ -334,7 +334,7 @@ const OriginsScreen = () => {
 
                         <div className="flex gap-2 justify-end w-full">
                             <TooltipButton
-                                onClick={handleRefetchOriginsData}
+                                onClick={handleRefetchBrandsData}
                                 buttonProps={{
                                     className: 'w-8',
                                     disabled: isRefreshing,
@@ -362,8 +362,8 @@ const OriginsScreen = () => {
                 <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                     <div>
                         <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                            <MapPin className="size-5 text-gray-700" />
-                            Gestionar Procedencias
+                            <Tag className="size-5 text-gray-700" />
+                            Gestionar Marcas
                         </CardTitle>
                         <CardDescription className="text-sm">
                             {totalRecords} elemento{totalRecords !== 1 ? "s" : ""} registrado
@@ -371,13 +371,13 @@ const OriginsScreen = () => {
                         </CardDescription>
                     </div>
                     <ConfigFormDialog
-                        config={ORIGINS_DIALOG_CONFIG}
+                        config={BRANDS_DIALOG_CONFIG}
                         isOpen={isDialogOpen}
                         onOpenChange={handleDialogToggle}
                         onSubmit={isEditing ? handleUpdateSubmit : handleCreateSubmit}
                         register={currentForm.register}
                         errors={currentForm.formState.errors}
-                        isLoading={isLoadingOriginById}
+                        isLoading={isLoadingBrandById}
                         isEditing={isEditing}
                         editingId={editingId}
                         isSaving={isSaving}
@@ -387,9 +387,9 @@ const OriginsScreen = () => {
                     <div className="border rounded-lg border-gray-200">
                         <CustomizableTable
                             table={table}
-                            isLoading={isLoadingOriginsData}
-                            isError={isErrorOriginsData}
-                            isFetching={isFetchingOriginsData}
+                            isLoading={isLoadingBrandsData}
+                            isError={isErrorBrandsData}
+                            isFetching={isFetchingBrandsData}
                             rows={filters.pagina_registros}
                         />
                     </div>
@@ -407,8 +407,8 @@ const OriginsScreen = () => {
 
             <ConfirmationModal
                 isOpen={showDeleteAlert}
-                title="Eliminar procedencia"
-                message={`¿Estás seguro de que deseas eliminar la procedencia #${itemToDelete}?`}
+                title="Eliminar marca"
+                message={`¿Estás seguro de que deseas eliminar la marca #${itemToDelete}?`}
                 onClose={handleCloseDeleteAlert}
                 onConfirm={handleConfirmDeleteAlert}
                 isLoading={isDeleting}
@@ -416,4 +416,4 @@ const OriginsScreen = () => {
         </main>
     );
 }
-export default OriginsScreen;
+export default BrandsScreen;
