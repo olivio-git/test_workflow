@@ -34,8 +34,8 @@ export function ConfigFormDialog<T extends FieldValues>({
     isSaving = false,
 }: ConfigFormDialogProps<T>) {
     const defaultTrigger = (
-        <Button className="bg-black hover:bg-gray-800 w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
+        <Button className="w-full sm:w-auto">
+            <Plus className="size-4" />
             Agregar
         </Button>
     );
