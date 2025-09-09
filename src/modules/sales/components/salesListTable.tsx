@@ -417,16 +417,15 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                 }
 
                 <div className="flex items-center gap-2">
-                    <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
                     <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                        <SelectTrigger>
+                        <SelectTrigger className="space-x-2">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="shadow-lg">
-                            <SelectItem value={"10"}>10</SelectItem>
-                            <SelectItem value={"25"}>25</SelectItem>
-                            <SelectItem value={"50"}>50</SelectItem>
-                            <SelectItem value={"100"}>100</SelectItem>
+                            <SelectItem value={"10"}>10 registros</SelectItem>
+                            <SelectItem value={"25"}>25 registros</SelectItem>
+                            <SelectItem value={"50"}>50 registros</SelectItem>
+                            <SelectItem value={"100"}>100 registros</SelectItem>
                         </SelectContent>
                     </Select>
                     <DropdownMenu>

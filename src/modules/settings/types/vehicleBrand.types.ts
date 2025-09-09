@@ -1,6 +1,6 @@
 import type z from "zod";
 import type { CreateVehicleBrandSchema, GetAllVehicleBrandsSchema, GetByIdVehicleBrandSchema, UpdateVehicleBrandSchema, VehicleBrandSchema } from "../schemas/vehicleBrand.schema";
-import type { PaginationParams } from "./paginationParams";
+import type { PaginationParams } from "../../shared/types/paginationParams";
 
 export type VehicleBrand = z.infer<typeof VehicleBrandSchema>
 export type GetAllVehicleBrands = z.infer<typeof GetAllVehicleBrandsSchema>

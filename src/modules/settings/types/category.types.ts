@@ -1,6 +1,6 @@
 import type z from "zod";
 import type { CategorySchema, CreateCategorySchema, GetAllCategoriesSchema, GetByIdCategorySchema, UpdateCategorySchema } from "../schemas/category.schema";
-import type { PaginationParams } from "./paginationParams";
+import type { PaginationParams } from "../../shared/types/paginationParams";
 
 export type Category = z.infer<typeof CategorySchema>
 export type GetAllCategories = z.infer<typeof GetAllCategoriesSchema>

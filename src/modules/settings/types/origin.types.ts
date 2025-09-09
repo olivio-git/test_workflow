@@ -1,6 +1,6 @@
 import type z from "zod";
 import type { CreateOriginSchema, GetAllOriginsSchema, GetByIdOriginSchema, OriginSchema, UpdateOriginSchema } from "../schemas/origin.schema";
-import type { PaginationParams } from "./paginationParams";
+import type { PaginationParams } from "../../shared/types/paginationParams";
 
 export type Origin = z.infer<typeof OriginSchema>
 export type GetAllOrigins = z.infer<typeof GetAllOriginsSchema>

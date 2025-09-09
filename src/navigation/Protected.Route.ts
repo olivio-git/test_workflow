@@ -3,7 +3,7 @@ import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
-import { BoxIcon, FileText, FolderOpen, LayoutDashboardIcon, Package, Receipt, Settings, ShoppingBag, ShoppingCart, Table2, Table2Icon, TableCellsMerge, UserCogIcon, Users } from "lucide-react";
+import { BoxIcon, FileText, FolderOpen, LayoutDashboardIcon, MapPin, Package, Receipt, Settings, ShoppingBag, ShoppingCart, Table2, Table2Icon, TableCellsMerge, UserCogIcon, Users } from "lucide-react";
 import type RouteType from "./RouteType";
 // import CreateCategory from "@/modules/categories/screens/CreateCategory";
 import TableCreateCategory from "@/modules/categories/components/TableCreateCategory";
@@ -22,6 +22,7 @@ import QuotationCreateScreen from "@/modules/quotations/screens/quotationCreateS
 import QuotationEditScreen from "@/modules/quotations/screens/quotationEditScreen";
 import ProductEditScreen from "@/modules/products/screens/ProductEditScreen";
 import SettingsScreen from "@/modules/settings/screens/settingsScreen";
+import OriginsScreen from "@/modules/settings/screens/OriginsScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -359,6 +360,20 @@ const protectedRoutes: RouteType[] = [
     isHeader: false,
     showSidebar: false,
     icon: Settings,
+    subRoutes: [
+      {
+        path: "/dashboard/settings/origins",
+        name: "Procedencias",
+        type: "protected",
+        element: OriginsScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: MapPin
+      },
+    ]
   },
 ];
 
