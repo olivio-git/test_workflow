@@ -1,6 +1,6 @@
 import type z from "zod";
 import type { CreateMeasurementSchema, GetAllMeasurementsSchema, GetByIdMeasurementSchema, MeasurementSchema, UpdateMeasurementSchema } from "../schemas/measurement.schema";
-import type { PaginationParams } from "./paginationParams";
+import type { PaginationParams } from "../../shared/types/paginationParams";
 
 export type Measurement = z.infer<typeof MeasurementSchema>
 export type GetAllMeasurements = z.infer<typeof GetAllMeasurementsSchema>

@@ -2,6 +2,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../atoms/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../atoms/select";
+import { cn } from "@/lib/utils";
 
 interface PaginationProps {
     currentPage: number;
@@ -9,6 +10,7 @@ interface PaginationProps {
     onPageChange: (page: number) => void;
     showRows?: number;
     onShowRowsChange?: (rows: number) => void;
+    className?: string
 }
 
 const Pagination: React.FC<PaginationProps> = ({
@@ -16,7 +18,8 @@ const Pagination: React.FC<PaginationProps> = ({
     totalData,
     onPageChange,
     showRows = 10,
-    onShowRowsChange
+    onShowRowsChange,
+    className
 }) => {
     const totalPages = Math.ceil(totalData / showRows);
     const getVisiblePages = () => {
@@ -75,19 +78,21 @@ const Pagination: React.FC<PaginationProps> = ({
     if (totalPages <= 1) return null
 
     return (
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-1 items-center justify-between px-2 sm:px-4 py-3 border-t border-gray-200">
+        <div className={cn(
+            "flex flex-col sm:flex-row gap-3 sm:gap-1 items-center justify-between px-2 sm:px-4 py-3 border-t border-gray-200",
+            className
+        )}>
             {/* Left side - Show rows selector */}
-            <div className="flex items-center gap-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-0">Mostrar:</label>
+            <div className="flex items-center">
                 <Select value={showRows.toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                    <SelectTrigger>
+                    <SelectTrigger className="space-x-2">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border border-gray-200 shadow-lg">
-                        <SelectItem className="hover:bg-gray-50" value={"10"}>10</SelectItem>
-                        <SelectItem className="hover:bg-gray-50" value={"25"}>25</SelectItem>
-                        <SelectItem className="hover:bg-gray-50" value={"50"}>50</SelectItem>
-                        <SelectItem className="hover:bg-gray-50" value={"100"}>100</SelectItem>
+                        <SelectItem className="hover:bg-gray-50" value={"10"}>10 registros</SelectItem>
+                        <SelectItem className="hover:bg-gray-50" value={"25"}>25 registros</SelectItem>
+                        <SelectItem className="hover:bg-gray-50" value={"50"}>50 registros</SelectItem>
+                        <SelectItem className="hover:bg-gray-50" value={"100"}>100 registros</SelectItem>
                     </SelectContent>
                 </Select>
             </div>

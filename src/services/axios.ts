@@ -1,4 +1,5 @@
 import authSDK from "@/services/sdk-simple-auth";
+import { cleanFilters } from "@/utils/cleanFilters";
 import { environment } from "@/utils/environment";
 import axios from "axios";
 
@@ -15,6 +16,11 @@ apiClient.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        if (config.method?.toLowerCase() === "get" && config.params) {
+            config.params = cleanFilters(config.params as Record<string, unknown>);
+        }
+
         return config;
     },
     (error) => {
