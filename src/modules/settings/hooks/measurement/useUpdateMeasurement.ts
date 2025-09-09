@@ -8,7 +8,7 @@ type UpdateParams = {
     data: UpdateMeasurement;
 };
 
-export const useUpdateCategory = () => {
+export const useUpdateMeasurement = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
