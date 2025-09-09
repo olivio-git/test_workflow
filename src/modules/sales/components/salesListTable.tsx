@@ -15,11 +15,11 @@ import { Kbd } from "@/components/atoms/kbd";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/atoms/dropdown-menu";
 import { Button } from "@/components/atoms/button";
 import authSDK from "@/services/sdk-simple-auth";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { formatCurrency } from "@/utils/formaters";
 import { useNavigate } from "react-router";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import ShortcutKey from "@/components/common/ShortcutKey";
+import RowsPerPageSelect from "@/components/common/RowsPerPageSelect";
 
 interface SalesListTableProps {
     data: SalesGetAllResponse
@@ -417,17 +417,10 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                 }
 
                 <div className="flex items-center gap-2">
-                    <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                        <SelectTrigger className="space-x-2">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="shadow-lg">
-                            <SelectItem value={"10"}>10 registros</SelectItem>
-                            <SelectItem value={"25"}>25 registros</SelectItem>
-                            <SelectItem value={"50"}>50 registros</SelectItem>
-                            <SelectItem value={"100"}>100 registros</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <RowsPerPageSelect
+                        value={filters.pagina_registros ?? 10}
+                        onChange={onShowRowsChange}
+                    />
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">

@@ -10,13 +10,6 @@ import {
 import { Input } from '@/components/atoms/input';
 import { Label } from '@/components/atoms/label';
 import ResizableBox from '@/components/atoms/resizable-box';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/atoms/select';
 import { Switch } from '@/components/atoms/switch';
 import CustomizableTable from '@/components/common/CustomizableTable';
 import Pagination from '@/components/common/pagination';
@@ -54,6 +47,7 @@ import { usePurchaseDelete } from '../hooks/usePurchaseDelete';
 import { usePurchaseFilters } from '../hooks/usePurchaseFilters';
 import { usePurchasesPaginated } from '../hooks/usePurchasesPaginated';
 import type { PurchaseGet } from '../types/PurchaseGet';
+import RowsPerPageSelect from '@/components/common/RowsPerPageSelect';
 
 const getColumnVisibilityKey = (userName: string) =>
   `purchase-columns-${userName}`;
@@ -568,20 +562,10 @@ const PurchaseListScreen = () => {
           )}
 
           <div className="flex items-center gap-2">
-            <Select
-              value={(filters.pagina_registros ?? 10).toString()}
-              onValueChange={value => onShowRowsChange?.(Number(value))}
-            >
-              <SelectTrigger className='space-x-2'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="shadow-lg">
-                <SelectItem value={'10'}>10 registros</SelectItem>
-                <SelectItem value={'25'}>25 registros</SelectItem>
-                <SelectItem value={'50'}>50 registros</SelectItem>
-                <SelectItem value={'100'}>100 registros</SelectItem>
-              </SelectContent>
-            </Select>
+            <RowsPerPageSelect
+              value={filters.pagina_registros ?? 10}
+              onChange={onShowRowsChange}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
