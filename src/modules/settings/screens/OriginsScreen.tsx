@@ -400,7 +400,7 @@ const OriginsScreen = () => {
                     </div>
 
                     <Pagination
-                        className="border-0"
+                        className="border-0 px-0 pt-3 pb-0"
                         currentPage={filters.pagina || 1}
                         onPageChange={setPage}
                         totalData={originsData?.meta?.total || 1}

@@ -79,7 +79,7 @@ const Pagination: React.FC<PaginationProps> = ({
 
     return (
         <div className={cn(
-            "flex flex-col sm:flex-row gap-3 sm:gap-1 items-center justify-between px-2 sm:px-4 py-3 border-t border-gray-200",
+            "flex flex-col sm:flex-row gap-3 sm:gap-1 items-center justify-between px-2 py-3 border-t border-gray-200",
             className
         )}>
             {/* Left side - Show rows selector */}
