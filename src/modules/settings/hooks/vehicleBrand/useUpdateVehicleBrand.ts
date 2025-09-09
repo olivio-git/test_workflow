@@ -8,7 +8,7 @@ type UpdateParams = {
     data: UpdateVehicleBrand;
 };
 
-export const useUpdateCategory = () => {
+export const useUpdateVehicleBrand = () => {
     const queryClient = useQueryClient();
 
     return useMutation({

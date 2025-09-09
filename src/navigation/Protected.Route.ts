@@ -3,7 +3,7 @@ import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
-import { BoxIcon, FileText, FolderOpen, LayoutDashboardIcon, MapPin, Package, Receipt, Settings, ShoppingBag, ShoppingCart, Table2, Table2Icon, TableCellsMerge, Tag, UserCogIcon, Users } from "lucide-react";
+import { BoxIcon, Car, FileText, FolderOpen, LayoutDashboardIcon, MapPin, Package, Receipt, Settings, ShoppingBag, ShoppingCart, Table2, Table2Icon, TableCellsMerge, Tag, UserCogIcon, Users } from "lucide-react";
 import type RouteType from "./RouteType";
 // import CreateCategory from "@/modules/categories/screens/CreateCategory";
 import TableCreateCategory from "@/modules/categories/components/TableCreateCategory";
@@ -24,6 +24,7 @@ import ProductEditScreen from "@/modules/products/screens/ProductEditScreen";
 import SettingsScreen from "@/modules/settings/screens/settingsScreen";
 import OriginsScreen from "@/modules/settings/screens/OriginsScreen";
 import BrandsScreen from "@/modules/settings/screens/brandsScreen";
+import VehicleBrandsScreen from "@/modules/settings/screens/vehicleBrandScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -385,6 +386,18 @@ const protectedRoutes: RouteType[] = [
         showSidebar: false,
         showInCommandPalette: true,
         icon: Tag
+      },
+      {
+        path: "/dashboard/settings/vehicle-brands",
+        name: "Marcas de Vehículo",
+        type: "protected",
+        element: VehicleBrandsScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: Car
       },
     ]
   },
