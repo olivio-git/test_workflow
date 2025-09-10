@@ -4,7 +4,7 @@ import { CategorySchema } from "./category.schema";
 
 export const SubcategorySchema = z.object({
     id: z.number(),
-    subcategoria: z.string(),
+    subcategoria: z.string().nonempty(),
     categoria: CategorySchema.pick({
         id: true,
         categoria: true
@@ -17,10 +17,14 @@ export const GetAllSubcategoriesSchema = paginatedResponseSchema(SubcategorySche
 
 export const CreateSubcategorySchema = SubcategorySchema.pick({
     subcategoria: true
+}).extend({
+    id_categoria: z.number().nonnegative().min(1, "El campo Categoria es requerido")
 })
 
 export const UpdateSubcategorySchema = SubcategorySchema.pick({
     subcategoria: true
+}).extend({
+    id_categoria: z.number().nonnegative().min(1, "El campo Categoria es requerido")
 })
 
 export const GetByIdSubcategorySchema = SubcategorySchema.extend({

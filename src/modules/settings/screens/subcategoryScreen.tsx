@@ -1,7 +1,7 @@
 import { Kbd } from "@/components/atoms/kbd";
 import TooltipButton from "@/components/common/TooltipButton";
 import { useGoBack } from "@/hooks/useGoBack";
-import { CornerUpLeft, Edit, Filter, RefreshCcw, Search, Tag, Trash2 } from "lucide-react";
+import { CornerUpLeft, Edit, Filter, Layers, RefreshCcw, Search, Trash2 } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Input } from "@/components/atoms/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
@@ -10,37 +10,23 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
 import CustomizableTable from "@/components/common/CustomizableTable";
 import Pagination from "@/components/common/pagination";
-import type { DialogConfig } from "../types/configFormDialog.types";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ConfigFormDialog } from "../components/configFormDialog";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
-import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
+import { showSuccessToast } from "@/hooks/use-toast-enhanced";
 import { useLocation, useNavigate } from "react-router";
 import ConfirmationModal from "@/components/common/confirmationModal";
 import useConfirmMutation from "@/hooks/useConfirmMutation";
-import { useGetAllBrands } from "../hooks/brand/useGetAllBrands";
-import { useGetBrandById } from "../hooks/brand/useGetBrandById";
-import { useCreateBrand } from "../hooks/brand/useCreateBrand";
-import { useUpdateBrand } from "../hooks/brand/useUpdateBrand";
-import { useDeleteBrand } from "../hooks/brand/useDeleteBrand";
-import type { Brand, CreateBrand, UpdateBrand } from "../types/brand.types";
-import { CreateBrandSchema, UpdateBrandSchema } from "../schemas/brand.schema";
-import { useBrandFilters } from "../hooks/brand/useBrandFilters";
 import RowsPerPageSelect from "@/components/common/RowsPerPageSelect";
+import { useSubcategoryFilters } from "../hooks/subcategory/useSubcategoryFilters";
+import { useGetAllSubcategories } from "../hooks/subcategory/useGetAllSubcategories";
+import { useDeleteSubcategory } from "../hooks/subcategory/useDeleteSubcategory";
+import type { Subcategory } from "../types/subcategory.types";
+import { Label } from "@/components/atoms/label";
+import SubcategoryFormDialog from "../components/subcategoryFormDialog";
+import { useCategoriesWithSubcategories } from "@/modules/shared/hooks/useCategories";
+import { ComboboxSelect } from "@/components/common/SelectCombobox";
+import { formatCell } from "@/utils/formatCell";
 
-const BRANDS_DIALOG_CONFIG: DialogConfig = {
-    title: "Marca",
-    description: "una marca",
-    field: {
-        name: "marca",
-        label: "Marca",
-        placeholder: "Ingresa el nombre de la marca...",
-        required: true,
-    }
-};
-
-const BrandsScreen = () => {
+const SubcategoriessScreen = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,33 +38,21 @@ const BrandsScreen = () => {
         debouncedFilters,
         resetFilters,
         setPage,
-    } = useBrandFilters()
+    } = useSubcategoryFilters()
 
     const {
-        data: brandsData,
-        refetch: handleRefetchBrandsData,
-        isFetching: isFetchingBrandsData,
-        isRefetching: isRefetchingBrandsData,
-        isLoading: isLoadingBrandsData,
-        isError: isErrorBrandsData,
-    } = useGetAllBrands(debouncedFilters)
+        data: subcategoriesData,
+        refetch: handleRefetchSubcategoriesData,
+        isFetching: isFetchingSubcategoriesData,
+        isRefetching: isRefetchingSubcategoriesData,
+        isLoading: isLoadingSubcategoriesData,
+        isError: isErrorSubcategoriesData,
+    } = useGetAllSubcategories(debouncedFilters)
 
     const {
-        data: brandById,
-        isLoading: isLoadingBrandById,
-        isError: isErrorBrandById,
-        error: errorBrandById
-    } = useGetBrandById(editingId || 0)
-
-    const {
-        mutate: handleCreateBrand,
-        isPending: isCreating
-    } = useCreateBrand()
-
-    const {
-        mutate: handleUpdateBrand,
-        isPending: isUpdating
-    } = useUpdateBrand()
+        data: categoriesData,
+        isLoading: isLoadingCategoriesData,
+    } = useCategoriesWithSubcategories()
 
     const { handleError } = useErrorHandler()
 
@@ -86,21 +60,21 @@ const BrandsScreen = () => {
 
     const handleDeleteSuccess = useCallback((_data: unknown, id: number) => {
         showSuccessToast({
-            title: "Marca eliminada",
-            description: `La marca #${id} se eliminó exitosamente`,
+            title: "Subcategoria eliminada",
+            description: `La Subcategoria #${id} se eliminó exitosamente`,
             duration: 5000
         });
         setEditingId(null);
     }, []);
 
     const handleDeleteError = useCallback((error: unknown, id: number) => {
-        handleError({ error, customTitle: `Error al eliminar marca #${id}` });
+        handleError({ error, customTitle: `Error al eliminar la Subcategoria #${id}` });
     }, [handleError]);
 
     const {
-        mutate: deleteBrand,
+        mutate: deleteSubcategory,
         isPending: isDeleting
-    } = useDeleteBrand()
+    } = useDeleteSubcategory()
 
     const {
         close: handleCloseDeleteAlert,
@@ -108,51 +82,25 @@ const BrandsScreen = () => {
         isOpen: showDeleteAlert,
         open: handleOpenDeleteAlert,
         variables: itemToDelete
-    } = useConfirmMutation(deleteBrand, handleDeleteSuccess, handleDeleteError)
-
-    // Forms
-    const createForm = useForm<CreateBrand>({
-        resolver: zodResolver(CreateBrandSchema),
-        defaultValues: {
-            marca: ''
-        },
-    });
-
-    const updateForm = useForm<UpdateBrand>({
-        resolver: zodResolver(UpdateBrandSchema),
-        defaultValues: {
-            marca: ''
-        },
-    });
+    } = useConfirmMutation(deleteSubcategory, handleDeleteSuccess, handleDeleteError)
 
     const isEditing = useMemo(() => editingId !== null, [editingId]);
-    const currentForm = useMemo(() => isEditing ? updateForm : createForm, [isEditing, updateForm, createForm]);
-    const isSaving = useMemo(() => isCreating || isUpdating, [isCreating, isUpdating]);
-    const totalRecords = useMemo(() => brandsData?.meta?.total || 0, [brandsData?.meta?.total]);
-    const isRefreshing = useMemo(() => isRefetchingBrandsData || isFetchingBrandsData, [isRefetchingBrandsData, isFetchingBrandsData]);
+    const totalRecords = useMemo(() => subcategoriesData?.meta?.total || 0, [subcategoriesData?.meta?.total]);
+    const isRefreshing = useMemo(() => isRefetchingSubcategoriesData || isFetchingSubcategoriesData, [isRefetchingSubcategoriesData, isFetchingSubcategoriesData]);
 
     useEffect(() => {
         if (location.state?.openModal) {
-            handleAddBrand()
+            handleAddSubcategory()
             navigate(location.pathname, { replace: true });
         }
     }, [location, navigate]);
 
-    useEffect(() => {
-        if (brandById && isEditing) {
-            updateForm.reset({
-                marca: brandById.marca
-            });
-        }
-    }, [brandById, isEditing, updateForm]);
-
-    const handleAddBrand = useCallback(() => {
+    const handleAddSubcategory = useCallback(() => {
         setEditingId(null);
-        createForm.reset();
         setIsDialogOpen(true);
-    }, [createForm]);
+    }, []);
 
-    const handleEditBrand = useCallback((id: number) => {
+    const handleEditSubcategory = useCallback((id: number) => {
         setEditingId(id);
         setIsDialogOpen(true);
     }, []);
@@ -161,67 +109,18 @@ const BrandsScreen = () => {
         setIsDialogOpen(open);
         if (!open) {
             setEditingId(null);
-            createForm.reset();
-            updateForm.reset();
         }
-    }, [createForm, updateForm]);
-
-    const handleCreateSubmit = useCallback(createForm.handleSubmit(async (data: CreateBrand) => {
-        handleCreateBrand(data, {
-            onSuccess: () => {
-                showSuccessToast({
-                    title: "Marca Agregada",
-                    description: "Marca agregada exitosamente",
-                    duration: 5000
-                });
-                handleDialogToggle(false);
-            },
-            onError: (error: unknown) => {
-                handleError({ error, customTitle: "No se pudo agregar la marca" });
-            }
-        });
-    }), [createForm, handleCreateBrand, handleDialogToggle, handleError]);
-
-    const handleUpdateSubmit = useCallback(updateForm.handleSubmit(async (data: UpdateBrand) => {
-        if (!editingId) {
-            showErrorToast({
-                title: "Error al modificar marca",
-                description: "No se pudo modificar la marca. Por favor, intenta nuevamente",
-                duration: 5000
-            });
-            return;
-        }
-
-        handleUpdateBrand({ data, id: editingId }, {
-            onSuccess: () => {
-                showSuccessToast({
-                    title: "Marca Modificada",
-                    description: "Marca modificada exitosamente",
-                    duration: 5000
-                });
-                handleDialogToggle(false);
-            },
-            onError: (error: unknown) => {
-                handleError({ error, customTitle: "No se pudo modificar la marca" });
-            }
-        });
-    }), [updateForm, editingId, handleUpdateBrand, handleDialogToggle, handleError]);
+    }, []);
 
     const handleRowsChange = useCallback((rows: number) => {
         updateFilter("pagina_registros", rows);
     }, [updateFilter]);
 
     const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        updateFilter("marca", e.target.value);
+        updateFilter("subcategoria", e.target.value);
     }, [updateFilter]);
 
-    useEffect(() => {
-        if (!isErrorBrandById) return
-        handleError({ error: errorBrandById, customTitle: "Ocurrió un error al cargar los datos" });
-        handleDialogToggle(false)
-    }, [isErrorBrandById, errorBrandById, handleError, handleDialogToggle])
-
-    const columns = useMemo<ColumnDef<Brand>[]>(() => [
+    const columns = useMemo<ColumnDef<Subcategory>[]>(() => [
         {
             accessorKey: "id",
             header: "ID",
@@ -234,13 +133,34 @@ const BrandsScreen = () => {
             )
         },
         {
-            accessorKey: "marca",
-            header: "Marca",
+            accessorKey: "subcategoria",
+            header: "Subcategoria",
             cell: ({ getValue }) => (
                 <h3 className="font-medium text-gray-700">
                     {getValue<string>()}
                 </h3>
             )
+        },
+        {
+            accessorFn: row => row.categoria?.categoria,
+            id: "categoria",
+            header: "Categoria",
+            cell: ({ getValue, row }) => {
+                const value = getValue<string>()
+                const id = row.original.categoria?.id
+                return (
+                    <div>
+                        <h3 className={`${value ? "font-medium text-gray-700" : "italic text-gray-400"}`}>
+                            {formatCell(value)}
+                        </h3>
+                        {
+                            id && (
+                                <span className="text-xs text-muted-foreground font-mono">ID: {id}</span>
+                            )
+                        }
+                    </div>
+                )
+            }
         },
         {
             id: "actions",
@@ -253,7 +173,7 @@ const BrandsScreen = () => {
                         <Button
                             className="w-8 cursor-pointer"
                             variant={"outline"}
-                            onClick={() => handleEditBrand(id)}
+                            onClick={() => handleEditSubcategory(id)}
                         >
                             <Edit className="size-4" />
                         </Button>
@@ -269,10 +189,10 @@ const BrandsScreen = () => {
                 )
             },
         },
-    ], [handleEditBrand, handleOpenDeleteAlert]);
+    ], [handleEditSubcategory, handleOpenDeleteAlert]);
 
-    const table = useReactTable<Brand>({
-        data: brandsData?.data || [],
+    const table = useReactTable<Subcategory>({
+        data: subcategoriesData?.data || [],
         columns,
         state: {},
         getCoreRowModel: getCoreRowModel(),
@@ -313,9 +233,9 @@ const BrandsScreen = () => {
                         </TooltipButton>
                         <div>
                             <h1 className="text-lg lg:text-xl font-bold text-gray-900 leading-tight">
-                                Marcas
+                                Subcategorías
                             </h1>
-                            <p className="text-sm text-gray-500">Marcas de productos</p>
+                            <p className="text-sm text-gray-500">Subcategorías de los productos</p>
                         </div>
                     </div >
                 </div >
@@ -330,19 +250,41 @@ const BrandsScreen = () => {
                 </CardHeader>
                 <CardContent>
                     <section className="grid gap-2 sm:grid-cols-2">
-                        <div className="flex w-full relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Buscar marca..."
-                                value={filters.marca}
-                                onChange={handleSearchChange}
-                                className="pl-10"
-                            />
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <Label>Subcategoría</Label>
+                                <div className="flex w-full relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Buscar subcategoria..."
+                                        value={filters.subcategoria}
+                                        onChange={handleSearchChange}
+                                        className="pl-10"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <Label>Categoria</Label>
+                                <ComboboxSelect
+                                    value={filters.categoria}
+                                    onChange={(value) => {
+                                        const parsedValue = value === "all" ? undefined : Number(value);
+                                        updateFilter("categoria", parsedValue);
+                                    }}
+                                    options={(categoriesData || []).map((cat) => ({
+                                        id: String(cat.id),
+                                        categoria: cat.categoria,
+                                    }))}
+                                    optionTag={"categoria"}
+                                    enableAllOption={true}
+                                    isLoadingData={isLoadingCategoriesData}
+                                />
+                            </div>
                         </div>
 
-                        <div className="flex gap-2 justify-end w-full">
+                        <div className="flex gap-2 justify-end w-full items-end">
                             <TooltipButton
-                                onClick={handleRefetchBrandsData}
+                                onClick={handleRefetchSubcategoriesData}
                                 buttonProps={{
                                     className: 'w-8',
                                     disabled: isRefreshing,
@@ -370,34 +312,30 @@ const BrandsScreen = () => {
                 <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                     <div>
                         <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                            <Tag className="size-5 text-gray-700" />
-                            Gestionar Marcas
+                            <Layers className="size-5 text-gray-700" />
+                            Gestionar Subcategorías
                         </CardTitle>
                         <CardDescription className="text-sm">
                             {totalRecords} elemento{totalRecords !== 1 ? "s" : ""} registrado
                             {totalRecords !== 1 ? "s" : ""}
                         </CardDescription>
                     </div>
-                    <ConfigFormDialog
-                        config={BRANDS_DIALOG_CONFIG}
+                    <SubcategoryFormDialog
                         isOpen={isDialogOpen}
                         onOpenChange={handleDialogToggle}
-                        onSubmit={isEditing ? handleUpdateSubmit : handleCreateSubmit}
-                        register={currentForm.register}
-                        errors={currentForm.formState.errors}
-                        isLoading={isLoadingBrandById}
                         isEditing={isEditing}
                         editingId={editingId}
-                        isSaving={isSaving}
+                        categories={categoriesData || []}
+                        isLoadingCategories={isLoadingCategoriesData}
                     />
                 </CardHeader>
                 <CardContent>
                     <div className="border rounded-lg border-gray-200">
                         <CustomizableTable
                             table={table}
-                            isLoading={isLoadingBrandsData}
-                            isError={isErrorBrandsData}
-                            isFetching={isFetchingBrandsData}
+                            isLoading={isLoadingSubcategoriesData}
+                            isError={isErrorSubcategoriesData}
+                            isFetching={isFetchingSubcategoriesData}
                             rows={filters.pagina_registros}
                         />
                     </div>
@@ -415,8 +353,8 @@ const BrandsScreen = () => {
 
             <ConfirmationModal
                 isOpen={showDeleteAlert}
-                title="Eliminar marca"
-                message={`¿Estás seguro de que deseas eliminar la marca #${itemToDelete}?`}
+                title="Eliminar subcategoria"
+                message={`¿Estás seguro de que deseas eliminar la subcategoria #${itemToDelete}?`}
                 onClose={handleCloseDeleteAlert}
                 onConfirm={handleConfirmDeleteAlert}
                 isLoading={isDeleting}
@@ -424,4 +362,4 @@ const BrandsScreen = () => {
         </main>
     );
 }
-export default BrandsScreen;
+export default SubcategoriessScreen;

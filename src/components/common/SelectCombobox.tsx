@@ -1,6 +1,6 @@
 import { useState, Fragment, useRef, useMemo } from 'react'
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Transition } from '@headlessui/react'
-import { Check, ChevronDown, X } from 'lucide-react'
+import { Check, ChevronDown, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Option {
@@ -19,6 +19,7 @@ interface ComboboxSelectProps {
     disabled?: boolean
     error?: boolean
     enableAllOption?: boolean
+    isLoadingData?: boolean
     searchPlaceholder?: string //quitar este campo si no se usa
 }
 
@@ -32,7 +33,8 @@ export function ComboboxSelect({
     allowClear = false,
     disabled = false,
     error = false,
-    enableAllOption
+    enableAllOption,
+    isLoadingData = false,
 }: ComboboxSelectProps) {
     const internalValue = !value
         ? enableAllOption ? 'all' : ''
@@ -140,46 +142,52 @@ export function ComboboxSelect({
                             static
                             className="absolute z-50 mt-1 max-h-72 w-full overflow-auto rounded-md bg-popover p-1 text-sm shadow-lg border border-gray-200 focus:outline-none sm:text-sm"
                         >
-                            {filteredOptions.length === 0 ? (
-                                <div className="relative cursor-default select-none px-4 py-2 text-muted-foreground text-center">
-                                    {query ? (
-                                        <>
-                                            No se encontraron resultados para "{query}"
-                                        </>
-                                    ) : (
-                                        'No hay opciones disponibles'
-                                    )}
-                                </div>
-                            ) : (
-                                filteredOptions.map((option: Option) => (
-                                    <ComboboxOption
-                                        key={option.id}
-                                        value={option.id.toString()}
-                                        className={({ focus }) =>
-                                            cn(
-                                                'relative cursor-pointer select-none py-1.5 pl-10 pr-4 transition-colors rounded',
-                                                focus ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-gray-50'
-                                            )
-                                        }
-                                    >
-                                        {({ selected }) => (
+                            {
+                                isLoadingData ? (
+                                    <div className="relative cursor-default select-none px-4 py-2 text-muted-foreground text-center flex justify-center items-center gap-2">
+                                        <Loader2 className='size-4 animate-spin' />
+                                        Cargando datos
+                                    </div>
+                                ) : filteredOptions.length === 0 ? (
+                                    <div className="relative cursor-default select-none px-4 py-2 text-muted-foreground text-center">
+                                        {query ? (
                                             <>
-                                                <span className={cn(
-                                                    'block truncate',
-                                                    selected ? 'font-medium' : 'font-normal'
-                                                )}>
-                                                    {option[optionTag]}
-                                                </span>
-                                                {selected && (
-                                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
-                                                        <Check className="h-4 w-4" />
-                                                    </span>
-                                                )}
+                                                No se encontraron resultados para "{query}"
                                             </>
+                                        ) : (
+                                            'No hay opciones disponibles'
                                         )}
-                                    </ComboboxOption>
-                                ))
-                            )}
+                                    </div>
+                                ) : (
+                                    filteredOptions.map((option: Option) => (
+                                        <ComboboxOption
+                                            key={option.id}
+                                            value={option.id.toString()}
+                                            className={({ focus }) =>
+                                                cn(
+                                                    'relative cursor-pointer select-none py-1.5 pl-10 pr-4 transition-colors rounded',
+                                                    focus ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-gray-50'
+                                                )
+                                            }
+                                        >
+                                            {({ selected }) => (
+                                                <>
+                                                    <span className={cn(
+                                                        'block truncate',
+                                                        selected ? 'font-medium' : 'font-normal'
+                                                    )}>
+                                                        {option[optionTag]}
+                                                    </span>
+                                                    {selected && (
+                                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                                                            <Check className="h-4 w-4" />
+                                                        </span>
+                                                    )}
+                                                </>
+                                            )}
+                                        </ComboboxOption>
+                                    ))
+                                )}
                         </ComboboxOptions>
                     </Transition>
                 </div>

@@ -7,7 +7,7 @@ export const useGetAllMeasurements = (filters: MeasurementFilters) => {
 
     return useQuery({
         queryKey: MEASUREMENT_QUERY_KEYS.list(filters),
-        queryFn: async () => await measurementsService.getAll(filters),
+        queryFn: () => measurementsService.getAll(filters),
         placeholderData: keepPreviousData,
         staleTime: 1000 * 60 * 10, // 10 minutes
         enabled: !!filters.pagina && !!filters.pagina_registros

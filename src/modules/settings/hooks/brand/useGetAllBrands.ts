@@ -7,7 +7,7 @@ export const useGetAllBrands = (filters: BrandFilters) => {
 
     return useQuery({
         queryKey: BRAND_QUERY_KEYS.list(filters),
-        queryFn: async () => await brandsService.getAll(filters),
+        queryFn: () => brandsService.getAll(filters),
         placeholderData: keepPreviousData,
         staleTime: 1000 * 60 * 10, // 10 minutes
         enabled: !!filters.pagina && !!filters.pagina_registros
