@@ -65,7 +65,9 @@ const MeasurementsScreen = () => {
 
     const {
         data: measurementById,
-        isLoading: isLoadingMeasurementById
+        isLoading: isLoadingMeasurementById,
+        isError: isErrorMeasurementById,
+        error: errorMeasurementById
     } = useGetMeasurementById(editingId || 0)
 
     const {
@@ -212,6 +214,12 @@ const MeasurementsScreen = () => {
     const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         updateFilter("unidad_medida", e.target.value);
     }, [updateFilter]);
+
+    useEffect(() => {
+        if (!isErrorMeasurementById) return
+        handleError({ error: errorMeasurementById, customTitle: "Ocurrió un error al cargar los datos" });
+        handleDialogToggle(false)
+    }, [isErrorMeasurementById, errorMeasurementById, handleError, handleDialogToggle])
 
     const columns = useMemo<ColumnDef<Measurement>[]>(() => [
         {

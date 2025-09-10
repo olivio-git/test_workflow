@@ -65,7 +65,9 @@ const VehicleBrandsScreen = () => {
 
     const {
         data: vehicleBrandById,
-        isLoading: isLoadingVehicleBrandById
+        isLoading: isLoadingVehicleBrandById,
+        isError: isErrorVehicleBrandById,
+        error: errorVehicleBrandById
     } = useGetVehicleBrandById(editingId || 0)
 
     const {
@@ -212,6 +214,12 @@ const VehicleBrandsScreen = () => {
     const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         updateFilter("marca_vehiculo", e.target.value);
     }, [updateFilter]);
+
+    useEffect(() => {
+        if (!isErrorVehicleBrandById) return
+        handleError({ error: errorVehicleBrandById, customTitle: "Ocurrió un error al cargar los datos" });
+        handleDialogToggle(false)
+    }, [isErrorVehicleBrandById, errorVehicleBrandById, handleError, handleDialogToggle])
 
     const columns = useMemo<ColumnDef<VehicleBrand>[]>(() => [
         {

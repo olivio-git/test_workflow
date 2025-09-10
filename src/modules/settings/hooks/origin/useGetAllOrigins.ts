@@ -7,7 +7,7 @@ export const useGetAllOrigins = (filters: OriginFilters) => {
 
     return useQuery({
         queryKey: ORIGIN_QUERY_KEYS.list(filters),
-        queryFn: async () => await originsService.getAll(filters),
+        queryFn: () => originsService.getAll(filters),
         placeholderData: keepPreviousData,
         staleTime: 1000 * 60 * 10, // 10 minutes
         enabled: !!filters.pagina && !!filters.pagina_registros

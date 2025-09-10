@@ -65,7 +65,9 @@ const OriginsScreen = () => {
 
     const {
         data: originById,
-        isLoading: isLoadingOriginById
+        isLoading: isLoadingOriginById,
+        isError: isErrorOriginById,
+        error: errorOriginById
     } = useGetOriginById(editingId || 0)
 
     const {
@@ -212,6 +214,12 @@ const OriginsScreen = () => {
     const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         updateFilter("procedencia", e.target.value);
     }, [updateFilter]);
+
+    useEffect(() => {
+        if (!isErrorOriginById) return
+        handleError({ error: errorOriginById, customTitle: "Ocurrió un error al cargar los datos" });
+        handleDialogToggle(false)
+    }, [isErrorOriginById, errorOriginById, handleError, handleDialogToggle])
 
     const columns = useMemo<ColumnDef<Origin>[]>(() => [
         {

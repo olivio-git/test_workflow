@@ -9,11 +9,11 @@ export const useOriginFilters = () => {
         procedencia: "",
     });
 
-    const [debouncedBrand] = useDebounce(filtersHook.filters.procedencia, 500);
+    const [debouncedOrigin] = useDebounce(filtersHook.filters.procedencia, 500);
 
     const debouncedFilters: OriginFilters = {
         ...filtersHook.filters,
-        procedencia: debouncedBrand,
+        procedencia: debouncedOrigin,
     };
 
     return {

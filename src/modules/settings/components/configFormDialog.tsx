@@ -82,7 +82,7 @@ export function ConfigFormDialog<T extends FieldValues>({
                                         autoFocus={true}
                                     />
                                     {errors[fieldName] && (
-                                        <p className="text-sm text-red-500 mt-1">
+                                        <p className="text-xs text-red-500 mt-1">
                                             {errors[fieldName]?.message as string}
                                         </p>
                                     )}
