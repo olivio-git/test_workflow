@@ -26,7 +26,8 @@ import OriginsScreen from "@/modules/settings/screens/OriginsScreen";
 import BrandsScreen from "@/modules/settings/screens/brandsScreen";
 import VehicleBrandsScreen from "@/modules/settings/screens/vehicleBrandScreen";
 import MeasurementsScreen from "@/modules/settings/screens/measurementScreen";
-import SubcategoriessScreen from "@/modules/settings/screens/subcategoryScreen";
+import CategoriesScreen from "@/modules/settings/screens/categoriesScreen";
+import SubcategoriesScreen from "@/modules/settings/screens/subcategoriesScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -417,7 +418,7 @@ const protectedRoutes: RouteType[] = [
         path: "/dashboard/settings/subcategories",
         name: "Subcategorías",
         type: "protected",
-        element: SubcategoriessScreen,
+        element: SubcategoriesScreen,
         isAdmin: true,
         role: ["admin"],
         isHeader: false,
@@ -425,7 +426,18 @@ const protectedRoutes: RouteType[] = [
         showInCommandPalette: true,
         icon: Layers
       },
-
+      {
+        path: "/dashboard/settings/categories",
+        name: "Categorías",
+        type: "protected",
+        element: CategoriesScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: Layers
+      },
     ]
   },
 ];
