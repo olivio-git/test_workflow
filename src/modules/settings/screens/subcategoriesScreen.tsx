@@ -26,7 +26,7 @@ import { useCategoriesWithSubcategories } from "@/modules/shared/hooks/useCatego
 import { ComboboxSelect } from "@/components/common/SelectCombobox";
 import { formatCell } from "@/utils/formatCell";
 
-const SubcategoriessScreen = () => {
+const SubcategoriesScreen = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -252,7 +252,7 @@ const SubcategoriessScreen = () => {
                     <section className="grid gap-2 sm:grid-cols-2">
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <Label>Subcategoría</Label>
+                                <Label htmlFor="subcategoria">Subcategoría</Label>
                                 <div className="flex w-full relative">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
@@ -362,4 +362,4 @@ const SubcategoriessScreen = () => {
         </main>
     );
 }
-export default SubcategoriessScreen;
+export default SubcategoriesScreen;
