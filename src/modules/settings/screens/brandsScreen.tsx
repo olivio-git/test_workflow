@@ -237,7 +237,7 @@ const BrandsScreen = () => {
             accessorKey: "marca",
             header: "Marca",
             cell: ({ getValue }) => (
-                <h3 className="font-medium text-gray-700">
+                <h3 className="font-medium text-gray-700 truncate">
                     {getValue<string>()}
                 </h3>
             )
@@ -245,7 +245,7 @@ const BrandsScreen = () => {
         {
             id: "actions",
             header: "Acciones",
-            size: 60,
+            size: 80,
             cell: ({ row }) => {
                 const id = row.original.id
                 return (

@@ -1,7 +1,7 @@
 import { paginatedResponseSchema } from "@/modules/shared/schemas/paginatedResponse.schema";
 import z from "zod";
 
-const ItemSubcategorySchema = z.object({
+export const ItemSubcategorySchema = z.object({
     id: z.number(),
     subcategoria: z.string(),
     codigo_interno: z.number().nonnegative()
