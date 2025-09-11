@@ -136,7 +136,7 @@ const SubcategoriesScreen = () => {
             accessorKey: "subcategoria",
             header: "Subcategoria",
             cell: ({ getValue }) => (
-                <h3 className="font-medium text-gray-700">
+                <h3 className="font-medium text-gray-700 truncate">
                     {getValue<string>()}
                 </h3>
             )
@@ -150,7 +150,7 @@ const SubcategoriesScreen = () => {
                 const id = row.original.categoria?.id
                 return (
                     <div>
-                        <h3 className={`${value ? "font-medium text-gray-700" : "italic text-gray-400"}`}>
+                        <h3 className={`truncate ${value ? "font-medium text-gray-700" : "italic text-gray-400"}`}>
                             {formatCell(value)}
                         </h3>
                         {
@@ -165,7 +165,8 @@ const SubcategoriesScreen = () => {
         {
             id: "actions",
             header: "Acciones",
-            size: 60,
+            size: 80,
+            minSize: 60,
             cell: ({ row }) => {
                 const id = row.original.id
                 return (

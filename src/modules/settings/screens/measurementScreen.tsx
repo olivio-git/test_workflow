@@ -237,7 +237,7 @@ const MeasurementsScreen = () => {
             accessorKey: "unidad_medida",
             header: "Unidad de Medida",
             cell: ({ getValue }) => (
-                <h3 className="font-medium text-gray-700">
+                <h3 className="font-medium text-gray-700 truncate">
                     {getValue<string>()}
                 </h3>
             )
@@ -245,7 +245,7 @@ const MeasurementsScreen = () => {
         {
             id: "actions",
             header: "Acciones",
-            size: 60,
+            size: 80,
             cell: ({ row }) => {
                 const id = row.original.id
                 return (

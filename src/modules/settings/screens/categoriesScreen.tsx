@@ -1,51 +1,24 @@
 import { Kbd } from "@/components/atoms/kbd";
 import TooltipButton from "@/components/common/TooltipButton";
 import { useGoBack } from "@/hooks/useGoBack";
-import { CornerUpLeft, Edit, Filter, FolderOpen, RefreshCcw, Search, Trash2 } from "lucide-react";
+import { CornerUpLeft, Filter, RefreshCcw, Search } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Input } from "@/components/atoms/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Button } from "@/components/atoms/button";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
-import CustomizableTable from "@/components/common/CustomizableTable";
-import Pagination from "@/components/common/pagination";
-import type { DialogConfig } from "../types/configFormDialog.types";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ConfigFormDialog } from "../components/configFormDialog";
+import { useCallback, useMemo, useState } from "react";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
-import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced";
-import { useLocation, useNavigate } from "react-router";
+import { showSuccessToast } from "@/hooks/use-toast-enhanced";
 import ConfirmationModal from "@/components/common/confirmationModal";
 import useConfirmMutation from "@/hooks/useConfirmMutation";
 import RowsPerPageSelect from "@/components/common/RowsPerPageSelect";
 import { useCategoryFilters } from "../hooks/category/useCategoryFilters";
 import { useGetAllCategories } from "../hooks/category/useGetAllCategories";
-import { useGetCategoryById } from "../hooks/category/useGetCategoryById";
-import { useCreateCategory } from "../hooks/category/useCreateCategory";
-import { useUpdateCategory } from "../hooks/category/useUpdateCategory";
 import { useDeleteCategory } from "../hooks/category/useDeleteCategory";
-import type { Category, CreateCategory, UpdateCategory } from "../types/category.types";
-import { CreateCategorySchema, UpdateCategorySchema } from "../schemas/category.schema";
 import { Label } from "@/components/atoms/label";
-
-const CATEGORIES_DIALOG_CONFIG: DialogConfig = {
-    title: "Categoria",
-    description: "una categoria",
-    field: {
-        name: "categoria",
-        label: "Categoria",
-        placeholder: "Ingresa el nombre de la categoria...",
-        required: true,
-    }
-};
+import CategoryListTable from "../components/categoryListTable";
 
 const CategoriesScreen = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
     const [codigo_interno, setCodigoInterno] = useState("")
 
     const {
@@ -65,23 +38,6 @@ const CategoriesScreen = () => {
         isError: isErrorCategoriesData,
     } = useGetAllCategories(debouncedFilters)
 
-    const {
-        data: categoryById,
-        isLoading: isLoadingCategoryById,
-        isError: isErrorCategoryById,
-        error: errorCategoryById
-    } = useGetCategoryById(editingId || 0)
-
-    const {
-        mutate: handleCreateCategory,
-        isPending: isCreating
-    } = useCreateCategory()
-
-    const {
-        mutate: handleUpdateCategory,
-        isPending: isUpdating
-    } = useUpdateCategory()
-
     const { handleError } = useErrorHandler()
 
     const handleGoBack = useGoBack("/dashboard/settings");
@@ -92,7 +48,6 @@ const CategoriesScreen = () => {
             description: `La Categoría #${id} se eliminó exitosamente`,
             duration: 5000
         });
-        setEditingId(null);
     }, []);
 
     const handleDeleteError = useCallback((error: unknown, id: number) => {
@@ -112,102 +67,8 @@ const CategoriesScreen = () => {
         variables: itemToDelete
     } = useConfirmMutation(deleteCategory, handleDeleteSuccess, handleDeleteError)
 
-    // Forms
-    const createForm = useForm<CreateCategory>({
-        resolver: zodResolver(CreateCategorySchema),
-        defaultValues: {
-            categoria: ''
-        },
-    });
-
-    const updateForm = useForm<UpdateCategory>({
-        resolver: zodResolver(UpdateCategorySchema),
-        defaultValues: {
-            categoria: ''
-        },
-    });
-
-    const isEditing = useMemo(() => editingId !== null, [editingId]);
-    const currentForm = useMemo(() => isEditing ? updateForm : createForm, [isEditing, updateForm, createForm]);
-    const isSaving = useMemo(() => isCreating || isUpdating, [isCreating, isUpdating]);
     const totalRecords = useMemo(() => categoriesData?.meta?.total || 0, [categoriesData?.meta?.total]);
     const isRefreshing = useMemo(() => isRefetchingCategoriesData || isFetchingCategoriesData, [isRefetchingCategoriesData, isFetchingCategoriesData]);
-
-    useEffect(() => {
-        if (location.state?.openModal) {
-            handleAddCategory()
-            navigate(location.pathname, { replace: true });
-        }
-    }, [location, navigate]);
-
-    useEffect(() => {
-        if (categoryById && isEditing) {
-            updateForm.reset({
-                categoria: categoryById.categoria
-            });
-        }
-    }, [categoryById, isEditing, updateForm]);
-
-    const handleAddCategory = useCallback(() => {
-        setEditingId(null);
-        createForm.reset();
-        setIsDialogOpen(true);
-    }, [createForm]);
-
-    const handleEditCategory = useCallback((id: number) => {
-        setEditingId(id);
-        setIsDialogOpen(true);
-    }, []);
-
-    const handleDialogToggle = useCallback((open: boolean) => {
-        setIsDialogOpen(open);
-        if (!open) {
-            setEditingId(null);
-            createForm.reset();
-            updateForm.reset();
-        }
-    }, [createForm, updateForm]);
-
-    const handleCreateSubmit = useCallback(createForm.handleSubmit(async (data: CreateCategory) => {
-        handleCreateCategory(data, {
-            onSuccess: () => {
-                showSuccessToast({
-                    title: "Categoría Agregada",
-                    description: "Categoría agregada exitosamente",
-                    duration: 5000
-                });
-                handleDialogToggle(false);
-            },
-            onError: (error: unknown) => {
-                handleError({ error, customTitle: "No se pudo agregar la categoría" });
-            }
-        });
-    }), [createForm, handleCreateCategory, handleDialogToggle, handleError]);
-
-    const handleUpdateSubmit = useCallback(updateForm.handleSubmit(async (data: UpdateCategory) => {
-        if (!editingId) {
-            showErrorToast({
-                title: "Error al modificar categoría",
-                description: "No se pudo modificar la categoría. Por favor, intenta nuevamente",
-                duration: 5000
-            });
-            return;
-        }
-
-        handleUpdateCategory({ data, id: editingId }, {
-            onSuccess: () => {
-                showSuccessToast({
-                    title: "Categoría Modificada",
-                    description: "Categoría modificada exitosamente",
-                    duration: 5000
-                });
-                handleDialogToggle(false);
-            },
-            onError: (error: unknown) => {
-                handleError({ error, customTitle: "No se pudo modificar la categoría" });
-            }
-        });
-    }), [updateForm, editingId, handleUpdateCategory, handleDialogToggle, handleError]);
 
     const handleRowsChange = useCallback((rows: number) => {
         updateFilter("pagina_registros", rows);
@@ -218,77 +79,13 @@ const CategoriesScreen = () => {
     }, [updateFilter]);
 
     const handleFilterByInternalCode = useCallback(() => {
-        console.log(codigo_interno)
         updateFilter("codigo_interno", Number(codigo_interno))
     }, [updateFilter, codigo_interno])
 
-    useEffect(() => {
-        if (!isErrorCategoryById) return
-        handleError({ error: errorCategoryById, customTitle: "Ocurrió un error al cargar los datos" });
-        handleDialogToggle(false)
-    }, [isErrorCategoryById, errorCategoryById, handleError, handleDialogToggle])
-
-    const columns = useMemo<ColumnDef<Category>[]>(() => [
-        {
-            accessorKey: "id",
-            header: "ID",
-            size: 40,
-            minSize: 30,
-            cell: ({ getValue }) => (
-                <span className="font-medium font-mono text-gray-700">
-                    #{getValue<number>()}
-                </span>
-            )
-        },
-        {
-            accessorKey: "categoria",
-            header: "Categoría",
-            cell: ({ getValue }) => (
-                <h3 className="font-medium text-gray-700">
-                    {getValue<string>()}
-                </h3>
-            )
-        },
-        {
-            id: "actions",
-            header: "Acciones",
-            size: 60,
-            cell: ({ row }) => {
-                const id = row.original.id
-                return (
-                    <div className="flex items-center gap-2">
-                        <Button
-                            className="w-8 cursor-pointer"
-                            variant={"outline"}
-                            onClick={() => handleEditCategory(id)}
-                        >
-                            <Edit className="size-4" />
-                        </Button>
-
-                        <Button
-                            className="w-8 cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent hover:border-red-200"
-                            variant={"outline"}
-                            onClick={() => handleOpenDeleteAlert(id)}
-                        >
-                            <Trash2 className="size-4" />
-                        </Button>
-                    </div>
-                )
-            },
-        },
-    ], [handleEditCategory, handleOpenDeleteAlert]);
-
-    const table = useReactTable<Category>({
-        data: categoriesData?.data || [],
-        columns,
-        state: {},
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        columnResizeMode: "onChange",
-        enableColumnResizing: true,
-        enableRowSelection: true,
-    })
+    const handleResetFilters = () => {
+        resetFilters()
+        setCodigoInterno("")
+    }
 
     // Shortcuts
     useHotkeys('escape', (e) => {
@@ -359,12 +156,20 @@ const CategoriesScreen = () => {
                                         onChange={(e) => setCodigoInterno(e.target.value)}
                                         placeholder="Ej. 16"
                                     />
-                                    <Button
-                                        className="cursor-pointer"
+                                    <TooltipButton
+                                        tooltipContentProps={{
+                                            align: 'center'
+                                        }}
                                         onClick={handleFilterByInternalCode}
+                                        tooltip={<p className="flex items-center gap-1">Buscar por código interno</p>}
+                                        buttonProps={{
+                                            variant: 'default',
+                                            type: 'button',
+                                            className: 'cursor-pointer'
+                                        }}
                                     >
                                         <Search className="size-4 " />
-                                    </Button>
+                                    </TooltipButton>
                                 </div>
                             </div>
                         </div>
@@ -386,7 +191,7 @@ const CategoriesScreen = () => {
                                 onChange={handleRowsChange}
                             />
 
-                            <Button onClick={resetFilters}>
+                            <Button onClick={handleResetFilters}>
                                 <Filter className="size-4" />
                                 Limpiar Filtros
                             </Button>
@@ -395,52 +200,18 @@ const CategoriesScreen = () => {
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-                    <div>
-                        <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                            <FolderOpen className="size-5 text-gray-700" />
-                            Gestionar Categorías
-                        </CardTitle>
-                        <CardDescription className="text-sm">
-                            {totalRecords} elemento{totalRecords !== 1 ? "s" : ""} registrado
-                            {totalRecords !== 1 ? "s" : ""}
-                        </CardDescription>
-                    </div>
-                    <ConfigFormDialog
-                        config={CATEGORIES_DIALOG_CONFIG}
-                        isOpen={isDialogOpen}
-                        onOpenChange={handleDialogToggle}
-                        onSubmit={isEditing ? handleUpdateSubmit : handleCreateSubmit}
-                        register={currentForm.register}
-                        errors={currentForm.formState.errors}
-                        isLoading={isLoadingCategoryById}
-                        isEditing={isEditing}
-                        editingId={editingId}
-                        isSaving={isSaving}
-                    />
-                </CardHeader>
-                <CardContent>
-                    <div className="border rounded-lg border-gray-200">
-                        <CustomizableTable
-                            table={table}
-                            isLoading={isLoadingCategoriesData}
-                            isError={isErrorCategoriesData}
-                            isFetching={isFetchingCategoriesData}
-                            rows={filters.pagina_registros}
-                        />
-                    </div>
-
-                    <Pagination
-                        className="border-0 px-0 pt-3 pb-0"
-                        currentPage={filters.pagina || 1}
-                        onPageChange={setPage}
-                        totalData={totalRecords}
-                        onShowRowsChange={handleRowsChange}
-                        showRows={filters.pagina_registros}
-                    />
-                </CardContent>
-            </Card>
+            <CategoryListTable
+                categories={categoriesData?.data || []}
+                handleOpenDeleteAlert={handleOpenDeleteAlert}
+                isErrorCategoriesData={isErrorCategoriesData}
+                isFetchingCategoriesData={isFetchingCategoriesData}
+                isLoadingCategoriesData={isLoadingCategoriesData}
+                rows={filters.pagina_registros}
+                handleRowsChange={handleRowsChange}
+                onPageChange={setPage}
+                page={filters.pagina}
+                totalRecords={totalRecords}
+            />
 
             <ConfirmationModal
                 isOpen={showDeleteAlert}
