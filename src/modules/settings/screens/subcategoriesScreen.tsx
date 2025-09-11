@@ -31,6 +31,7 @@ const SubcategoriesScreen = () => {
     const location = useLocation();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [categorySearch, setCategroySearch] = useState<string>("")
 
     const {
         filters,
@@ -52,7 +53,8 @@ const SubcategoriesScreen = () => {
     const {
         data: categoriesData,
         isLoading: isLoadingCategoriesData,
-    } = useCategoriesWithSubcategories()
+        isFetching: isFetchingCategoriesData,
+    } = useCategoriesWithSubcategories(categorySearch)
 
     const { handleError } = useErrorHandler()
 
@@ -279,6 +281,9 @@ const SubcategoriesScreen = () => {
                                     optionTag={"categoria"}
                                     enableAllOption={true}
                                     isLoadingData={isLoadingCategoriesData}
+                                    enableExternalSearch={true}
+                                    onSearch={(value) => setCategroySearch(value)}
+                                    isSearching={isFetchingCategoriesData}
                                 />
                             </div>
                         </div>
