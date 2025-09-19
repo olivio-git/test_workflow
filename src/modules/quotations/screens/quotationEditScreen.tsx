@@ -38,6 +38,7 @@ import QuotationEditSkeleton from "../components/quotationEditSkeleton"
 import { Textarea } from "@/components/atoms/textarea"
 import useQuotationProductDetails from "../hooks/useQuotationProductDetails"
 import QuotationDetailsEditingTable from "../components/quotationDetailsEditingTable"
+import { Switch } from "@/components/atoms/switch"
 
 const QuotationEditScreen = () => {
     const navigate = useNavigate()
@@ -585,6 +586,21 @@ const QuotationEditScreen = () => {
                                                     />
                                                 )}
                                             />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="pedido">Es Pedido</Label>
+                                            <div>
+                                                <Controller
+                                                    name="pedido"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <Switch
+                                                            checked={field.value}
+                                                            onCheckedChange={(checked) => field.onChange(checked)}
+                                                        />
+                                                    )}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </CardContent>

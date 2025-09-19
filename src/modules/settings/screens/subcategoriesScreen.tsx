@@ -333,6 +333,8 @@ const SubcategoriesScreen = () => {
                         editingId={editingId}
                         categories={categoriesData || []}
                         isLoadingCategories={isLoadingCategoriesData}
+                        isSearching={isFetchingCategoriesData}
+                        onSearchCategories={(value) => setCategroySearch(value)}
                     />
                 </CardHeader>
                 <CardContent>

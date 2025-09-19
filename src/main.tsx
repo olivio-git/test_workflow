@@ -11,15 +11,17 @@ import "@/config/zodI18nConfig.ts"
 import { queryClient } from "./lib/reactQueryConfig.ts";
 
 createRoot(document.getElementById("root")!).render(
-  <HotkeysProvider initiallyActiveScopes={["default", "esc-key"]}>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          {/* <Sonner /> */}
-          <Navigation />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
-  </HotkeysProvider>
+  <QueryClientProvider client={queryClient}>
+    <HotkeysProvider initiallyActiveScopes={["default", "esc-key"]}>
+      <TooltipProvider>
+        <Toaster />
+        {/* <Sonner /> */}
+        <BrowserRouter>
+          {/* <SidebarProvider> */}
+            <Navigation />
+          {/* </SidebarProvider> */}
+        </BrowserRouter>
+      </TooltipProvider>
+    </HotkeysProvider>
+  </QueryClientProvider>
 );

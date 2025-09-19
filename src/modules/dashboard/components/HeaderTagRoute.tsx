@@ -1,7 +1,9 @@
 import type RouteType from "@/navigation/RouteType";
 import NavItem from "./NavItem";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useLocation } from "react-router";
+import { cn } from "@/lib/utils";
+import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from "@/components/atoms/sidebar";
 
 const HeaderTagRoute = ({
   route,
@@ -19,8 +21,8 @@ const HeaderTagRoute = ({
 
   const isInSubRoute = hasSubRoutes
     ? (route.subRoutes ?? []).some(
-        (subRoute) => subRoute.path && location.pathname.startsWith(subRoute.path)
-      )
+      (subRoute) => subRoute.path && location.pathname.startsWith(subRoute.path)
+    )
     : false;
 
   const isExpanded = expandedHeaders.includes(route.name) || isInSubRoute;
@@ -29,22 +31,26 @@ const HeaderTagRoute = ({
 
   if (!route.isHeader) {
     return (
-      <NavItem
-        key={route.path}
-        href={route.path || "/"}
-        icon={route.icon}
-        handleNavigation={handleNavigation}
-      >
-        {route.name}
-      </NavItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <NavItem
+            key={route.path}
+            href={route.path || "/"}
+            icon={route.icon}
+            handleNavigation={handleNavigation}
+          >
+            {route.name}
+          </NavItem>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
     );
   }
 
   return (
-    <div className="mb-2">
-      <div
+    <SidebarMenuItem>
+      <SidebarMenuButton
         onClick={() => toggleHeader(route.name)}
-        className="flex items-center justify-between gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-secondary hover:text-secondary-foreground cursor-pointer rounded-md transition-colors"
+        className="flex items-center justify-between gap-2 p-2 text-sm font-medium text-gray-700 hover:bg-secondary hover:text-secondary-foreground cursor-pointer rounded-md transition-colors"
       >
         <div className="flex items-center gap-2">
           {route.icon && <route.icon className="h-4 w-4 flex-shrink-0" />}
@@ -54,33 +60,38 @@ const HeaderTagRoute = ({
         </div>
         {hasSubRoutes && (
           <div className="ml-2">
-            {isExpanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
+            <ChevronRight className={cn(
+              "size-4 transition-transform duration-200",
+              isExpanded && "rotate-90"
+            )} />
           </div>
         )}
-      </div>
+      </SidebarMenuButton>
 
       {hasSubRoutes && isExpanded && (
-        <div className="ml-4 mt-1 space-y-1">
+        <SidebarMenuSub className={cn(
+          "ml-3 mt-1 border-l border-gray-200 pl-2 mr-0 pr-0 py-0",
+        )}>
           {route.subRoutes
             ?.filter((subRoute) => subRoute.showSidebar && subRoute.path)
             .map((subRoute, index) => (
-              <NavItem
+              <SidebarMenuSubItem
                 key={`${subRoute.path}-${index}`}
-                href={subRoute.path || "#"}
-                icon={subRoute.icon}
-                handleNavigation={handleNavigation}
               >
-                {subRoute.name}
-              </NavItem>
+                <SidebarMenuSubButton asChild>
+                  <NavItem
+                    href={subRoute.path || "#"}
+                    icon={subRoute.icon}
+                    handleNavigation={handleNavigation}
+                  >
+                    {subRoute.name}
+                  </NavItem>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
             ))}
-        </div>
+        </SidebarMenuSub>
       )}
-    </div>
+    </SidebarMenuItem>
   );
 };
-
 export default HeaderTagRoute;

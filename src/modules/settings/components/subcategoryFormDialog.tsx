@@ -24,6 +24,8 @@ interface SubcategoryFormDialogProps {
     editingId?: number | null;
     categories: CategoryWithSubcategories[]
     isLoadingCategories: boolean
+    isSearching: boolean
+    onSearchCategories: (query: string) => void
 }
 
 const SubcategoryFormDialog: React.FC<SubcategoryFormDialogProps> = ({
@@ -34,6 +36,8 @@ const SubcategoryFormDialog: React.FC<SubcategoryFormDialogProps> = ({
     editingId,
     categories,
     isLoadingCategories,
+    isSearching,
+    onSearchCategories
 }) => {
     const {
         data: subcategoryById,
@@ -135,6 +139,7 @@ const SubcategoryFormDialog: React.FC<SubcategoryFormDialogProps> = ({
 
     const handleDialogToggle = useCallback((open: boolean) => {
         onOpenChange(open)
+        onSearchCategories("")
         if (!open) {
             createForm.reset();
             updateForm.reset();
@@ -228,6 +233,9 @@ const SubcategoryFormDialog: React.FC<SubcategoryFormDialogProps> = ({
                                             placeholder="Seleccionar categoría"
                                             searchPlaceholder="Buscar categorías..."
                                             isLoadingData={isLoadingCategories}
+                                            enableExternalSearch={true}
+                                            onSearch={onSearchCategories}
+                                            isSearching={isSearching}
                                         />
                                     )}
                                 />

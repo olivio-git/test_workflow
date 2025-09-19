@@ -32,6 +32,7 @@ import QuotationsSummary from "../components/quotationsSummary";
 import ProductDetailTable from "../components/productDetailTable";
 import { Textarea } from "@/components/atoms/textarea";
 import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice";
+import { Switch } from "@/components/atoms/switch";
 
 const QuotationCreateScreen = () => {
     const navigate = useNavigate();
@@ -557,6 +558,21 @@ const QuotationCreateScreen = () => {
                                                 />
                                             )}
                                         />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="pedido">Es Pedido</Label>
+                                        <div>
+                                            <Controller
+                                                name="pedido"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Switch
+                                                        checked={field.value}
+                                                        onCheckedChange={(checked) => field.onChange(checked)}
+                                                    />
+                                                )}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </CardContent>

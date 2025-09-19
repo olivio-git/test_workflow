@@ -244,7 +244,7 @@ export function ComboboxSelect({
                                 showLoading ? (
                                     <div className="relative cursor-default select-none px-4 py-2 text-muted-foreground text-center flex justify-center items-center gap-2">
                                         <Loader2 className='size-4 animate-spin' />
-                                        {enableExternalSearch ? 'Buscando...' : 'Cargando datos'}
+                                        {enableExternalSearch && isSearching ? 'Buscando...' : 'Cargando datos'}
                                     </div>
                                 ) : filteredOptions.length === 0 ? (
                                     <div className="relative cursor-default select-none px-4 py-2 text-muted-foreground text-center">
