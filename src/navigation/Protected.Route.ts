@@ -436,7 +436,7 @@ const protectedRoutes: RouteType[] = [
         isHeader: false,
         showSidebar: false,
         showInCommandPalette: true,
-        icon: Layers
+        icon: FolderOpen
       },
     ]
   },

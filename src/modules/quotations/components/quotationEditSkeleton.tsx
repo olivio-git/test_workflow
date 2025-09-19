@@ -29,7 +29,7 @@ const QuotationEditSkeleton = () => {
                     <Card className="shadow-none h-full md:col-span-2">
                         <CardContent className="py-3">
                             <div className="grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-3 gap-x-2">
-                                {Array.from({ length: 10 }).map((_, i) => (
+                                {Array.from({ length: 11 }).map((_, i) => (
                                     <div key={i}>
                                         <Skeleton className="h-4 w-20 mb-2" />
                                         <Skeleton className="h-10 w-full rounded-md" />
