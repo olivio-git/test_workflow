@@ -105,11 +105,6 @@ export function usePurchaseEdit(initialData?: PurchaseDetail) {
           // Detectar si es un detalle existente por la presencia de id o id_detalle_compra
           const isExistingDetail = detalle.id || detalle.id_detalle_compra;
           
-          // Obtener un ID de referencia del primer detalle existente
-          const referenceId = formData.detalles.find(d => d.id || d.id_detalle_compra)?.id || 
-                             formData.detalles.find(d => d.id || d.id_detalle_compra)?.id_detalle_compra || 
-                             1;
-          
           if (isExistingDetail) {
             // Detalle existente - incluir id_detalle_compra y producto completo
             const transformedDetalle = {
@@ -146,8 +141,8 @@ export function usePurchaseEdit(initialData?: PurchaseDetail) {
             const precioVentaAlt = typeof detalle.precio_venta_alt === 'string' ? parseFloat(detalle.precio_venta_alt) : detalle.precio_venta_alt;
 
             const transformedDetalle = {
-              // Usar el ID del primer detalle existente como referencia
-              id_detalle_compra: referenceId,
+              // Usar null para productos nuevos (según indicación del desarrollador backend)
+              id_detalle_compra: null,
               id_producto: detalle.producto?.id || parseInt(detalle.id_producto || '0'),
               cantidad: Number(cantidad),
               costo: Number(costo),
@@ -157,7 +152,7 @@ export function usePurchaseEdit(initialData?: PurchaseDetail) {
               precio_venta_alt: Number(precioVentaAlt),
               moneda: detalle.moneda || 'BOB ',
             };
-            // Usar ID de referencia para productos nuevos
+            // Usar null para productos nuevos
             
             // Validar que los campos numéricos no sean NaN
             if (isNaN(transformedDetalle.inc_p_venta)) transformedDetalle.inc_p_venta = 0;
@@ -167,7 +162,7 @@ export function usePurchaseEdit(initialData?: PurchaseDetail) {
             if (isNaN(transformedDetalle.precio_venta)) transformedDetalle.precio_venta = 0;
             if (isNaN(transformedDetalle.precio_venta_alt)) transformedDetalle.precio_venta_alt = 0;
             
-            console.log(`🆕 Detalle nuevo ${index} (ID referencia: ${referenceId}, Producto ID: ${transformedDetalle.id_producto}):`, transformedDetalle);
+            console.log(`🆕 Detalle nuevo ${index} (ID: null, Producto ID: ${transformedDetalle.id_producto}):`, transformedDetalle);
             return transformedDetalle;
           }
         })

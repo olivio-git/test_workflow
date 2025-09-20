@@ -53,7 +53,6 @@ const FormCreatePurchase: React.FC<Props> = ({
     purchaseModalities,
     responsibles,
     loading,
-    errors: commonsErrors,
   } = usePurchaseCommons();
 
   const inputClass = (f: string) =>
@@ -69,29 +68,24 @@ const FormCreatePurchase: React.FC<Props> = ({
   };
 
   return (
-    <div className="p-4 bg-white border border-gray-200 rounded-lg">
-      <div className="grid gap-6 sm:grid-cols-2">
+    <div className="p-3 bg-white border border-gray-200 rounded-lg">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 items-end">
         <div className="flex flex-col">
-          <Label>Proveedor *</Label>
+          <Label className="text-xs font-medium mb-1">Proveedor *</Label>
           <ComboboxSelect
             value={formData.id_proveedor || undefined}
             onChange={v => onChange('id_proveedor', v)}
             options={proveedores}
             optionTag="nombre"
-            placeholder={
-              isLoadingProviders
-                ? 'Cargando proveedores...'
-                : 'Seleccionar proveedor'
-            }
+            placeholder={isLoadingProviders ? 'Cargando proveedores...' : 'Proveedor'}
             className={inputClass('id_proveedor')}
             disabled={isLoadingProviders}
           />
-          {errors.id_proveedor && (
-            <p className="text-red-500">{errors.id_proveedor}</p>
-          )}
+          {errors.id_proveedor && <p className="text-xs text-red-500 mt-1">{errors.id_proveedor}</p>}
         </div>
+
         <div className="flex flex-col">
-          <Label>Fecha *</Label>
+          <Label className="text-xs font-medium mb-1">Fecha *</Label>
           <Input
             type="date"
             value={formatDate(formData.fecha)}
@@ -99,13 +93,11 @@ const FormCreatePurchase: React.FC<Props> = ({
             onBlur={() => onBlur('fecha')}
             className={inputClass('fecha')}
           />
-          {errors.fecha && <p className="text-red-500">{errors.fecha}</p>}
+          {errors.fecha && <p className="text-xs text-red-500 mt-1">{errors.fecha}</p>}
         </div>
-        {/* Repite para nro_comprobante, nro_comprobante2, tipo_compra, forma_compra, comentario */}
-        <div className="flex flex-col space-y-2">
-          <Label className="text-sm font-medium text-gray-700">
-            Nro comprobante *
-          </Label>
+
+        <div className="flex flex-col">
+          <Label className="text-xs font-medium mb-1">Nro comprobante *</Label>
           <Input
             type="text"
             value={formData.nro_comprobante }
@@ -114,17 +106,11 @@ const FormCreatePurchase: React.FC<Props> = ({
             placeholder="FA-01"
             className={inputClass('nro_comprobante')}
           />
-          {errors.nro_comprobante && (
-            <p className="text-sm text-red-500 mt-1">
-              {errors.nro_comprobante}
-            </p>
-          )}
+          {errors.nro_comprobante && <p className="text-xs text-red-500 mt-1">{errors.nro_comprobante}</p>}
         </div>
-        {/* Nro comprobante 2 */}
-        <div className="flex flex-col space-y-2">
-          <Label className="text-sm font-medium text-gray-700">
-            Nro comprobante 2 *
-          </Label>
+
+        <div className="flex flex-col">
+          <Label className="text-xs font-medium mb-1">Nro comprobante 2</Label>
           <Input
             type="text"
             value={formData.nro_comprobante2}
@@ -132,99 +118,62 @@ const FormCreatePurchase: React.FC<Props> = ({
             onBlur={() => onBlur('nro_comprobante2')}
             className={inputClass('nro_comprobante2')}
           />
-          {errors.nro_comprobante2 && (
-            <p className="text-sm text-red-500 mt-1">
-              {errors.nro_comprobante2}
-            </p>
-          )}
+          {errors.nro_comprobante2 && <p className="text-xs text-red-500 mt-1">{errors.nro_comprobante2}</p>}
         </div>
 
-        {/* Tipo de compra */}
-        <div className="flex flex-col space-y-2">
-          <Label className="text-sm font-medium text-gray-700">
-            Tipo de compra *
-          </Label>
+        <div className="flex flex-col">
+          <Label className="text-xs font-medium mb-1">Tipo *</Label>
           <ComboboxSelect
             value={formData.tipo_compra || undefined}
             onChange={v => onChange('tipo_compra', v)}
             options={purchaseTypes.map(pt => ({ id: pt.value, label: pt.label }))}
             optionTag="label"
-            placeholder={
-              loading.types
-                ? 'Cargando tipos...'
-                : 'Seleccionar tipo de compra'
-            }
+            placeholder={loading.types ? 'Cargando...' : 'Tipo'}
             className={inputClass('tipo_compra')}
             disabled={loading.types}
           />
-          {errors.tipo_compra && (
-            <p className="text-sm text-red-500 mt-1">{errors.tipo_compra}</p>
-          )}
-          {commonsErrors.types && (
-            <p className="text-sm text-red-500 mt-1">Error: {commonsErrors.types}</p>
-          )}
+          {errors.tipo_compra && <p className="text-xs text-red-500 mt-1">{errors.tipo_compra}</p>}
         </div>
 
-        {/* Forma de compra */}
-        <div className="flex flex-col space-y-2">
-          <Label className="text-sm font-medium text-gray-700">Forma *</Label>
+        <div className="flex flex-col">
+          <Label className="text-xs font-medium mb-1">Forma *</Label>
           <ComboboxSelect
             value={formData.forma_compra || undefined}
             onChange={v => onChange('forma_compra', v)}
             options={purchaseModalities.map(pm => ({ id: pm.value, label: pm.label }))}
             optionTag="label"
-            placeholder={
-              loading.modalities
-                ? 'Cargando formas...'
-                : 'Seleccionar forma de compra'
-            }
+            placeholder={loading.modalities ? 'Cargando...' : 'Forma'}
             className={inputClass('forma_compra')}
             disabled={loading.modalities}
           />
-          {errors.forma_compra && (
-            <p className="text-sm text-red-500 mt-1">{errors.forma_compra}</p>
-          )}
-          {commonsErrors.modalities && (
-            <p className="text-sm text-red-500 mt-1">Error: {commonsErrors.modalities}</p>
-          )}
+          {errors.forma_compra && <p className="text-xs text-red-500 mt-1">{errors.forma_compra}</p>}
         </div>
 
-        {/* Responsable */}
-        <div className="flex flex-col space-y-2">
-          <Label className="text-sm font-medium text-gray-700">Responsable *</Label>
+        <div className="flex flex-col">
+          <Label className="text-xs font-medium mb-1">Responsable *</Label>
           <ComboboxSelect
             value={formData.id_responsable || undefined}
             onChange={v => onChange('id_responsable', v)}
             options={responsibles.map(r => ({ id: r.value, label: r.label }))}
             optionTag="label"
-            placeholder={
-              loading.responsibles
-                ? 'Cargando responsables...'
-                : 'Seleccionar responsable'
-            }
+            placeholder={loading.responsibles ? 'Cargando...' : 'Responsable'}
             className={inputClass('id_responsable')}
             disabled={loading.responsibles}
           />
-          {errors.id_responsable && (
-            <p className="text-sm text-red-500 mt-1">{errors.id_responsable}</p>
-          )}
-          {commonsErrors.responsibles && (
-            <p className="text-sm text-red-500 mt-1">Error: {commonsErrors.responsibles}</p>
-          )}
+          {errors.id_responsable && <p className="text-xs text-red-500 mt-1">{errors.id_responsable}</p>}
         </div>
       </div>
-      
-      {/* Comentario */}
-      <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-        <div className="flex flex-col space-y-2">
-          <Label className="text-sm font-medium text-gray-700">Comentarios</Label>
+
+      <div className="mt-3 p-3 bg-white border border-gray-200 rounded-lg">
+        <div className="flex flex-col">
+          <Label className="text-xs font-medium mb-1">Comentarios</Label>
           <textarea
             value={formData.comentario}
             onChange={e => onChange('comentario', e.target.value)}
             onBlur={() => onBlur('comentario')}
-            placeholder="Comentarios adicionales sobre la compra"
-            rows={3}
-            className="p-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+            placeholder="Comentarios adicionales"
+            rows={2}
+            className="p-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
           />
         </div>
       </div>
