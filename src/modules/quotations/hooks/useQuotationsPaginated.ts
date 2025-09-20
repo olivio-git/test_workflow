@@ -2,7 +2,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { cleanUndefined } from "@/utils/zodHelpers";
 import type { QuotationFilters } from "../types/quotationFilters.types";
 import { salesFiltersSchema } from "@/modules/sales/schemas/salesFilters.schema";
-import { fetchQuotations } from "../services/quotation.service";
+import { quotationService } from "../services/quotation.service";
 
 export const useQuotationsPaginated = (filters: QuotationFilters) => {
     const parsed = salesFiltersSchema.safeParse(filters);
@@ -14,7 +14,7 @@ export const useQuotationsPaginated = (filters: QuotationFilters) => {
 
     return useQuery({
         queryKey: ["quotations", parsedFilters],
-        queryFn: async () => await fetchQuotations(parsedFilters),
+        queryFn: async () => await quotationService.getAll(parsedFilters),
         placeholderData: keepPreviousData,
         staleTime: 1000 * 60 * 5, // 5 minutes
         enabled: !!parsedFilters?.sucursal && bothOrNoneDates,

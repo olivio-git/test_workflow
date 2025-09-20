@@ -1,70 +1,93 @@
-import apiClient from "@/lib/axios"
 import { SALECOMMONS_ENDPOINTS } from "./saleCommonsEndpoints"
-import type { SaleTypes } from "../types/typeSale"
-import { SaleTypesSchema } from "../schemas/salesTypes.schema"
-import type { SaleModalities } from "../types/modalitiesSale"
+import type { SaleTypesList, SaleTypesResponse } from "../types/typeSale.types"
+import { SaleTypesResponseSchema } from "../schemas/salesTypes.schema"
+import type { SaleModalitiesList } from "../types/modalitiesSale.types"
 import type { SaleResponsibleListResponse } from "../types/saleResponsible"
 import { SaleResponsibleListResponseSchema } from "../schemas/saleResponsibles.schema"
 import type { SaleCustomerListResponse } from "../types/saleCustomer.types"
 import { SaleCustomerListResponseSchema } from "../schemas/saleCustomer.schema"
+import { Logger } from "@/lib/logger"
+import { ApiService } from "@/lib/apiService"
 
-export const fetchSaleTypes = async (): Promise<SaleTypes> => {
-    const response = await apiClient.get(SALECOMMONS_ENDPOINTS.types)
-    const result = SaleTypesSchema.safeParse(response.data)
+const MODULE_NAME = "SALE_COMMONS_SERVICE";
 
-    if (!result.success) {
-        console.error("Zod error en fetchSaleTypes:", result.error.format())
-        throw new Error("Respuesta inválida del servidor (tipos-venta).")
-    }
+export const saleCommonsService = {
+    /**
+     * Obtener tipos de venta
+     */
+    async getSaleTypes(): Promise<SaleTypesList> {
+        Logger.info("Fetching sale types", undefined, MODULE_NAME);
 
-    return result.data
-}
+        const response = await ApiService.get(
+            SALECOMMONS_ENDPOINTS.types,
+            SaleTypesResponseSchema
+        );
 
-export const fetchSaleModalities = async (): Promise<SaleModalities> => {
-    const response = await apiClient.get(SALECOMMONS_ENDPOINTS.modalities)
-    const result = SaleTypesSchema.safeParse(response.data)
+        Logger.info("Sale types fetched successfully", { count: Object.keys(response).length }, MODULE_NAME);
 
-    if (!result.success) {
-        console.error("Zod error en fetchSaleModalities:", result.error.format())
-        throw new Error("Respuesta inválida del servidor (modalidad-venta).")
-    }
+        return this.convertToOptions(response);
+    },
 
-    return result.data
-}
+    /**
+     * Obtener modalidades de venta
+     */
+    async getSaleModalities(): Promise<SaleModalitiesList> {
+        Logger.info("Fetching sale modalities", undefined, MODULE_NAME);
 
-export const fetchSaleResponsibles = async (): Promise<SaleResponsibleListResponse> => {
-    const response = await apiClient.get(SALECOMMONS_ENDPOINTS.responsibles)
-    const result = SaleResponsibleListResponseSchema.safeParse(response.data.data)
+        // ⚠️ Si tienes un schema para modalidades, cámbialo aquí
+        const response = await ApiService.get(
+            SALECOMMONS_ENDPOINTS.modalities,
+            SaleTypesResponseSchema
+        );
 
-    if (!result.success) {
-        console.error("Zod error en fetchSaleResponsibles:", result.error.format())
-        throw new Error("Respuesta inválida del servidor (responsables-venta).")
-    }
+        Logger.info("Sale modalities fetched successfully", undefined, MODULE_NAME);
 
-    return result.data
-}
+        return this.convertToOptions(response);
+    },
 
-export const fetchSaleCustomers = async (cliente?: string): Promise<SaleCustomerListResponse> => {
-    const response = await apiClient.get(SALECOMMONS_ENDPOINTS.customers,
-        {
-            params: cliente ? { cliente } : {},
-        }
-    )
-    const result = SaleCustomerListResponseSchema.safeParse(response.data)
+    /**
+     * Obtener responsables de venta
+     */
+    async getSaleResponsibles(): Promise<SaleResponsibleListResponse> {
+        Logger.info("Fetching sale responsibles", undefined, MODULE_NAME);
 
-    if (!result.success) {
-        console.error("Zod error en fetchSaleCustomers:", result.error.format())
-        throw new Error("Respuesta inválida del servidor (clientes-venta).")
-    }
+        const response = await ApiService.get(
+            SALECOMMONS_ENDPOINTS.responsibles,
+            SaleResponsibleListResponseSchema,
+            undefined,
+            { unwrapData: true }
+        );
 
-    return result.data
-}
+        Logger.info("Sale responsibles fetched successfully", { count: response.length }, MODULE_NAME);
 
-export const convertToOptions = (ventaTypes: SaleTypes) => {
-    return Object.entries(ventaTypes).map(([code, description]) => ({
-        value: code,
-        label: description,
-        code,
-        description,
-    }));
-}
+        return response;
+    },
+
+    /**
+     * Obtener clientes de venta
+     * @param cliente - Filtro opcional por nombre de cliente
+     */
+    async getSaleCustomers(cliente?: string): Promise<SaleCustomerListResponse> {
+        Logger.info("Fetching sale customers", { cliente }, MODULE_NAME);
+
+        const response = await ApiService.get(
+            SALECOMMONS_ENDPOINTS.customers,
+            SaleCustomerListResponseSchema,
+            { params: cliente ? { cliente } : {} }
+        );
+
+        Logger.info("Sale customers fetched successfully", { count: response.data.length }, MODULE_NAME);
+
+        return response;
+    },
+
+    /**
+     * Convertir tipos de venta en opciones para selects
+     */
+    convertToOptions(saleTypes: SaleTypesResponse): SaleTypesList {
+        return Object.entries(saleTypes).map(([code, label]) => ({
+            code,
+            label
+        }));
+    },
+};

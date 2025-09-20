@@ -1,12 +1,17 @@
 import { z } from "zod";
 
+const toNumber = z.preprocess((val) => {
+    if (typeof val === "string") return Number(val);
+    return val;
+}, z.number());
+
 export const ProductStockSchema = z.object({
     id: z.number(),
-    cantidad: z.string().transform(Number),
-    costo: z.string().transform(Number),
-    precio_venta: z.string().transform(Number),
-    precio_venta_alt: z.string().transform(Number),
-    saldo: z.string().transform(Number),
+    cantidad: toNumber,
+    costo: toNumber,
+    precio_venta: toNumber,
+    precio_venta_alt: toNumber,
+    saldo: toNumber,
     nro_adquisicion: z.number(),
     fecha_adquisicion: z.string(),
     fecha_actualizacion: z.string().nullable(),

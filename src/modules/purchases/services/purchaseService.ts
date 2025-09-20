@@ -1,4 +1,4 @@
-import apiClient from "@/lib/axios";
+import apiClient from "@/services/axios";
 import { ProviderResponseSchema, type ProviderOption } from "../schemas/provider.schema";
 import { PurchaseDetailResponseSchema } from "../schemas/purchase.schema";
 import { PurchaseListResponseSchema } from "../schemas/purchaseResponse.schema";

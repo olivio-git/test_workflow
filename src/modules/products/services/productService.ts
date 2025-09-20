@@ -1,4 +1,3 @@
-import apiClient from "@/lib/axios";
 import type { ProductFilters } from "../types/productFilters";
 import { PRODUCT_ENDPOINTS } from "./endpoints";
 import type { ProductDetail } from "../types/productDetail";
@@ -12,92 +11,145 @@ import { ProductProviderOrderListSchema } from "../schemas/productProviderOrders
 import { ProductListResponseSchema } from "../schemas/productResponse.schema";
 import type { ProductListResponse } from "../types/productListResponse ";
 import { ProductDetailSchema } from "../schemas/ProductDetail.schema";
+import { ApiService } from "@/lib/apiService";
+import { Logger } from "@/lib/logger";
+import type { ProductUpdate } from "../types/ProductUpdate.types";
+import type { ProductCreate } from "../types/ProductCreate.types";
 
-export const fetchProducts = async (filters: Partial<ProductFilters>): Promise<ProductListResponse> => {
-	const response = await apiClient.get(PRODUCT_ENDPOINTS.all, { params: filters });
+const MODULE_NAME = "PRODUCTS_SERVICE";
 
-	const result = ProductListResponseSchema.safeParse(response.data);
-	if (!result.success) {
-		console.error("Zod error en fetchProducts:", result.error.format());
-		throw new Error("Respuesta inválida del servidor.");
-	}
-	return result.data;
-};
+export const productsService = {
+	/**
+	 * Obtener todos los productos con filtros opcionales
+	 * @param filters - Filtros opcionales para la consulta
+	 */
+	async getAll(filters: Partial<ProductFilters>): Promise<ProductListResponse> {
+		Logger.info("Fetching products", { filters }, MODULE_NAME);
+		const response = await ApiService.get(
+			PRODUCT_ENDPOINTS.all,
+			ProductListResponseSchema,
+			{ params: filters }
+		);
+		Logger.info("Products fetched successfully", { count: response.data.length }, MODULE_NAME);
+		return response as ProductListResponse;
+	},
 
-export const fetchProductDetail = async (id: number): Promise<ProductDetail> => {
-	const response = await apiClient.get(PRODUCT_ENDPOINTS.byId(id));
-	const result = ProductDetailSchema.safeParse(response.data.data);
-	if (!result.success) {
-		console.error("Zod error en fetchProductDetail:", result.error.format());
-		throw new Error("Respuesta inválida del servidor.");
-	}
-	return result.data;
-};
+	/**
+	 * Obtener detalle de un producto por ID
+	 * @param id - ID del producto
+	 */
+	async getById(id: number): Promise<ProductDetail> {
+		Logger.info("Fetching product detail", { id }, MODULE_NAME);
+		const response = await ApiService.get(
+			PRODUCT_ENDPOINTS.byId(id),
+			ProductDetailSchema,
+			undefined,
+			{ unwrapData: true }
+		);
+		Logger.info("Product detail fetched successfully", { id }, MODULE_NAME);
+		return response as ProductDetail;
+	},
 
-export const fetchProductStock = async ({
-	producto,
-	sucursal,
-	resto_only,
-}: StockParams): Promise<ProductStock[]> => {
-	const res = await apiClient.get(PRODUCT_ENDPOINTS.stockDetails, {
-		params: { producto, sucursal, resto_only },
-	});
+	/**
+	 * Obtener stock de un producto con filtros opcionales
+	 * @param params - Parámetros para la consulta de stock
+	 */
+	async getStock(params: StockParams): Promise<ProductStock[]> {
+		Logger.info("Fetching product stock", { params }, MODULE_NAME);
+		const response = await ApiService.get(
+			PRODUCT_ENDPOINTS.stockDetails,
+			ProductStockListSchema,
+			{ params },
+			{ unwrapData: true }
+		);
+		Logger.info("Product stock fetched successfully", { length: response.length }, MODULE_NAME);
+		return response as ProductStock[];
+	},
 
-	const result = ProductStockListSchema.safeParse(res.data.data);
-	if (!result.success) {
-		console.error("Zod error en fetchProductStock:", result.error.format());
-		throw new Error("Respuesta inválida del servidor.");
-	}
-	return result.data;
-};
+	/**
+	 * Obtener órdenes de productos con filtros opcionales
+	 * @param params - Parámetros para la consulta de órdenes de productos
+	 */
+	async getProviderOrders(params: ProvOrdersParams): Promise<ProductProviderOrder[]> {
+		Logger.info("Fetching provider orders", { params }, MODULE_NAME);
+		const response = await ApiService.get(
+			PRODUCT_ENDPOINTS.providerOrders,
+			ProductProviderOrderListSchema,
+			{ params },
+			{ unwrapData: true }
+		);
+		Logger.info("Provider orders fetched successfully", { length: response.length }, MODULE_NAME);
+		return response as ProductProviderOrder[];
+	},
 
-export const fetchProductProviderOrders = async ({
-	producto,
-	sucursal,
-}: ProvOrdersParams): Promise<ProductProviderOrder[]> => {
-	const res = await apiClient.get(PRODUCT_ENDPOINTS.providerOrders, {
-		params: { producto, sucursal },
-	});
+	/**
+	 * Obtener estadísticas de ventas de un producto, basado en dos años
+	 * @param params - Parámetros para la consulta de estadísticas
+	 */
+	async getSalesStats(params: SalesParams): Promise<ProductSalesStats> {
+		Logger.info("Fetching product sales stats", { params }, MODULE_NAME);
+		const response = await ApiService.get(
+			PRODUCT_ENDPOINTS.twoYearsSales,
+			ProductSalesSchema,
+			{ params }
+		);
+		Logger.info("Product sales stats fetched successfully", {}, MODULE_NAME);
+		return response as ProductSalesStats;
+	},
 
-	const result = ProductProviderOrderListSchema.safeParse(res.data.data);
-	if (!result.success) {
-		console.error("Zod error en fetchProductProviderOrders:", result.error.format());
-		throw new Error("Respuesta inválida del servidor.");
-	}
-	return result.data;
-};
+	/**
+	 * Eliminar un producto por ID
+	 * @param id - ID del producto
+	 */
+	async delete(id: number): Promise<void> {
+		Logger.info("Deleting product", { id }, MODULE_NAME);
+		await ApiService.delete(PRODUCT_ENDPOINTS.delete(id));
+		Logger.info("Product deleted successfully", { id }, MODULE_NAME);
+	},
 
-export const fetchProductSalesStats = async ({
-	producto,
-	sucursal,
-	gestion_1,
-	gestion_2,
-}: SalesParams): Promise<ProductSalesStats> => {
-	const res = await apiClient.get(PRODUCT_ENDPOINTS.twoYearsSales, {
-		params: { producto, sucursal, gestion_1, gestion_2 },
-	});
+	/**	
+	 * Modificar producto
+	 * @param id - ID del producto
+	 * @param data - Datos para actualizar el producto
+	 */
+	async update(id: number, data: ProductUpdate): Promise<ProductDetail> {
+		Logger.info('Updating product', { id, data }, MODULE_NAME);
 
-	const result = ProductSalesSchema.safeParse(res.data);
-	if (!result.success) {
-		console.error("Zod error en fetchProductSalesStats:", result.error.format());
-		throw new Error("Respuesta inválida del servidor.");
-	}
-	return result.data;
-};
+		const response = await ApiService.put(
+			PRODUCT_ENDPOINTS.update(id),
+			data,
+			ProductDetailSchema,
+			undefined,
+			{ unwrapData: true }
+		);
 
-/**
- * Elimina un producto por ID
- * @param productId - ID del producto a eliminar
- */
-export const deleteProduct = async (productId: number): Promise<void> => {
-	try {
-		await apiClient.delete(PRODUCT_ENDPOINTS.delete(productId));
+		Logger.info('Product updated successfully', {
+			id
+		}, MODULE_NAME);
+		return response as ProductDetail;
+	},
 
-	} catch (error: any) {
-		if (error.response?.data?.error?.message) {
-			console.error("Error eliminando producto:", error.response.data.error.message);
-			throw new Error(error.response.data.error.message);
-		}
-		throw new Error("Error eliminando el producto.");
-	}
+	/**
+		 * Crear un nuevo producto
+		 * @param data - Datos del producto a crear
+		 */
+	async create(data: ProductCreate): Promise<ProductDetail> {
+		Logger.info('Creating product', { data }, MODULE_NAME);
+
+		const response = await ApiService.post(
+			PRODUCT_ENDPOINTS.create,
+			data,
+			ProductDetailSchema,
+			undefined,
+			{ unwrapData: true }
+		);
+
+		Logger.info(
+			"Product created successfully",
+			undefined,
+			// response.data.id && { id: response.data.id },
+			MODULE_NAME
+		);
+		return response as ProductDetail;
+	},
 };

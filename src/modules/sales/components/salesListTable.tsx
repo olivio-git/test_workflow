@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SaleGetAll, SalesGetAllResponse } from "../types/salesGetResponse";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type RowSelectionState } from "@tanstack/react-table";
 import { Checkbox } from "@/components/atoms/checkbox";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Badge } from "@/components/atoms/badge";
-import { Clock, Edit, Eye, HelpCircle, Loader2, MoreVertical, Settings, Trash2 } from "lucide-react";
+import { Clock, Edit, Eye, HelpCircle, Loader2, MoreVertical, Phone, Settings, Trash2 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import CustomizableTable from "@/components/common/CustomizableTable";
-import ResizableBox from "@/components/atoms/resizable-box";
 import type { useSalesFilters } from "../hooks/useSalesFilters";
 import Pagination from "@/components/common/pagination";
 import { TooltipWrapper } from "@/components/common/TooltipWrapper ";
@@ -16,11 +15,11 @@ import { Kbd } from "@/components/atoms/kbd";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/atoms/dropdown-menu";
 import { Button } from "@/components/atoms/button";
 import authSDK from "@/services/sdk-simple-auth";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { formatCurrency } from "@/utils/formaters";
 import { useNavigate } from "react-router";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import ShortcutKey from "@/components/common/ShortcutKey";
+import RowsPerPageSelect from "@/components/common/RowsPerPageSelect";
 
 interface SalesListTableProps {
     data: SalesGetAllResponse
@@ -80,13 +79,13 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         }
     }, [columnVisibility, user?.name]);
 
-    const handleSeeDetails = (saleId: number) => {
+    const handleSeeDetails = useCallback((saleId: number) => {
         navigate(`/dashboard/sales/${saleId}`)
-    }
+    }, [navigate]);
 
-    const handleUpdateSale = (saleId: number) => {
+    const handleUpdateSale = useCallback((saleId: number) => {
         navigate(`/dashboard/sales/${saleId}/update`)
-    }
+    }, [navigate]);
 
     const columns = useMemo<ColumnDef<SaleGetAll>[]>(() => [
         {
@@ -234,7 +233,11 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                             cliente &&
                             <div className="text-xs text-muted-foreground space-y-0.5">
                                 {cliente.nit && <div>NIT: {cliente.nit}</div>}
-                                {cliente.contacto && <div>Tel: {cliente.contacto}</div>}
+                                {cliente.contacto &&
+                                    <div className="flex items-center gap-1">
+                                        <Phone className="size-3" />
+                                        {cliente.contacto}
+                                    </div>}
                             </div>
                         }
                     </div>
@@ -338,7 +341,7 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                 );
             },
         },
-    ], []);
+    ], [handleDeleteSale, handleSeeDetails, handleUpdateSale]);
 
     const table = useReactTable<SaleGetAll>({
         data: sales,
@@ -361,7 +364,6 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
         selectedIndex,
         setSelectedIndex,
         isFocused,
-        handleContainerClick: handleTableClick,
         // setIsFocused: setIsFocusedTable,
         hotkeys
     } = useKeyboardNavigation<SaleGetAll, HTMLTableElement>({
@@ -415,18 +417,10 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                 }
 
                 <div className="flex items-center gap-2">
-                    <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
-                    <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="shadow-lg">
-                            <SelectItem value={"10"}>10</SelectItem>
-                            <SelectItem value={"25"}>25</SelectItem>
-                            <SelectItem value={"50"}>50</SelectItem>
-                            <SelectItem value={"100"}>100</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <RowsPerPageSelect
+                        value={filters.pagina_registros ?? 10}
+                        onChange={onShowRowsChange}
+                    />
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
@@ -538,47 +532,41 @@ const SalesListTable: React.FC<SalesListTableProps> = ({
                     />
                 </InfiniteScroll>
             ) : (
-                <ResizableBox
-                    direction="vertical"
-                    minSize={10}
-                >
+                <div
+                    className="overflow-auto h-full">
                     <div
-                        className="overflow-auto h-full">
-                        <div
-                            onClick={handleTableClick}
-                            className="overflow-x-hidden">
-                            <CustomizableTable
-                                table={table}
-                                isError={isError}
-                                isFetching={isFetching}
-                                isLoading={isLoading}
-                                errorMessage="Ocurrió un error al cargar las ventas"
-                                noDataMessage="No se encontraron ventas"
-                                rows={filters.pagina_registros}
-                                selectedRowIndex={selectedIndex}
-                                onRowClick={handleRowClick}
-                                onRowDoubleClick={handleRowDoubleClick}
-                                tableRef={tableRef}
-                                focused={isFocused}
-                                keyboardNavigationEnabled={true}
-                            />
+                        className="overflow-x-hidden">
+                        <CustomizableTable
+                            table={table}
+                            isError={isError}
+                            isFetching={isFetching}
+                            isLoading={isLoading}
+                            errorMessage="Ocurrió un error al cargar las ventas"
+                            noDataMessage="No se encontraron ventas"
+                            rows={filters.pagina_registros}
+                            selectedRowIndex={selectedIndex}
+                            onRowClick={handleRowClick}
+                            onRowDoubleClick={handleRowDoubleClick}
+                            tableRef={tableRef}
+                            focused={isFocused}
+                            keyboardNavigationEnabled={true}
+                        />
 
-                        </div>
-
-                        {/* Pagination */}
-                        {
-                            (data?.data?.length ?? 0) > 0 && (
-                                <Pagination
-                                    currentPage={filters.pagina || 1}
-                                    onPageChange={onPageChange}
-                                    totalData={data?.meta?.total ?? 1}
-                                    onShowRowsChange={onShowRowsChange}
-                                    showRows={filters.pagina_registros}
-                                />
-                            )
-                        }
                     </div>
-                </ResizableBox>
+
+                    {/* Pagination */}
+                    {
+                        (data?.data?.length ?? 0) > 0 && (
+                            <Pagination
+                                currentPage={filters.pagina || 1}
+                                onPageChange={onPageChange}
+                                totalData={data?.meta?.total ?? 1}
+                                onShowRowsChange={onShowRowsChange}
+                                showRows={filters.pagina_registros}
+                            />
+                        )
+                    }
+                </div>
             )}
         </section>
     );

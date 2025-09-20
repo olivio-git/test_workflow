@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { SaleResponsibleSchema } from "./saleResponsibles.schema";
 import { SaleCustomerGetSchema } from "./saleCustomer.schema";
+import { paginatedResponseSchema } from "@/modules/shared/schemas/paginatedResponse.schema";
 
 export const saleGetAllSchema = z.object({
     id: z.number().int(),
@@ -14,26 +15,4 @@ export const saleGetAllSchema = z.object({
     comentarios: z.string().nullable(),
 });
 
-export const salesGetAllResponseSchema = z.object({
-    data: z.array(saleGetAllSchema),
-    links: z.object({
-        first: z.string().nullable(),
-        last: z.string().nullable(),
-        prev: z.string().nullable(),
-        next: z.string().nullable(),
-    }).nullable(),
-    meta: z.object({
-        current_page: z.number().int(),
-        from: z.number().int().nullable(),
-        last_page: z.number().int(),
-        links: z.array(z.object({
-            url: z.string().nullable(),
-            label: z.string().nullable(),
-            active: z.boolean().nullable(),
-        })).nullable(),
-        path: z.string(),
-        per_page: z.number().int(),
-        to: z.number().int().nullable(),
-        total: z.number().int(),
-    }).nullable(),
-});
+export const salesGetAllResponseSchema = paginatedResponseSchema(saleGetAllSchema)

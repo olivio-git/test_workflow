@@ -10,13 +10,6 @@ import {
 import { Input } from '@/components/atoms/input';
 import { Label } from '@/components/atoms/label';
 import ResizableBox from '@/components/atoms/resizable-box';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/atoms/select';
 import { Switch } from '@/components/atoms/switch';
 import CustomizableTable from '@/components/common/CustomizableTable';
 import Pagination from '@/components/common/pagination';
@@ -54,6 +47,7 @@ import { usePurchaseDelete } from '../hooks/usePurchaseDelete';
 import { usePurchaseFilters } from '../hooks/usePurchaseFilters';
 import { usePurchasesPaginated } from '../hooks/usePurchasesPaginated';
 import type { PurchaseGet } from '../types/PurchaseGet';
+import RowsPerPageSelect from '@/components/common/RowsPerPageSelect';
 
 const getColumnVisibilityKey = (userName: string) =>
   `purchase-columns-${userName}`;
@@ -268,7 +262,7 @@ const PurchaseListScreen = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onKeyDown={e => e.stopPropagation()}
-                    onClick={() => {}}
+                    onClick={() => { }}
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     Ver comprobantes
@@ -427,9 +421,8 @@ const PurchaseListScreen = () => {
           const comentarios = getValue<string>();
           return (
             <div
-              className={`text-xs ${
-                !comentarios ? 'italic text-gray-400' : ''
-              }`}
+              className={`text-xs ${!comentarios ? 'italic text-gray-400' : ''
+                }`}
             >
               {formatCell(comentarios, 'Sin comentarios')}
             </div>
@@ -535,9 +528,8 @@ const PurchaseListScreen = () => {
                 className="w-8"
               >
                 <RefreshCcw
-                  className={`size-4 ${
-                    isRefetchingPurchases || isFetching ? 'animate-spin' : ''
-                  }`}
+                  className={`size-4 ${isRefetchingPurchases || isFetching ? 'animate-spin' : ''
+                    }`}
                 />
               </Button>
 
@@ -563,37 +555,22 @@ const PurchaseListScreen = () => {
             isInfiniteScroll ? (
               `Mostrando ${purchases.length} de ${purchaseData?.meta.total} compras`
             ) : (
-              `Mostrando ${
-                (filters.pagina ?? 1) * (filters.pagina_registros ?? 1) -
-                ((filters.pagina_registros ?? 1) - 1)
+              `Mostrando ${(filters.pagina ?? 1) * (filters.pagina_registros ?? 1) -
+              ((filters.pagina_registros ?? 1) - 1)
               } 
-                            - ${
-                              (filters.pagina ?? 1) *
-                              (filters.pagina_registros ?? 1)
-                            } de ${purchaseData?.meta.total} compras`
+                            - ${(filters.pagina ?? 1) *
+              (filters.pagina_registros ?? 1)
+              } de ${purchaseData?.meta.total} compras`
             )
           ) : (
             <span>Cargando...</span>
           )}
 
           <div className="flex items-center gap-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Mostrar:
-            </label>
-            <Select
-              value={(filters.pagina_registros ?? 10).toString()}
-              onValueChange={value => onShowRowsChange?.(Number(value))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="shadow-lg">
-                <SelectItem value={'10'}>10</SelectItem>
-                <SelectItem value={'25'}>25</SelectItem>
-                <SelectItem value={'50'}>50</SelectItem>
-                <SelectItem value={'100'}>100</SelectItem>
-              </SelectContent>
-            </Select>
+            <RowsPerPageSelect
+              value={filters.pagina_registros ?? 10}
+              onChange={onShowRowsChange}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">

@@ -22,26 +22,13 @@ const SaleDetailScreen = () => {
     const navigate = useNavigate()
     const { id: saleId } = useParams()
 
-    if (!(Number(saleId))) {
-        return (
-            <ErrorDataComponent
-                errorMessage="No se pudo cargar la venta."
-                showButtonIcon={false}
-                buttonText="Ir a lista de ventas"
-                onRetry={() => {
-                    navigate("/dashboard/sales")
-                }}
-            />
-        )
-    }
-
     const {
         data: saleData,
         isLoading: isLoadingSale,
         isError: isErrorSale
     } = useSaleGetById(Number(saleId))
 
-    const handleDeleteSuccess = (_data: any, saleId: number) => {
+    const handleDeleteSuccess = (_data: unknown, saleId: number) => {
         showSuccessToast({
             title: "Venta eliminada",
             description: `La venta #${saleId} se eliminó exitosamente`,
@@ -50,7 +37,7 @@ const SaleDetailScreen = () => {
         handleGoBack()
     };
 
-    const handleDeleteError = (_error: any, saleId: number) => {
+    const handleDeleteError = (_error: unknown, saleId: number) => {
         showErrorToast({
             title: "Error al eliminar venta",
             description: `No se pudo eliminar la venta #${saleId}. Por favor, intenta nuevamente`,
@@ -110,7 +97,7 @@ const SaleDetailScreen = () => {
         return <SaleDetailSkeleton />;
     }
 
-    if (isErrorSale) {
+    if (isErrorSale || !(Number(saleId))) {
         return <ErrorDataComponent
             errorMessage="No se pudo cargar la venta."
             showButtonIcon={false}
@@ -124,7 +111,7 @@ const SaleDetailScreen = () => {
     return (
         <main className="flex flex-col items-center">
             <div className="max-w-7xl w-full space-y-2">
-                <header className="border-gray-200 border bg-white rounded-lg p-6">
+                <header className="border-gray-200 border bg-white rounded-lg p-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <TooltipButton
@@ -201,7 +188,7 @@ const SaleDetailScreen = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 text-base font-semibold text-gray-900">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 text-base font-semibold text-gray-900">
                             <div>
                                 <Label>Número de venta</Label>
                                 <p className="font-bold">{saleData?.nro}</p>

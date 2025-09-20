@@ -44,7 +44,7 @@ const CustomizableTable = <T,>({
     onRowClick,
     onRowDoubleClick,
     tableRef,
-    focused,
+    focused = false,
     keyboardNavigationEnabled = false,
 }: Props<T>) => {
 

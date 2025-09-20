@@ -57,14 +57,14 @@ const SalesListScreen = () => {
         } else {
             setSales(salesData.data);
         }
-    }, [salesData?.data, isInfiniteScroll, filters.pagina]);
+    }, [salesData?.data, isInfiniteScroll, filters.pagina, error, isFetching]);
 
     const handleResetFilters = () => {
         resetFilters()
         setSearchKeywords("")
     }
 
-    const handleDeleteSuccess = (_data: any, saleId: number) => {
+    const handleDeleteSuccess = (_data: unknown, saleId: number) => {
         showSuccessToast({
             title: "Venta eliminada",
             description: `La venta #${saleId} se eliminó exitosamente`,
@@ -72,7 +72,7 @@ const SalesListScreen = () => {
         })
     };
 
-    const handleDeleteError = (_error: any, saleId: number) => {
+    const handleDeleteError = (_error: unknown, saleId: number) => {
         showErrorToast({
             title: "Error al eliminar venta",
             description: `No se pudo eliminar la venta #${saleId}. Por favor, intenta nuevamente`,
@@ -95,7 +95,7 @@ const SalesListScreen = () => {
 
     useEffect(() => {
         updateFilter("keywords", debouncedSearchKeywords);
-    }, [debouncedSearchKeywords]);
+    }, [debouncedSearchKeywords, updateFilter]);
 
     const handleRefetchSales = () => {
         refetchSales();

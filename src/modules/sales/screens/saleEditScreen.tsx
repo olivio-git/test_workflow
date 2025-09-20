@@ -4,10 +4,9 @@ import { useSaleGetById } from "../hooks/useSaleGetById"
 import TooltipButton from "@/components/common/TooltipButton"
 import { CornerUpLeft, Loader2, Save, ShoppingCart } from "lucide-react"
 import { Kbd } from "@/components/atoms/kbd"
-import { Controller, FormProvider, useForm } from "react-hook-form"
+import { Controller, FormProvider, useForm, type FieldErrors } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { SaleUpdateSchema } from "../schemas/saleUpdate.schema"
-import type { SaleUpdate, SaleUpdateDetailWithProduct } from "../types/saleUpdate.type"
+import type { SaleUpdate, SaleUpdateDetailUI, SaleUpdateForm } from "../types/saleUpdate.type"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card"
 import { Label } from "@/components/atoms/label"
 import { Input } from "@/components/atoms/input"
@@ -20,16 +19,24 @@ import { useSaleResponsibles } from "../hooks/useSaleResponsibles"
 import { useSaleCustomers } from "../hooks/useSaleCustomers"
 import { PaginatedCombobox } from "@/components/common/paginatedCombobox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
-import { Textarea } from "@/components/atoms/textarea"
 import { useBranchStore } from "@/states/branchStore"
-import { showErrorToast } from "@/hooks/use-toast-enhanced"
-import { format, parse } from "date-fns"
+import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced"
+import { parse } from "date-fns"
 import { useHotkeys } from "react-hotkeys-hook"
-import SaleDetailSkeleton from "../components/saleDetail/saleDetailSkeleton"
 import ProductSelectorModal from "@/modules/products/components/ProductSelectorModal"
-import TableSaleProducts from "../components/saleEdit/saleProductsEditTable"
-import type { ProductGet } from "@/modules/products/types/ProductGet"
-import type { SaleItemGetById } from "../types/salesGetResponse"
+import SaleDetailsEditingTable from "../components/saleEdit/saleDetailsEditingTable"
+import { SaleUpdateFormSchema, SaleUpdateSchema } from "../schemas/saleUpdate.schema"
+import useSaleProductDetailsWithForm from "../hooks/useSaleProductDetails"
+import { useUpdateSale } from "../hooks/useUpdateSale"
+import { useGoBack } from "@/hooks/useGoBack"
+import { Button } from "@/components/atoms/button"
+import { Separator } from "@/components/atoms/separator"
+import { formatCurrency } from "@/utils/formaters"
+import { EditablePercentage } from "@/modules/shoppingCart/components/EditablePercentage"
+import { EditablePrice } from "@/modules/shoppingCart/components/editablePrice"
+import { useErrorHandler } from "@/hooks/useErrorHandler"
+import SaleEditSkeleton from "../components/saleEdit/saleEditSkeleton"
+import ShortcutKey from "@/components/common/ShortcutKey"
 
 const SaleEditScreen = () => {
     const navigate = useNavigate()
@@ -38,18 +45,21 @@ const SaleEditScreen = () => {
     const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
     const [debouncedCustomerSearchTerm] = useDebounce<string>(customerSearchTerm, 500)
     const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
-    const [saleDetails, setSaleDetails] = useState<SaleUpdateDetailWithProduct[]>([])
+    const [hasInitialized, setHasInitialized] = useState<boolean>(false);
 
     const {
         data: saleTypesData,
+        isLoading: isLoadingSaleTypes,
     } = useSaleTypes()
 
     const {
         data: saleModalitiesData,
+        isLoading: isLoadingSaleModalities,
     } = useSaleModalities()
 
     const {
         data: saleResponsiblesData,
+        isLoading: isLoadingSaleResponsibles
     } = useSaleResponsibles()
 
     const {
@@ -57,18 +67,10 @@ const SaleEditScreen = () => {
         isLoading: isSaleCustomersLoading
     } = useSaleCustomers(debouncedCustomerSearchTerm)
 
-    if (!(Number(saleId))) {
-        return (
-            <ErrorDataComponent
-                errorMessage="No se pudo cargar la venta."
-                showButtonIcon={false}
-                buttonText="Ir a lista de ventas"
-                onRetry={() => {
-                    navigate("/dashboard/sales")
-                }}
-            />
-        )
-    }
+    const {
+        mutate: updateSale,
+        isPending: isSaving
+    } = useUpdateSale();
 
     const {
         data: saleData,
@@ -76,8 +78,11 @@ const SaleEditScreen = () => {
         isError: isErrorSale
     } = useSaleGetById(Number(saleId))
 
-    const methods = useForm<SaleUpdate>({
-        resolver: zodResolver(SaleUpdateSchema),
+    const handleGoBack = useGoBack("/dashboard/sales");
+    const { handleError } = useErrorHandler()
+
+    const formMethods = useForm<SaleUpdateForm>({
+        resolver: zodResolver(SaleUpdateFormSchema),
         defaultValues: {
             fecha: "",
             nro_comprobante: "",
@@ -110,39 +115,57 @@ const SaleEditScreen = () => {
         setError,
         clearErrors,
         formState: { errors }
-    } = methods
+    } = formMethods
 
     useEffect(() => {
-        console.log(saleData)
-
         if (saleData && saleTypesData && saleModalitiesData) {
-            reset({
-                fecha: saleData.fecha?.slice(0, 10) ?? "", // adaptar formato yyyy-MM-dd
+            const detallesTransformados: SaleUpdateDetailUI[] =
+                (saleData.detalles ?? []).map((d) => ({
+                    cantidad: d.cantidad,
+                    descuento: d.descuento,
+                    id_detalle_venta: d.id,
+                    id_producto: d.producto.id,
+                    porcentaje_descuento: d.porcentaje_descuento,
+                    precio: d.precio,
+                    producto: {
+                        id: d.producto.id,
+                        categoria: d.producto.categoria?.categoria ?? null,
+                        codigo_oem: d.producto.codigo_oem ?? null,
+                        codigo_upc: d.producto.codigo_upc ?? null,
+                        descripcion: d.producto.descripcion,
+                        marca: d.producto.marca?.marca ?? '',
+                        precio_venta: d.producto.precio_venta
+                    }
+                }));
+
+            const resetData: SaleUpdateForm = {
+                fecha: saleData.fecha?.slice(0, 10) ?? "",
                 nro_comprobante2: saleData.comprobante2 ?? "",
                 nro_comprobante: saleData.comprobante ?? "",
-                id_cliente: saleData.cliente?.id ?? undefined,
-                tipo_venta: saleData.tipo_venta.toString(),
-                forma_venta: saleData.forma_venta.toString(),
+                id_cliente: saleData.cliente?.id ?? 0,
                 comentario: saleData.comentarios ?? "",
-                plazo_pago: saleData.plazo_pago ?? "",
+                plazo_pago: saleData.plazo_pago?.slice(0, 10) ?? "",
                 vehiculo: saleData.vehiculo ?? "",
                 nro_motor: saleData.nmotor ?? "",
                 cliente_nombre: saleData.cliente?.cliente ?? "",
                 cliente_nit: saleData.cliente?.nit?.toString() ?? "",
-                // usuario: saleData.usuario_id ?? 1,
-                // sucursal: saleData.sucursal_id ?? 1,
-                id_responsable: saleData.responsable_venta?.id ?? undefined,
-                detalles: saleData.detalles ?? []
-            });
-            setSaleDetails(saleData.detalles)
+                usuario: 1,
+                sucursal: 1,
+                id_responsable: saleData.responsable_venta?.id ?? 0,
+                detalles: detallesTransformados,
+                tipo_venta: saleData.tipo_venta,
+                forma_venta: saleData.forma_venta,
+            };
+            reset(resetData);
+            setHasInitialized(true);
         }
     }, [saleData, saleTypesData, saleModalitiesData, reset]);
 
-
     const validateBeforeSubmit = (): boolean => {
         let isValid = true;
+        const formData = getValues();
 
-        if (saleData?.detalles.length === 0) {
+        if (formData.detalles.length === 0) {
             setError("detalles", {
                 type: "manual",
                 message: "Debes agregar al menos un producto para realizar una venta"
@@ -154,17 +177,6 @@ const SaleEditScreen = () => {
             });
             isValid = false;
         }
-
-        // const validation = validateCartWithToast();
-        // if (!validation.isValid) {
-        //     setError("detalles", {
-        //         type: "manual",
-        //         message: "Hay productos con problemas de stock en el carrito"
-        //     });
-        //     isValid = false;
-        // }
-
-        const formData = getValues();
 
         if (!formData.id_cliente) {
             setError("id_cliente", {
@@ -212,10 +224,10 @@ const SaleEditScreen = () => {
     };
 
     // VALIDACIÓN DE FECHA DE PLAZO
+    const tipoVenta = watch("tipo_venta");
+    const plazoPago = watch("plazo_pago");
     useEffect(() => {
-        const tipoVenta = watch("tipo_venta");
-        const plazoPago = watch("plazo_pago");
-
+        if (!hasInitialized) return;
         if (tipoVenta === "VC" && plazoPago) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -239,70 +251,58 @@ const SaleEditScreen = () => {
             }
         }
         if (tipoVenta !== "VC") {
-            resetField("plazo_pago");
+            resetField("plazo_pago", { defaultValue: "" });
         }
-    }, [watch("tipo_venta"), watch("plazo_pago"), resetField]);
+    }, [tipoVenta, plazoPago, resetField, setError, clearErrors, hasInitialized]);
 
-    const handleCheckout = () => {
-        const currentValues = getValues();
-        reset({
-            fecha: format(new Date(), "yyyy-MM-dd"),
-            nro_comprobante: "",
-            nro_comprobante2: "",
-            id_cliente: currentValues.id_cliente,
-            tipo_venta: currentValues.tipo_venta,
-            forma_venta: currentValues.forma_venta,
-            comentario: "",
-            plazo_pago: "",
-            vehiculo: "",
-            nro_motor: "",
-            cliente_nombre: currentValues.cliente_nombre,
-            cliente_nit: currentValues.cliente_nit,
-            usuario: currentValues.usuario,
-            sucursal: currentValues.sucursal,
-            id_responsable: currentValues.id_responsable,
-            detalles: []
-        });
-    };
-
-    // const handleAddProductItem = (product: ProductGet) => {
-    //     addItemToCart(product)
-    // };
-
-    // const handleAddMultipleProducts = (products: ProductGet[]) => {
-    //     addMultipleItems(products);
-    // };
+    const {
+        addProduct,
+        removeProduct,
+        updateQuantity,
+        updatePrice,
+        updateCustomSubtotal,
+        applyGlobalDiscount,
+        calculateTotal,
+        calculateTotalDiscount,
+        calculateTotalBeforeDiscount,
+        getDiscountPercentage,
+    } = useSaleProductDetailsWithForm({ formMethods });
 
     const onSubmit = (data: SaleUpdate) => {
-        console.log(data)
-        if (!validateBeforeSubmit()) {
+        if (!validateBeforeSubmit()) return;
+
+        const result = SaleUpdateSchema.safeParse(data);
+
+        if (!result.success) {
+            showErrorToast({
+                title: "Datos inválidos",
+                description: "Revisa los campos antes de continuar.",
+                duration: 5000,
+            });
             return;
         }
 
-        // createSale(data, {
-        //     onSuccess: () => {
-        //         // console.log('Venta creada:', response);
-        //         showSuccessToast({
-        //             title: "Venta Exitosa",
-        //             description: `Venta realizada con éxito`,
-        //             duration: 5000
-        //         });
-        //         handleCheckout();
-
-        //         queryClient.invalidateQueries({ queryKey: ["sales"] });
-        //         queryClient.invalidateQueries({ queryKey: ["products"] });
-        //     },
-        //     onError: (error: any) => {
-        //         showErrorToast({
-        //             title: "Error en la venta",
-        //             description: error.message || "No se pudo procesar la venta. Intenta nuevamente.",
-        //             duration: 5000
-        //         });
-        //     }
-        // });
+        const transformedData = result.data;
+        updateSale(
+            { saleId: Number(saleId), data: transformedData },
+            {
+                onSuccess: () => {
+                    showSuccessToast({
+                        title: "Venta Modificada",
+                        description: `Venta modificada con éxito`,
+                        duration: 5000,
+                    });
+                    setTimeout(handleGoBack, 200);
+                },
+                onError: (error: unknown) => {
+                    handleError({ error, customTitle: "No se pudo modificar la venta" });
+                }
+            }
+        );
     };
 
-    const onError = (errors: any) => {
+    const onError = (errors: FieldErrors<SaleUpdateForm>) => {
+        // console.log(errors)
         if (errors.id_cliente || errors.tipo_venta || errors.forma_venta || errors.id_responsable) {
             showErrorToast({
                 title: "Error de validación",
@@ -311,7 +311,7 @@ const SaleEditScreen = () => {
             });
             return;
         }
-        const firstErrorKey = Object.keys(errors)[0];
+        const firstErrorKey = Object.keys(errors)[0] as keyof SaleUpdateForm;
         const firstError = errors[firstErrorKey];
 
         if (firstError?.message) {
@@ -327,29 +327,25 @@ const SaleEditScreen = () => {
         }
     };
 
-    const handleGoBack = () => {
-        navigate('/dashboard/sales')
-    }
-
-    const handleAddProductItem = (product: ProductGet) => {
-
-    }
-
-    const handleAddMultipleProducts = (products: ProductGet[]) => {
-
-    }
-
     // Shortcuts
-    useHotkeys('escape', handleGoBack, {
+    useHotkeys('escape', (e) => {
+        e.preventDefault();
+        handleGoBack();
+    }, {
         scopes: ["esc-key"],
         enabled: true
     });
 
-    if (isLoadingSale) {
-        return <SaleDetailSkeleton />;
+    useHotkeys('alt+s', (e) => {
+        e.preventDefault();
+        handleSubmit(onSubmit, onError)();
+    })
+
+    if (isLoadingSale || isLoadingSaleTypes || isLoadingSaleModalities || isLoadingSaleResponsibles) {
+        return <SaleEditSkeleton />;
     }
 
-    if (isErrorSale) {
+    if (isErrorSale || isNaN(Number(saleId))) {
         return <ErrorDataComponent
             errorMessage="No se pudo cargar la venta."
             showButtonIcon={false}
@@ -362,21 +358,21 @@ const SaleEditScreen = () => {
 
     return (
         <main className="flex flex-col items-center">
-            <div className="max-w-7xl w-full space-y-2">
-                <FormProvider {...methods}>
+            <div className="w-full space-y-2">
+                <FormProvider {...formMethods}>
                     <form
                         className="space-y-2"
                         onSubmit={handleSubmit(onSubmit, onError)}
                     >
-                        <header className="border-gray-200 border bg-white rounded-lg p-6">
-                            <div className="flex items-center justify-between">
+                        <header className="border-gray-200 border bg-white rounded-lg p-2 sm:p-3">
+                            <div className="flex flex-wrap gap-2 items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <TooltipButton
                                         tooltipContentProps={{
                                             align: 'start'
                                         }}
-                                        // onClick={handleGoBack}
-                                        tooltip={<p className="flex gap-1">Presiona <Kbd>esc</Kbd> para volver a la lista de ventas</p>}
+                                        onClick={handleGoBack}
+                                        tooltip={<p className="flex items-center gap-1">Presiona <Kbd>esc</Kbd> para volver atrás</p>}
                                         buttonProps={{
                                             variant: 'default',
                                             type: 'button'
@@ -398,13 +394,9 @@ const SaleEditScreen = () => {
                                 </div >
 
                                 {/* Action Buttons */}
-                                < div className="flex items-center gap-2" >
+                                < div className="flex items-center justify-end w-full sm:w-auto gap-2" >
                                     <TooltipButton
-                                        // onClick={handleUpdateSale}
-                                        onClick={() => {
-                                            const d = getValues()
-                                            console.log(d)
-                                        }}
+                                        onClick={handleGoBack}
                                         tooltip="Cancelar Edicion"
                                         buttonProps={{
                                             variant: 'outline',
@@ -416,17 +408,18 @@ const SaleEditScreen = () => {
                                     </TooltipButton>
 
                                     <TooltipButton
-                                        // onClick={() => handleOpenDeleteAlert(saleData?.id)}
-                                        tooltip="Guardar cambios"
+                                        tooltip={
+                                            <span className="flex items-center gap-1">Guardar Cambios <ShortcutKey combo="alt+s" /></span>
+                                        }
                                         buttonProps={{
                                             variant: 'default',
                                             size: 'sm',
-                                            type: 'submit'
-                                            // disabled: isDeleting
+                                            type: 'submit',
+                                            disabled: isSaving
                                         }}
                                     >
                                         {
-                                            2 > 1 ? (
+                                            !isSaving ? (
                                                 <>
                                                     <Save className="h-4 w-4" />
                                                     Guardar Cambios
@@ -446,9 +439,9 @@ const SaleEditScreen = () => {
                         {/* 1. Datos de la Venta */}
                         <Card className="border-gray-200 shadow-none pt-4">
                             <CardContent className="">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 xl:gap-x-2 xl:gap-y-3">
                                     <div>
-                                        <Label htmlFor="fechaVenta">Fecha de Venta *</Label>
+                                        <Label htmlFor="fechaVenta">Fecha *</Label>
                                         <Input
                                             id="fechaVenta"
                                             type="date"
@@ -459,7 +452,7 @@ const SaleEditScreen = () => {
                                         {errors.fecha && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
                                     </div>
                                     <div>
-                                        <Label htmlFor="responsable">Responsable de Venta *</Label>
+                                        <Label htmlFor="responsable">Responsable *</Label>
                                         <Controller
                                             name="id_responsable"
                                             control={control}
@@ -528,7 +521,7 @@ const SaleEditScreen = () => {
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="nroComprobanteSecundario">N° Comprobante Secundario</Label>
+                                        <Label htmlFor="nroComprobanteSecundario">N° Comprobante Sec.</Label>
                                         <Input
                                             id="nroComprobanteSecundario"
                                             {...register("nro_comprobante2")}
@@ -541,15 +534,17 @@ const SaleEditScreen = () => {
                                             name="forma_venta"
                                             control={control}
                                             render={({ field }) => (
-                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                <Select
+                                                    onValueChange={field.onChange}
+                                                    value={field.value || saleData?.forma_venta || ""}>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Selecciona una forma" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {
-                                                            saleModalitiesData && Object.entries(saleModalitiesData || {}).map(([code, description]) => (
-                                                                <SelectItem key={code} value={code}>
-                                                                    {description}
+                                                            saleModalitiesData && saleModalitiesData.map((modality) => (
+                                                                <SelectItem key={modality.code} value={modality.code}>
+                                                                    {modality.label}
                                                                 </SelectItem>
                                                             ))
                                                         }
@@ -566,15 +561,16 @@ const SaleEditScreen = () => {
                                             name="tipo_venta"
                                             control={control}
                                             render={({ field }) => (
-                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                <Select
+                                                    onValueChange={field.onChange} value={field.value || saleData?.tipo_venta || ""}>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Selecciona un tipo" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {
-                                                            saleTypesData && Object.entries(saleTypesData).map(([code, description]) => (
-                                                                <SelectItem key={code} value={code}>
-                                                                    {description}
+                                                            saleTypesData && saleTypesData.map((type) => (
+                                                                <SelectItem key={type.code} value={type.code}>
+                                                                    {type.label}
                                                                 </SelectItem>
                                                             ))
                                                         }
@@ -585,9 +581,12 @@ const SaleEditScreen = () => {
                                         {errors.tipo_venta && <p className="text-red-500 text-sm mt-1">El campo es requerido</p>}
                                     </div>
                                     <div>
-                                        <Label htmlFor="fechaPlazo">Fecha Plazo (Venta Crédito)</Label>
+                                        <Label htmlFor="fechaPlazo">
+                                            Fecha Plazo
+                                            <span className="text-xs ml-1 text-gray-500">(Crédito)</span>
+                                        </Label>
                                         <Input
-                                            id="fechaPlazo"
+                                            id="plazo_pago"
                                             type="date"
                                             {...register("plazo_pago")}
                                             disabled={watch("tipo_venta") !== "VC"}
@@ -609,13 +608,12 @@ const SaleEditScreen = () => {
                                             placeholder="Tipo de motor"
                                         />
                                     </div>
-                                    <div className="col-span-full">
+                                    <div>
                                         <Label htmlFor="comentarios">Comentarios</Label>
-                                        <Textarea
+                                        <Input
                                             id="comentarios"
                                             {...register("comentario")}
                                             placeholder="Comentarios adicionales sobre la venta"
-                                            className="min-h-[100px]"
                                         />
                                     </div>
                                 </div>
@@ -624,39 +622,126 @@ const SaleEditScreen = () => {
                         </Card>
 
                     </form>
-                </FormProvider>
 
-                {/* 2. Productos */}
-                <Card className="border-0 shadow-sm">
-                    <CardHeader className="pb-4">
-                        <CardTitle>
-                            <ProductSelectorModal
-                                isSearchOpen={isSearchOpen}
-                                setIsSearchOpen={setIsSearchOpen}
-                                addItem={handleAddProductItem}
-                                onlyWithStock={true}
-                                addMultipleItem={handleAddMultipleProducts}
-                            />
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-2">
-                            {saleData?.detalles.length === 0 ? (
-                                <div className="text-center py-8 text-gray-500">
-                                    <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                                    <p>No hay productos agregados</p>
-                                    <p className="text-sm">Haz clic en "Seleccionar Productos" para agregar</p>
-                                </div>
-                            ) :
-                                <TableSaleProducts
-                                    products={saleData?.detalles ?? []}
+                    {/* 2. Productos */}
+                    <Card className="border-0 shadow-sm">
+                        <CardHeader className="pb-4">
+                            <CardTitle>
+                                <ProductSelectorModal
+                                    isSearchOpen={isSearchOpen}
+                                    setIsSearchOpen={setIsSearchOpen}
+                                    addItem={addProduct}
+                                    onlyWithStock={true}
+                                    addMultipleItem={addProduct}
                                 />
-                            }
-                        </div>
-                    </CardContent>
-                </Card>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                {saleData?.detalles.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                                        <p>No hay productos agregados</p>
+                                        <p className="text-sm">Haz clic en "Seleccionar Productos" para agregar</p>
+                                    </div>
+                                ) :
+                                    <SaleDetailsEditingTable
+                                        products={watch("detalles")}
+                                        removeItem={removeProduct}
+                                        updatePrice={updatePrice}
+                                        updateQuantity={updateQuantity}
+                                        updateCustomSubtotal={updateCustomSubtotal}
+                                    />
+                                }
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border shadow-none border-gray-200 pt-3">
+                        <CardContent>
+                            <div className="grid md:grid-cols-2 gap-3">
+                                <section className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                                    <header className="flex items-center gap-2 mb-2">
+                                        <span className="text-sm font-medium text-gray-700">Descuento</span>
+                                    </header>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <Label className="text-xs text-gray-600">Porcentaje (%)</Label>
+                                            <EditablePercentage
+                                                value={getDiscountPercentage()}
+                                                onSubmit={(value) => applyGlobalDiscount(value as number, 'percentage')}
+                                                className="w-full"
+                                                buttonClassName="w-full"
+                                                showEditIcon={false}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-xs text-gray-600">Monto (Bs)</Label>
+                                            <EditablePrice
+                                                value={calculateTotalDiscount()}
+                                                onSubmit={(value) => applyGlobalDiscount(value as number, 'amount')}
+                                                className="w-full"
+                                                buttonClassName="w-full"
+                                                showEditIcon={false}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-1">
+                                        {[0, 5, 10, 15, 20].map((percentage) => (
+                                            <Button
+                                                key={percentage}
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-xs h-7 px-2 border-orange-300 text-orange-700 hover:bg-orange-100 hover:text-orange-600 transition-colors duration-300"
+                                                onClick={() => applyGlobalDiscount(percentage, 'percentage')}
+                                            >
+                                                {percentage}%
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {/* Totales - DERECHA */}
+                                <section className="space-y-4">
+                                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                                        <div className="flex justify-between items-center">
+                                            <Label>Subtotal:</Label>
+                                            <span className="text-base font-semibold tabular-nums">
+                                                {formatCurrency(calculateTotalBeforeDiscount())}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex justify-between items-center">
+                                            <Label>
+                                                Descuento ({getDiscountPercentage().toFixed(2)}%):
+                                            </Label>
+                                            <span className="text-base font-semibold text-red-600 tabular-nums">
+                                                -{formatCurrency(calculateTotalDiscount())}
+                                            </span>
+                                        </div>
+
+                                        <Separator className="my-2" />
+
+                                        <div className="bg-white rounded-lg p-2 border border-green-200">
+                                            <div className="flex justify-between items-center">
+                                                <Label className="text-base font-bold text-gray-700">TOTAL:</Label>
+                                                <span className="text-xl font-bold text-green-600 tabular-nums">
+                                                    {formatCurrency(calculateTotal())}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </FormProvider>
             </div>
-        </main>
+        </main >
     );
 }
 

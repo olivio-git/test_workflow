@@ -41,7 +41,7 @@ const BranchSelection: React.FC<BranchSelectionProps> = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 w-full">
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900"></div>
@@ -52,7 +52,7 @@ const BranchSelection: React.FC<BranchSelectionProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 w-full">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <div className="text-center mb-6">

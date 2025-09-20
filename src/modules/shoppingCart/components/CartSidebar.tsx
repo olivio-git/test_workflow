@@ -194,9 +194,13 @@ const CartSidebar = ({
                                         </Button>
                                         <Button
                                             size={'sm'}
+                                            onClick={() => {
+                                                navigate('/dashboard/create-quotation')
+                                                onOpenChange(false)
+                                            }}
                                             variant="outline" className="w-full cursor-pointer">
                                             <FileText className="size-4" />
-                                            Guardar Cotización
+                                            Proceder a la Cotización
                                         </Button>
                                     </div>
                                 </div>

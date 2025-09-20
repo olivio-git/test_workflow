@@ -131,7 +131,8 @@ const BottomShoppingCartBar: React.FC<ShoppingCartProps> = ({
 
                             <div className="grid sm:grid-cols-2 gap-2">
                                 <Button
-                                    className="w-full cursor-pointer" size={"sm"} onClick={() => {
+                                    className="w-full cursor-pointer" size={"sm"}
+                                    onClick={() => {
                                         navigate('/dashboard/create-sale')
                                     }}>
                                     <CreditCard className="size-4" />
@@ -139,9 +140,12 @@ const BottomShoppingCartBar: React.FC<ShoppingCartProps> = ({
                                 </Button>
                                 <Button
                                     size={'sm'}
+                                    onClick={() => {
+                                        navigate('/dashboard/create-quotation')
+                                    }}
                                     variant="outline" className="w-full cursor-pointer">
                                     <FileText className="size-4" />
-                                    Guardar Cotización
+                                    Proceder a la Cotización
                                 </Button>
                             </div>
                         </div>

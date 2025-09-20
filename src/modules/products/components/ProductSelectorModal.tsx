@@ -10,9 +10,9 @@ import {
 } from "@/components/atoms/dialog";
 import { Input } from "@/components/atoms/input";
 import { Plus, Search, Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { ProductGet } from "../types/ProductGet";
-import { useProductsPaginated } from "../hooks/useProductsPaginated";
+import { useProductsPaginated } from "../hooks/queries/useProductsPaginated";
 import { useProductFilters } from "../hooks/useProductFilters";
 import { useBranchStore } from "@/states/branchStore";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -20,10 +20,11 @@ import { formatCurrency } from "@/utils/formaters";
 import { useDebounce } from "use-debounce";
 import NoDataComponent from "@/components/common/noDataComponent";
 import { Checkbox } from "@/components/atoms/checkbox";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 interface ProductSelectorModalProps {
     isSearchOpen: boolean
-    setIsSearchOpen: any
+    setIsSearchOpen: Dispatch<SetStateAction<boolean>>
     addItem: (product: ProductGet) => void
     addMultipleItem: (products: ProductGet[]) => void
     onlyWithStock?: boolean
@@ -46,13 +47,15 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
         setPage,
         updateFilter,
         resetFilters,
-    } = useProductFilters(Number(selectedBranchId) ?? 0)
+    } = useProductFilters(Number(selectedBranchId) || 0)
+
     const {
         data: productsResponse,
         isLoading,
         isFetching,
         error,
     } = useProductsPaginated(filters)
+
     // Agregar producto al detalle
     const addProduct = (product: ProductGet) => {
         addItem(product)
@@ -61,7 +64,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
 
     useEffect(() => {
         updateFilter("descripcion", debouncedSearchTerm)
-    }, [debouncedSearchTerm]);
+    }, [debouncedSearchTerm, updateFilter]);
 
     const filteredProducts = useMemo(() => {
         if (!productsResponse?.data) return [];
@@ -87,7 +90,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
         } else {
             setProducts(filteredProducts);
         }
-    }, [filteredProducts, filters.pagina]);
+    }, [filteredProducts, filters.pagina, error, isFetching]);
 
     useEffect(() => {
         if (!productsResponse?.meta) return;
@@ -101,14 +104,14 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
             // No hay scroll -> cargar más automáticamente
             setPage((filters.pagina || 1) + 1);
         }
-    }, [products]);
+    }, [products, filters.pagina, filters.pagina_registros, productsResponse?.meta, setPage]);
 
 
     useEffect(() => {
         resetFilters()
         setSearchTerm("")
         setSelectedProducts([])
-    }, [isSearchOpen])
+    }, [isSearchOpen, resetFilters])
 
     const handleToggleSelectedProduct = (product: ProductGet) => {
         setSelectedProducts((prev) => {
@@ -129,8 +132,8 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
     const hasMoreProducts = filters.pagina < totalPages;
 
     return (
-        <section className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
+        <section className="flex flex-wrap items-center justify-between">
+            <h3 className="text-base font-semibold text-gray-900">
                 Detalle de Productos
             </h3>
             <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
@@ -138,15 +141,19 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                     <Button
                         className="bg-black hover:bg-gray-800 text-white"
                         size="sm"
+                        title="Seleccionar Productos"
                     >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Seleccionar Productos
+                        <Plus className="size-4" />
+                        <span className="hidden sm:block">Seleccionar Productos</span>
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl border-gray-200">
-                    <AlertDialogHeader>
+                <DialogContent className="max-w-4xl border-gray-200" aria-describedby="Seleccionar productos">
+                    <AlertDialogHeader className="text-start">
                         <DialogTitle>Buscar Productos</DialogTitle>
                     </AlertDialogHeader>
+                    <DialogDescription className="text-gray-500 text-sm -mt-2">
+                        Seleccionar productos para agregar
+                    </DialogDescription>
                     <div className="space-y-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -208,32 +215,33 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                                                             />
                                                         </div>
                                                         <div className="flex-1">
-                                                            <h4 className="font-medium text-sm">
+                                                            <h4 className="font-medium text-xs sm:text-sm">
                                                                 {product.descripcion}
                                                             </h4>
-                                                            <p className="text-xs text-gray-500">
+                                                            <p className="text-xs text-gray-500 hidden sm:block">
                                                                 OEM: {product.codigo_oem} | UPC:{" "}
                                                                 {product.codigo_upc}
                                                             </p>
                                                             <div className="flex items-center gap-2 mt-1">
                                                                 <Badge
                                                                     variant="accent"
+                                                                    className="text-[10px] sm:text-xs"
                                                                 >
                                                                     {product.categoria}
                                                                 </Badge>
                                                                 <Badge
                                                                     variant="outline"
-                                                                    className="border-gray-200"
+                                                                    className="border-gray-200 text-[10px] sm:text-xs"
                                                                 >
                                                                     {product.marca}
                                                                 </Badge>
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-sm font-bold text-green-600">
+                                                            <p className="text-xs sm:text-sm font-bold text-green-600">
                                                                 {formatCurrency(product.precio_venta)}
                                                             </p>
-                                                            <Badge variant={'default'}>
+                                                            <Badge className="text-[10px] sm:text-xs" variant={'default'}>
                                                                 {`${product.stock_actual} ${product.unidad_medida}`}
                                                             </Badge>
                                                         </div>
@@ -257,7 +265,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                             )}
                         </div>
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="gap-1">
                         <Button
                             variant={'outline'}
                             onClick={() => setIsSearchOpen(false)}
@@ -266,6 +274,7 @@ const ProductSelectorModal: React.FC<ProductSelectorModalProps> = ({
                         </Button>
                         <Button
                             onClick={handleAddMultipleItems}
+                            disabled={selectedProducts.length === 0}
                         >
                             <Plus className="size-4" />
                             {`Agregar ${selectedProducts.length > 0 ? `(${selectedProducts.length})` : ''}`}

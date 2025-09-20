@@ -2,8 +2,12 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+interface InputProps extends React.ComponentProps<"input"> {
+  autoSelectOnFocus?: boolean
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, autoSelectOnFocus = false, onFocus, ...props }, ref) => {
     return (
       <input
         type={type}
@@ -12,6 +16,12 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
+        onFocus={(e) => {
+          if (autoSelectOnFocus) {
+            e.target.select()
+          }
+          onFocus?.(e) // por si el usuario pasa otro handler
+        }}
         {...props}
       />
     )

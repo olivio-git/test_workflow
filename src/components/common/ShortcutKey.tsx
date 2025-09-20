@@ -5,9 +5,11 @@ type ShortcutKeyProps = {
     combo: string; // Ej: "Ctrl + Shift + C"
     variant?: "light" | "dark";
     showPlus?: boolean;
+    useIcons?: boolean;
+    crossPlatform?: boolean;
 };
 
-const ShortcutKey: React.FC<ShortcutKeyProps> = ({ combo, variant, showPlus = true }) => {
+const ShortcutKey: React.FC<ShortcutKeyProps> = ({ combo, variant, showPlus = true, useIcons = false, crossPlatform = true }) => {
     const keys = combo.split("+").map((k) => k.trim());
 
     const plusClass =
@@ -22,7 +24,7 @@ const ShortcutKey: React.FC<ShortcutKeyProps> = ({ combo, variant, showPlus = tr
             {keys.map((key, index) => (
                 <React.Fragment key={index}>
                     <span className="inline-flex items-center">
-                        <Kbd variant={variant}>{key}</Kbd>
+                        <Kbd variant={variant} useIcons={useIcons} crossPlatform={crossPlatform}>{key}</Kbd>
                     </span>
                     {showPlus && index < keys.length - 1 && (
                         <span className={`text-xs ${plusClass}`}>+</span>

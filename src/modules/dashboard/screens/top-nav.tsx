@@ -1,9 +1,9 @@
-import { Bell, PanelLeftClose, PanelLeftOpen, ShoppingCart } from "lucide-react";
+import { Bell, ShoppingCart } from "lucide-react";
 import CommandPalette from "./CommandPalette/CommandPalette";
 import SearchButton from "./CommandPalette/SearchButton";
 import { useState } from "react";
 import protectedRoutes from "@/navigation/Protected.Route";
-import { Link, useLocation,matchPath } from "react-router";
+import { Link, useLocation, matchPath } from "react-router";
 import { useHotkeys } from "react-hotkeys-hook";
 import SelectBranch from "../components/SelectBranch";
 import type RouteType from "@/navigation/RouteType";
@@ -14,10 +14,9 @@ import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
 import { TooltipWrapper } from "@/components/common/TooltipWrapper ";
 import ShortcutKey from "@/components/common/ShortcutKey";
 import { useBranchStore } from "@/states/branchStore";
+import { SidebarTrigger } from "@/components/atoms/sidebar";
 
 interface TopNavProps {
-  isSidebarMenuOpen: boolean;
-  handleToogleSidebarMenu: () => void;
   onOpenCartChange: () => void
 }
 
@@ -62,8 +61,6 @@ const findParentRoute = (routes: RouteType[], pathname: string): RouteType | nul
 
 
 const TopNav: React.FC<TopNavProps> = ({
-  isSidebarMenuOpen,
-  handleToogleSidebarMenu,
   onOpenCartChange
 }) => {
   const user = authSDK.getCurrentUser()
@@ -76,7 +73,7 @@ const TopNav: React.FC<TopNavProps> = ({
 
   // const currentRoute = flatRoutes.find((route) => route.path === location.pathname);
   const currentRoute = matchRoute(routes, location.pathname);
-  
+
   // const parentRoute = findParentRoute(routes, location.pathname);
   const parentRoute = findParentRoute(routes, location.pathname);
   const {
@@ -143,28 +140,17 @@ const TopNav: React.FC<TopNavProps> = ({
   return (
     <nav className="flex items-center justify-between h-full px-2 bg-white border-b border-gray-200 sm:px-4">
       <div className="font-medium text-sm flex items-center space-x-1 truncate w-full">
-        <Button
-          onClick={() => handleToogleSidebarMenu()}
-          variant={'outline'}
-          size={'sm'}
-          className="cursor-pointer size-8"
-        >
-          {isSidebarMenuOpen ? (
-            <PanelLeftClose className="size-4 text-gray-800" />
-          ) : (
-            <PanelLeftOpen className="size-4 text-gray-800" />
-          )}
-        </Button>
+        <SidebarTrigger />
         {renderBreadcrumb()}
       </div>
 
       <div className="flex items-center gap-2 ml-auto sm:gap-3 sm:ml-0">
-        <div className="flex items-center gap-4 w-full">
-          <SelectBranch></SelectBranch>
-        </div>
         <div className="flex items-center gap-4">
           <SearchButton onClick={() => setOpen(true)} />
           <CommandPalette open={open} setOpen={setOpen} />
+        </div>
+        <div className="flex items-center gap-4 w-full">
+          <SelectBranch></SelectBranch>
         </div>
         <TooltipWrapper
           tooltip={

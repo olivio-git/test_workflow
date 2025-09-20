@@ -3,7 +3,7 @@ import CreateProduct from "@/modules/products/screens/CreateProduct";
 import ProductDetailScreen from "@/modules/products/screens/ProductDetailScreen";
 import ProductListScreen from "@/modules/products/screens/ProductListScreen";
 import CreatePurchase from "@/modules/purchases/screens/CreatePurchase";
-import { BoxIcon, LayoutDashboardIcon, Package, ShoppingBag, Table2, Table2Icon, TableCellsMerge, UserCogIcon } from "lucide-react";
+import { BoxIcon, Car, FileText, FolderOpen, Layers, LayoutDashboardIcon, MapPin, Package, Receipt, Ruler, Settings, ShoppingBag, ShoppingCart, Table2, Table2Icon, TableCellsMerge, Tag, UserCogIcon, Users } from "lucide-react";
 import type RouteType from "./RouteType";
 // import CreateCategory from "@/modules/categories/screens/CreateCategory";
 import TableCreateCategory from "@/modules/categories/components/TableCreateCategory";
@@ -18,6 +18,16 @@ import SaleDetailScreen from "@/modules/sales/screens/saleDetailScreen";
 import QuotationListScreen from "@/modules/quotations/screens/quotationListScreen";
 import QuotationDetailScreen from "@/modules/quotations/screens/quotationDetailScreen";
 import SaleEditScreen from "@/modules/sales/screens/saleEditScreen";
+import QuotationCreateScreen from "@/modules/quotations/screens/quotationCreateScreen";
+import QuotationEditScreen from "@/modules/quotations/screens/quotationEditScreen";
+import ProductEditScreen from "@/modules/products/screens/ProductEditScreen";
+import SettingsScreen from "@/modules/settings/screens/settingsScreen";
+import OriginsScreen from "@/modules/settings/screens/OriginsScreen";
+import BrandsScreen from "@/modules/settings/screens/brandsScreen";
+import VehicleBrandsScreen from "@/modules/settings/screens/vehicleBrandScreen";
+import MeasurementsScreen from "@/modules/settings/screens/measurementScreen";
+import CategoriesScreen from "@/modules/settings/screens/categoriesScreen";
+import SubcategoriesScreen from "@/modules/settings/screens/subcategoriesScreen";
 
 const protectedRoutes: RouteType[] = [
   {
@@ -28,6 +38,7 @@ const protectedRoutes: RouteType[] = [
     isAdmin: false,
     role: ["user"],
     icon: LayoutDashboardIcon,
+    showSidebar: true,
   },
   {
     name: "Usuarios",
@@ -35,7 +46,7 @@ const protectedRoutes: RouteType[] = [
     role: ["admin"],
     isHeader: true,
     showSidebar: true,
-    // icon:BoxIcon,
+    icon: Users,
     subRoutes: [
       {
         path: "/dashboard/user",
@@ -82,7 +93,7 @@ const protectedRoutes: RouteType[] = [
     role: ["admin"],
     isHeader: true,
     showSidebar: true,
-    // icon:BoxIcon,
+    icon: Package,
     subRoutes: [
       {
         path: "/dashboard/create-product",
@@ -119,6 +130,17 @@ const protectedRoutes: RouteType[] = [
         showSidebar: false,
         showInCommandPalette: false
       },
+      {
+        path: "/dashboard/productos/:productId/update",
+        name: "Editar producto",
+        type: "protected",
+        element: ProductEditScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: false
+      },
     ]
   },
   {
@@ -127,7 +149,7 @@ const protectedRoutes: RouteType[] = [
     //element: Content,
     isAdmin: false,
     role: ["user"],
-    // icon: HomeIcon,
+    icon: FolderOpen,
 
     isHeader: true,
     showSidebar: true,
@@ -162,7 +184,8 @@ const protectedRoutes: RouteType[] = [
     name: "Compras",
     type: "protected",
     isAdmin: false,
-    role: ["user"],
+    role: ["admin"],
+    icon: ShoppingCart,
     isHeader: true,
     showSidebar: true,
     subRoutes: [
@@ -221,7 +244,8 @@ const protectedRoutes: RouteType[] = [
     name: "Ventas",
     type: "protected",
     isAdmin: false,
-    role: ["user"],
+    role: ["admin"],
+    icon: Receipt,
     isHeader: true,
     showSidebar: true,
     subRoutes: [
@@ -277,22 +301,23 @@ const protectedRoutes: RouteType[] = [
     name: "Cotizaciones",
     type: "protected",
     isAdmin: false,
-    role: ["user"],
+    role: ["admin"],
+    icon: FileText,
     isHeader: true,
     showSidebar: true,
     subRoutes: [
-      // {
-      //   path: "/dashboard/create-sale",
-      //   name: "Registrar venta",
-      //   type: "protected",
-      //   element: CreateSaleScreen,
-      //   isAdmin: true,
-      //   role: ["admin"],
-      //   icon: ShoppingBag,
+      {
+        path: "/dashboard/create-quotation",
+        name: "Registrar cotización",
+        type: "protected",
+        element: QuotationCreateScreen,
+        isAdmin: true,
+        role: ["admin"],
+        icon: ShoppingBag,
 
-      //   isHeader: false,
-      //   showSidebar: true
-      // },
+        isHeader: false,
+        showSidebar: true
+      },
       {
         path: "/dashboard/quotations",
         name: "Lista de cotizaciones",
@@ -316,6 +341,102 @@ const protectedRoutes: RouteType[] = [
         isHeader: false,
         showSidebar: false,
         showInCommandPalette: false
+      },
+      {
+        path: "/dashboard/quotations/:quotationId/update",
+        name: "Editar cotización",
+        type: "protected",
+        element: QuotationEditScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: false
+      },
+    ]
+  },
+  {
+    path: "/dashboard/settings",
+    name: "Configuración",
+    type: "protected",
+    element: SettingsScreen,
+    isAdmin: true,
+    role: ["admin"],
+    isHeader: false,
+    showSidebar: false,
+    icon: Settings,
+    subRoutes: [
+      {
+        path: "/dashboard/settings/origins",
+        name: "Procedencias",
+        type: "protected",
+        element: OriginsScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: MapPin
+      },
+      {
+        path: "/dashboard/settings/brands",
+        name: "Marcas",
+        type: "protected",
+        element: BrandsScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: Tag
+      },
+      {
+        path: "/dashboard/settings/vehicle-brands",
+        name: "Marcas de Vehículo",
+        type: "protected",
+        element: VehicleBrandsScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: Car
+      },
+      {
+        path: "/dashboard/settings/measurements",
+        name: "Medidas",
+        type: "protected",
+        element: MeasurementsScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: Ruler
+      },
+      {
+        path: "/dashboard/settings/subcategories",
+        name: "Subcategorías",
+        type: "protected",
+        element: SubcategoriesScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: Layers
+      },
+      {
+        path: "/dashboard/settings/categories",
+        name: "Categorías",
+        type: "protected",
+        element: CategoriesScreen,
+        isAdmin: true,
+        role: ["admin"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: FolderOpen
       },
     ]
   },

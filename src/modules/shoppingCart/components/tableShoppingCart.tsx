@@ -147,7 +147,12 @@ const TableShoppingCart = forwardRef((_props, ref) => {
                 )
             }
         }
-    ], [])
+    ], [
+        removeItem,
+        updateCustomPrice,
+        updateCustomSubtotal,
+        updateQuantity
+    ])
     const table = useReactTable<CartItem>({
         data: cart,
         columns,

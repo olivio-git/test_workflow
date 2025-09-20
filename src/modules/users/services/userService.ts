@@ -1,4 +1,4 @@
-import apiClient from "@/lib/axios";
+import apiClient from "@/services/axios";
 import { UserListResponseSchema, UserSchema } from "../screens/schemas/user.schema";
 import type { Permission, User, UserFilters, UserListResponse, UserPermissionsRequest } from "../types/User";
 import { USER_ENDPOINTS } from "./endpoints";

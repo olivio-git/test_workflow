@@ -4,12 +4,13 @@ import { useStore } from "zustand";
 import { showErrorToast, showInfoToast, showSuccessToast, showWarningToast } from "@/hooks/use-toast-enhanced";
 import { CartProductSchema } from "../schemas/cartProduct.schema";
 import type { ProductGet } from "@/modules/products/types/ProductGet";
+import { useCallback } from "react";
 
 export interface CartOperationResult {
     success: boolean;
     error?: string;
     message: string;
-    data?: any;
+    data?: unknown;
 }
 
 export interface BulkAddResult {
@@ -29,21 +30,21 @@ export const useCartWithUtils = (user: string, branch: string) => {
     const cartStore = useCartStore(`${user}-${branch}`);
     const state = useStore(cartStore, (state) => state)
 
-    const incrementQuantity = (productId: number) => {
+    const incrementQuantity = useCallback((productId: number) => {
         const currentQuantity = state.getItemQuantity(productId);
         state.updateQuantity(productId, currentQuantity + 1);
-    };
+    }, [state]);
 
-    const decrementQuantity = (productId: number) => {
+    const decrementQuantity = useCallback((productId: number) => {
         const currentQuantity = state.getItemQuantity(productId);
         if (currentQuantity > 1) {
             state.updateQuantity(productId, currentQuantity - 1);
         } else {
             state.removeItem(productId);
         }
-    };
+    }, [state]);
 
-    const addItemToCart = (product: ProductGet): CartOperationResult => {
+    const addItemToCart = useCallback((product: ProductGet): CartOperationResult => {
         const productForCart = CartProductSchema.parse(product)
         const result = state.addItem(productForCart);
 
@@ -62,9 +63,9 @@ export const useCartWithUtils = (user: string, branch: string) => {
         }
 
         return result;
-    };
+    }, [state]);
 
-    const updateQuantity = (productId: number, quantity: number): CartOperationResult => {
+    const updateQuantity = useCallback((productId: number, quantity: number): CartOperationResult => {
         const result = state.updateQuantity(productId, quantity);
 
         if (!result.success) {
@@ -76,9 +77,17 @@ export const useCartWithUtils = (user: string, branch: string) => {
         }
 
         return result;
-    };
+    }, [state]);
 
-    const addMultipleItems = (products: ProductGet[]): BulkAddResult => {
+    const updateCustomDescription = useCallback((productId: number, description: string) => {
+        state.updateCustomDescription(productId, description);
+    }, [state]);
+
+    const updateCustomBrand = useCallback((productId: number, brand: string) => {
+        state.updateCustomBrand(productId, brand)
+    }, [state])
+
+    const addMultipleItems = useCallback((products: ProductGet[]): BulkAddResult => {
         let totalAdded = 0;
         let totalFailed = 0;
         const failedProducts: BulkAddResult['failedProducts'] = [];
@@ -130,9 +139,9 @@ export const useCartWithUtils = (user: string, branch: string) => {
         }
 
         return bulkResult;
-    };
+    }, [state]);
 
-    const addItemWithQuantity = (product: ProductGet, quantity: number): CartOperationResult => {
+    const addItemWithQuantity = useCallback((product: ProductGet, quantity: number): CartOperationResult => {
         const productForCart = CartProductSchema.parse(product)
         const existingQuantity = state.getItemQuantity(product.id);
         const totalQuantity = existingQuantity + quantity;
@@ -185,26 +194,24 @@ export const useCartWithUtils = (user: string, branch: string) => {
             message: `Se agregaron ${addedCount} de ${quantity} unidades de ${product.descripcion}`
         };
 
-        {
-            addedCount === quantity ? (
-                showSuccessToast({
-                    title: "Productos agregados",
-                    description: result.message,
-                    duration: 5000
-                })
-            ) : (
-                showWarningToast({
-                    title: "Agregado parcial",
-                    description: result.message,
-                    duration: 5000
-                })
-            )
+        if (addedCount === quantity) {
+            showSuccessToast({
+                title: "Productos agregados",
+                description: result.message,
+                duration: 5000
+            });
+        } else {
+            showWarningToast({
+                title: "Agregado parcial",
+                description: result.message,
+                duration: 5000
+            });
         }
 
         return result;
-    };
+    }, [state]);
 
-    const validateCartWithToast = () => {
+    const validateCartWithToast = useCallback(() => {
         const validation = state.validateCart();
 
         if (!validation.isValid) {
@@ -220,9 +227,9 @@ export const useCartWithUtils = (user: string, branch: string) => {
         }
 
         return validation;
-    };
+    }, [state]);
 
-    const removeOutOfStockItems = (): CartOperationResult => {
+    const removeOutOfStockItems = useCallback((): CartOperationResult => {
         const validation = state.validateCart();
         const outOfStockItems = validation.issues.filter(issue => issue.issue === 'NO_STOCK');
 
@@ -242,9 +249,9 @@ export const useCartWithUtils = (user: string, branch: string) => {
             success: true,
             message: `Se removieron ${outOfStockItems.length} productos sin stock`
         };
-    };
+    }, [state]);
 
-    const adjustQuantitiesToStock = (): CartOperationResult => {
+    const adjustQuantitiesToStock = useCallback((): CartOperationResult => {
         const validation = state.validateCart();
         const quantityIssues = validation.issues.filter(issue => issue.issue === 'QUANTITY_EXCEEDS_STOCK');
 
@@ -268,9 +275,9 @@ export const useCartWithUtils = (user: string, branch: string) => {
             success: true,
             message: `Se ajustaron ${adjustedCount} productos`
         };
-    };
+    }, [state]);
 
-    const getCartSummary = (): CartSummary => {
+    const getCartSummary = useCallback((): CartSummary => {
         return {
             itemCount: state.getCartCount(),
             subtotal: state.getCartSubtotal(),
@@ -278,7 +285,7 @@ export const useCartWithUtils = (user: string, branch: string) => {
             total: state.getCartTotal(),
             itemsLength: state.items.length
         };
-    };
+    }, [state]);
 
     return {
         // Estado original
@@ -295,6 +302,8 @@ export const useCartWithUtils = (user: string, branch: string) => {
         adjustQuantitiesToStock,
         getCartSummary,
         updateQuantity,
+        updateCustomDescription,
+        updateCustomBrand,
 
         // Store reference
         useCartStore: cartStore

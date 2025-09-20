@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
-    Search,
     Filter,
     Settings,
     Eye,
@@ -13,13 +12,11 @@ import {
     HelpCircle,
 } from "lucide-react"
 import { Button } from "@/components/atoms/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select"
-import { Input } from "@/components/atoms/input"
 import { Checkbox } from "@/components/atoms/checkbox"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/atoms/dropdown-menu"
 import type { ProductGet } from "../types/ProductGet"
 import { useProductFilters } from "../hooks/useProductFilters"
-import { useProductsPaginated } from "../hooks/useProductsPaginated"
+import { useProductsPaginated } from "../hooks/queries/useProductsPaginated"
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type RowSelectionState, type SortingState } from "@tanstack/react-table"
 import { Badge } from "@/components/atoms/badge"
 import Pagination from "@/components/common/pagination"
@@ -35,17 +32,18 @@ import { useCartWithUtils } from "@/modules/shoppingCart/hooks/useCartWithUtils"
 import TooltipButton from "@/components/common/TooltipButton"
 import { TooltipWrapper } from "@/components/common/TooltipWrapper "
 import { Kbd } from "@/components/atoms/kbd"
-import { useDebounce } from "use-debounce"
 import { formatCell } from "@/utils/formatCell"
 import BottomShoppingCartBar from "@/modules/shoppingCart/components/BottomShoppingCartBar"
 import ResizableBox from "@/components/atoms/resizable-box"
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation"
 import { formatCurrency } from "@/utils/formaters"
-import { showErrorToast, showSuccessToast } from "@/hooks/use-toast-enhanced"
-import { useDeleteProduct } from "../hooks/useDeleteProduct"
+import { showSuccessToast } from "@/hooks/use-toast-enhanced"
+import { useDeleteProduct } from "../hooks/mutations/useDeleteProduct"
 import useConfirmMutation from "@/hooks/useConfirmMutation"
 import ConfirmationModal from "@/components/common/confirmationModal"
 import ShortcutKey from "@/components/common/ShortcutKey"
+import { useErrorHandler } from "@/hooks/useErrorHandler"
+import RowsPerPageSelect from "@/components/common/RowsPerPageSelect"
 
 const getColumnVisibilityKey = (userName: string) => `product-columns-${userName}`;
 
@@ -78,16 +76,12 @@ const ProductListScreen = () => {
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [products, setProducts] = useState<ProductGet[]>([]);
     const [columnVisibility, setColumnVisibility] = useState({})
-    const [searchDescription, setSearchDescription] = useState("");
-    const [debouncedSearchDescription] = useDebounce(searchDescription, 500);
 
-    useEffect(() => {
-        updateFilter("descripcion", debouncedSearchDescription);
-    }, [debouncedSearchDescription]);
+    const { handleError } = useErrorHandler()
 
     useEffect(() => {
         updateFilter("sucursal", Number(selectedBranchId))
-    }, [selectedBranchId])
+    }, [selectedBranchId, updateFilter])
 
     useEffect(() => {
         if (!user?.name) return;
@@ -128,14 +122,13 @@ const ProductListScreen = () => {
         } else {
             setProducts(productData.data);
         }
-    }, [productData?.data, isInfiniteScroll, filters.pagina]);
+    }, [productData?.data, isInfiniteScroll, filters.pagina, error, isFetching]);
 
     const handleResetFilters = () => {
         resetFilters()
-        setSearchDescription("")
     }
 
-    const handleDeleteSuccess = (_data: any, productId: number) => {
+    const handleDeleteSuccess = (_data: unknown, productId: number) => {
         showSuccessToast({
             title: "Producto eliminado",
             description: `El producto #${productId} se eliminó exitosamente`,
@@ -143,12 +136,13 @@ const ProductListScreen = () => {
         })
     };
 
-    const handleDeleteError = (_error: any, productId: number) => {
-        showErrorToast({
-            title: "Error al eliminar el producto",
-            description: `No se pudo eliminar el producto #${productId}. Por favor, intenta nuevamente`,
-            duration: 5000
-        })
+    const handleDeleteError = (error: unknown, productId: number) => {
+        handleError({ error, customTitle: `Error al eliminar el producto #${productId}` });
+        // showErrorToast({
+        //     title: "Error al eliminar el producto",
+        //     description: `No se pudo eliminar el producto #${productId}. Por favor, intenta nuevamente`,
+        //     duration: 5000
+        // })
     };
 
     const {
@@ -171,13 +165,23 @@ const ProductListScreen = () => {
         if (stock <= (stockMin + 10)) return "warning"
         return "success"
     }
-    const handleProductDetail = (productId: number) => {
-        navigate(`/dashboard/productos/${productId}`);
-    }
+    const handleProductDetail = useCallback(
+        (productId: number) => {
+            navigate(`/dashboard/productos/${productId}`);
+        },
+        [navigate]
+    );
 
-    const handleAddItemCart = (product: ProductGet) => {
-        addItemToCart(product)
-    }
+    const handleUpdateProduct = useCallback((productId: number) => {
+        navigate(`/dashboard/productos/${productId}/update`)
+    }, [navigate])
+
+    const handleAddItemCart = useCallback(
+        (product: ProductGet) => {
+            addItemToCart(product);
+        },
+        [addItemToCart]
+    );
 
     const columns = useMemo<ColumnDef<ProductGet>[]>(() => [
         {
@@ -256,7 +260,7 @@ const ProductListScreen = () => {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onKeyDown={(e) => e.stopPropagation()}
-                                    onClick={() => { }}>
+                                    onClick={() => handleUpdateProduct(row.original.id)}>
                                     <Edit className="mr-2 h-4 w-4" />
                                     Editar producto
                                 </DropdownMenuItem>
@@ -440,7 +444,7 @@ const ProductListScreen = () => {
                 </div>
             ),
         },
-    ], [])
+    ], [handleAddItemCart, handleProductDetail, handleOpenDeleteAlert, handleUpdateProduct]);
 
     const table = useReactTable<ProductGet>({
         data: products,
@@ -466,7 +470,6 @@ const ProductListScreen = () => {
         setSelectedIndex,
         isFocused,
         containerRef,
-        handleContainerClick: handleTableClick,
         setIsFocused: setIsFocusedTable,
         hotkeys
     } = useKeyboardNavigation<ProductGet, HTMLTableElement>({
@@ -524,7 +527,6 @@ const ProductListScreen = () => {
 
     const onShowRowsChange = (rows: number) => {
         updateFilter("pagina_registros", rows);
-        updateFilter("pagina", 1);
     };
 
     const handleRefetchProducts = () => {
@@ -541,19 +543,9 @@ const ProductListScreen = () => {
             <div className="bg-white rounded-lg shadow-sm">
                 {/* Header */}
                 <header className="p-2 border-b border-gray-200">
-                    <h1 className="text-lg font-bold text-gray-900">Productos</h1>
                     <section className="flex items-center justify-between gap-2 md:gap-4 flex-wrap">
                         <div className="flex items-center gap-2 md:gap-4 grow">
-
-                            <div className="relative w-full">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                <Input
-                                    placeholder="Buscar por descripcion..."
-                                    value={searchDescription}
-                                    onChange={(e) => setSearchDescription(e.target.value)}
-                                    className="pl-10 w-full"
-                                />
-                            </div>
+                            <h1 className="text-lg font-bold text-gray-900">Productos</h1>
                         </div>
 
                         <div className="flex items-center gap-2 flex-wrap">
@@ -605,7 +597,7 @@ const ProductListScreen = () => {
                     />
                 }
                 {/* Results Info */}
-                <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between">
+                <div className="p-2 text-sm text-gray-600 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
                     {
                         products.length > 0 ? (
                             isInfiniteScroll ? (
@@ -626,19 +618,13 @@ const ProductListScreen = () => {
                         )
                     }
 
-                    <div className="flex items-center gap-2">
-                        <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
-                        <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="shadow-lg">
-                                <SelectItem value={"10"}>10</SelectItem>
-                                <SelectItem value={"25"}>25</SelectItem>
-                                <SelectItem value={"50"}>50</SelectItem>
-                                <SelectItem value={"100"}>100</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center">
+                            <RowsPerPageSelect
+                                value={filters.pagina_registros ?? 10}
+                                onChange={onShowRowsChange}
+                            />
+                        </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm">
@@ -746,7 +732,7 @@ const ProductListScreen = () => {
                             selectedRowIndex={selectedIndex}
                             onRowClick={handleRowClick}
                             onRowDoubleClick={handleRowDoubleClick}
-                            tableRef={containerRef}
+                            tableRef={tableRef}
                             focused={isFocused}
                             keyboardNavigationEnabled={true}
                         />
@@ -760,7 +746,6 @@ const ProductListScreen = () => {
                         <div
                             className="overflow-auto h-full">
                             <div
-                                onClick={handleTableClick}
                                 className="overflow-x-hidden">
                                 <CustomizableTable
                                     table={table}

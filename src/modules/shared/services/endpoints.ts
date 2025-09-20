@@ -4,4 +4,5 @@ export const COMMON_ENDPOINTS = {
     brands: "/products/commons/brands",
     origins: "/products/commons/origins",
     measurements: "/products/commons/measurements",
+    vehicle_brands: "/products/commons/vehicle-brands"
 }

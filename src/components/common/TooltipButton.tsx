@@ -36,7 +36,11 @@ const TooltipButton: React.FC<TooltipButtonProps> = ({
                     {children}
                 </Button>
             </TooltipTrigger>
-            <TooltipContent {...tooltipContentProps}>{tooltip}</TooltipContent>
+            <TooltipContent {...tooltipContentProps}>
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                    {tooltip}
+                </div>
+            </TooltipContent>
         </Tooltip>
     );
 };

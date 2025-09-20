@@ -1,10 +1,10 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { fetchSaleTypes } from "../services/salesCommonsService";
+import { saleCommonsService } from "../services/salesCommonsService";
 
 export const useSaleTypes = () => {
     return useQuery({
         queryKey: ["sale-types"],
-        queryFn: async () => await fetchSaleTypes(),
+        queryFn: async () => await saleCommonsService.getSaleTypes(),
         placeholderData: keepPreviousData,
         staleTime: Infinity
     });

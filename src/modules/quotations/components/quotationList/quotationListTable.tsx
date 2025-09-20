@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type RowSelectionState } from "@tanstack/react-table";
 import { Checkbox } from "@/components/atoms/checkbox";
 import { format } from "date-fns";
@@ -7,20 +7,19 @@ import { Badge } from "@/components/atoms/badge";
 import { Clock, Edit, Eye, HelpCircle, Loader2, MoreVertical, Settings, Trash2 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import CustomizableTable from "@/components/common/CustomizableTable";
-import ResizableBox from "@/components/atoms/resizable-box";
 import Pagination from "@/components/common/pagination";
 import { TooltipWrapper } from "@/components/common/TooltipWrapper ";
 import { Kbd } from "@/components/atoms/kbd";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/atoms/dropdown-menu";
 import { Button } from "@/components/atoms/button";
 import authSDK from "@/services/sdk-simple-auth";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { formatCurrency } from "@/utils/formaters";
 import { useNavigate } from "react-router";
 import type { QuotationGetAll, QuotationGetAllResponse } from "../../types/quotationGet.types";
 import type { useSalesFilters } from "@/modules/sales/hooks/useSalesFilters";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import ShortcutKey from "@/components/common/ShortcutKey";
+import RowsPerPageSelect from "@/components/common/RowsPerPageSelect";
 
 interface QuotationsListTableProps {
     data: QuotationGetAllResponse
@@ -80,13 +79,13 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
         }
     }, [columnVisibility, user?.name]);
 
-    const handleSeeDetails = (quotationId: number) => {
+    const handleSeeDetails = useCallback((quotationId: number) => {
         navigate(`/dashboard/quotations/${quotationId}`)
-    }
+    }, [navigate])
 
-    const handleUpdateQuotation = (quotationId: number) => {
+    const handleUpdateQuotation = useCallback((quotationId: number) => {
         navigate(`/dashboard/quotations/${quotationId}/update`)
-    }
+    }, [navigate])
 
     const columns = useMemo<ColumnDef<QuotationGetAll>[]>(() => [
         {
@@ -338,7 +337,7 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
                 );
             },
         },
-    ], []);
+    ], [handleSeeDetails, handleUpdateQuotation, handleDeleteSale]);
 
     const table = useReactTable<QuotationGetAll>({
         data: quotations,
@@ -361,7 +360,6 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
         selectedIndex,
         setSelectedIndex,
         isFocused,
-        handleContainerClick: handleTableClick,
         // setIsFocused: setIsFocusedTable,
         hotkeys
     } = useKeyboardNavigation<QuotationGetAll, HTMLTableElement>({
@@ -415,18 +413,10 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
                 }
 
                 <div className="flex items-center gap-2">
-                    <label className="block text-sm font-medium text-gray-700">Mostrar:</label>
-                    <Select value={(filters.pagina_registros ?? 10).toString()} onValueChange={(value) => onShowRowsChange?.(Number(value))}>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="shadow-lg">
-                            <SelectItem value={"10"}>10</SelectItem>
-                            <SelectItem value={"25"}>25</SelectItem>
-                            <SelectItem value={"50"}>50</SelectItem>
-                            <SelectItem value={"100"}>100</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <RowsPerPageSelect
+                        value={filters.pagina_registros ?? 10}
+                        onChange={onShowRowsChange}
+                    />
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
@@ -538,47 +528,41 @@ const QuotationsListTable: React.FC<QuotationsListTableProps> = ({
                     />
                 </InfiniteScroll>
             ) : (
-                <ResizableBox
-                    direction="vertical"
-                    minSize={10}
-                >
+                <div
+                    className="overflow-auto h-full">
                     <div
-                        className="overflow-auto h-full">
-                        <div
-                            onClick={handleTableClick}
-                            className="overflow-x-hidden">
-                            <CustomizableTable
-                                table={table}
-                                isError={isError}
-                                isFetching={isFetching}
-                                isLoading={isLoading}
-                                errorMessage="Ocurrió un error al cargar las cotizaciones"
-                                noDataMessage="No se encontraron cotizaciones"
-                                rows={filters.pagina_registros}
-                                selectedRowIndex={selectedIndex}
-                                onRowClick={handleRowClick}
-                                onRowDoubleClick={handleRowDoubleClick}
-                                tableRef={tableRef}
-                                focused={isFocused}
-                                keyboardNavigationEnabled={true}
-                            />
+                        className="overflow-x-hidden">
+                        <CustomizableTable
+                            table={table}
+                            isError={isError}
+                            isFetching={isFetching}
+                            isLoading={isLoading}
+                            errorMessage="Ocurrió un error al cargar las cotizaciones"
+                            noDataMessage="No se encontraron cotizaciones"
+                            rows={filters.pagina_registros}
+                            selectedRowIndex={selectedIndex}
+                            onRowClick={handleRowClick}
+                            onRowDoubleClick={handleRowDoubleClick}
+                            tableRef={tableRef}
+                            focused={isFocused}
+                            keyboardNavigationEnabled={true}
+                        />
 
-                        </div>
-
-                        {/* Pagination */}
-                        {
-                            (data?.data?.length ?? 0) > 0 && (
-                                <Pagination
-                                    currentPage={filters.pagina || 1}
-                                    onPageChange={onPageChange}
-                                    totalData={data?.meta?.total ?? 1}
-                                    onShowRowsChange={onShowRowsChange}
-                                    showRows={filters.pagina_registros}
-                                />
-                            )
-                        }
                     </div>
-                </ResizableBox>
+
+                    {/* Pagination */}
+                    {
+                        (data?.data?.length ?? 0) > 0 && (
+                            <Pagination
+                                currentPage={filters.pagina || 1}
+                                onPageChange={onPageChange}
+                                totalData={data?.meta?.total ?? 1}
+                                onShowRowsChange={onShowRowsChange}
+                                showRows={filters.pagina_registros}
+                            />
+                        )
+                    }
+                </div>
             )}
         </section>
     );

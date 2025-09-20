@@ -1,9 +1,12 @@
-import apiClient from "@/lib/axios";
+import { ApiService } from "@/lib/apiService";
+import { Logger } from "@/lib/logger";
+import apiClient from "@/services/axios";
 import { SaleGetByIdSchema } from "../schemas/saleGetbyid.schema";
 import { salesGetAllResponseSchema } from "../schemas/salesGetAll.schema";
 import type { Sale } from "../types/sale";
 import type { SalesFilters } from "../types/salesFilters";
 import type { SaleGetById, SalesGetAllResponse } from "../types/salesGetResponse";
+import type { SaleUpdate } from "../types/saleUpdate.type";
 import { SALE_ENDPOINTS } from "./saleEndpoints";
 
 export const postSale = async (data: Sale): Promise<any> => {
@@ -13,44 +16,101 @@ export const postSale = async (data: Sale): Promise<any> => {
     return res.data
 };
 
-export const fetchSales = async (filters: Partial<SalesFilters>): Promise<SalesGetAllResponse> => {
-    const response = await apiClient.get(SALE_ENDPOINTS.all, { params: filters });
+const MODULE_NAME = 'SALES_SERVICE';
 
-    const result = salesGetAllResponseSchema.safeParse(response.data);
-    if (!result.success) {
-        console.error("Zod error en fetchSales:", result.error.format());
-        throw new Error("Respuesta inválida del servidor.");
-    }
-    return result.data;
-};
+export const salesService = {
+    /**
+     * Crear una nueva venta
+     * @param data - Datos de la venta a crear
+     */
+    async create(data: Sale): Promise<unknown> {
+        Logger.info('Creating sale', { data }, MODULE_NAME);
 
-/**
- * Obtener una venta por ID
- * @param idSale - ID de la venta a obtener
- */
-export const fetchSaleDetail = async (idSale: number): Promise<SaleGetById> => {
-    const response = await apiClient.get(SALE_ENDPOINTS.byId(idSale));
-    const result = SaleGetByIdSchema.safeParse(response.data.data);
-    if (!result.success) {
-        console.error("Zod error en fetchSaleDetail:", result.error.format());
-        throw new Error("Respuesta inválida del servidor.");
-    }
-    return result.data;
-};
+        const response = await ApiService.post(
+            SALE_ENDPOINTS.create,
+            data,
+        );
 
-/**
- * Elimina una venta por ID
- * @param idSale - ID de la venta a eliminar
- */
-export const deleteSale = async (idSale: number): Promise<void> => {
-    try {
-        await apiClient.delete(SALE_ENDPOINTS.delete(idSale));
+        Logger.info(
+            "Sale created successfully",
+            undefined,
+            // response.data.id && { id: response.data.id },
+            MODULE_NAME
+        );
+        return response
+    },
 
-    } catch (error: any) {
-        if (error.response?.data?.error?.message) {
-            console.error("Error eliminando venta:", error.response.data.error.message);
-            throw new Error(error.response.data.error.message);
-        }
-        throw new Error("Error eliminando la venta.");
-    }
+    /**
+     * Obtener todas las ventas con filtros opcionales
+     */
+    async getAll(filters: Partial<SalesFilters>): Promise<SalesGetAllResponse> {
+        Logger.info('Fetching sales', { filters }, MODULE_NAME);
+
+        const response = await ApiService.get(
+            SALE_ENDPOINTS.all,
+            salesGetAllResponseSchema,
+            { params: filters }
+        );
+
+        Logger.info('Sales fetched successfully', {
+            count: response.data.length,
+        }, MODULE_NAME);
+
+        return response;
+    },
+
+    /**
+     * Obtener una venta por ID
+     * @param id - ID de la venta
+     */
+    async getById(id: number): Promise<SaleGetById> {
+        Logger.info('Fetching sale detail', { id }, MODULE_NAME);
+
+        const response = await ApiService.get(
+            SALE_ENDPOINTS.byId(id),
+            SaleGetByIdSchema,
+            undefined,
+            { unwrapData: true }
+        );
+
+        Logger.info('Sale detail fetched successfully', {
+            id
+        }, MODULE_NAME);
+
+        return response as SaleGetById;
+    },
+
+    /**
+     * Actualizar una venta por ID
+     * @param id - ID de la venta
+     * @param data - Datos para actualizar la venta
+     */
+    async update(id: number, data: SaleUpdate): Promise<SaleGetById> {
+        Logger.info('Updating sale', { id, data }, MODULE_NAME);
+
+        const response = await ApiService.put(
+            SALE_ENDPOINTS.update(id),
+            data,
+            SaleGetByIdSchema,
+            undefined,
+            { unwrapData: true }
+        );
+
+        Logger.info('Sale updated successfully', {
+            id
+        }, MODULE_NAME);
+        return response as SaleGetById;
+    },
+
+    /**
+     * Eliminar una venta por ID
+     * @param id - ID de la venta
+     */
+    async delete(id: number): Promise<void> {
+        Logger.info('Deleting sale', { id }, MODULE_NAME);
+
+        await ApiService.delete(SALE_ENDPOINTS.delete(id));
+
+        Logger.info('Sale deleted successfully', { id }, MODULE_NAME);
+    },
 };

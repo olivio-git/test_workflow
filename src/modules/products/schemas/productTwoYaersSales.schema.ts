@@ -1,9 +1,14 @@
 import { z } from "zod";
 
+const toNumber = z.preprocess((val) => {
+    if (typeof val === "string") return Number(val);
+    return val;
+}, z.number());
+
 export const ProductSalesItemSchema = z.object({
     mes: z.string(),
-    gestion_1: z.string().transform(Number),
-    gestion_2: z.string().transform(Number),
+    gestion_1: toNumber,
+    gestion_2: toNumber,
 });
 
 export const ProductSalesMetaSchema = z.object({
