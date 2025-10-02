@@ -41,21 +41,21 @@ jobs:
               repo: context.repo.repo,
               tag_name: `v${{ steps.get_version.outputs.VERSION }}`,
               name: `TPS Intermotors v${{ steps.get_version.outputs.VERSION }}`,
-              body: `## =€ Nueva versión v${{ steps.get_version.outputs.VERSION }}
+              body: `## =ï¿½ Nueva versiï¿½n v${{ steps.get_version.outputs.VERSION }}
 
-              ### =Ë Cambios
+              ### =ï¿½ Cambios
               - Ver commits para detalles completos
 
-              ### =æ Instalación
+              ### =ï¿½ Instalaciï¿½n
               - **Windows MSI**: Descarga \`TPS-Intermotors_${{ steps.get_version.outputs.VERSION }}_x64_en-US.msi\`
               - **Windows NSIS**: Descarga \`TPS-Intermotors_${{ steps.get_version.outputs.VERSION }}_x64-setup.exe\`
 
-              ### = Actualización
-              Si ya tienes la app instalada, usa el botón "Buscar actualizaciones" en Configuración.
+              ### = Actualizaciï¿½n
+              Si ya tienes la app instalada, usa el botï¿½n "Buscar actualizaciones" en Configuraciï¿½n.
 
               ---
 
-              > Generado automáticamente por GitHub Actions`,
+              > Generado automï¿½ticamente por GitHub Actions`,
               draft: false,
               prerelease: false
             });
@@ -67,7 +67,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest]
-        # Puedes agregar más plataformas después:
+        # Puedes agregar mï¿½s plataformas despuï¿½s:
         # platform: [windows-latest, ubuntu-22.04, macos-latest]
 
     runs-on: ${{ matrix.platform }}
@@ -105,7 +105,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Si tienes configurada la firma digital, descomenta estas líneas:
+          # Si tienes configurada la firma digital, descomenta estas lï¿½neas:
           # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
