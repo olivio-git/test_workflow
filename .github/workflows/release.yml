@@ -5,7 +5,6 @@ on:
     tags:
       - 'v*'
 
-# Permisos necesarios para crear releases
 permissions:
   contents: write
 
@@ -39,21 +38,21 @@ jobs:
               repo: context.repo.repo,
               tag_name: `v${{ steps.get_version.outputs.VERSION }}`,
               name: `TPS Intermotors v${{ steps.get_version.outputs.VERSION }}`,
-              body: `## =� Nueva versi�n v${{ steps.get_version.outputs.VERSION }}
+              body: `## 🚀 Nueva version v${{ steps.get_version.outputs.VERSION }}
 
-              ### =� Cambios
+              ### 📋 Cambios
               - Ver commits para detalles completos
 
-              ### =� Instalaci�n
+              ### 📦 Instalacion
               - **Windows MSI**: Descarga \`TPS-Intermotors_${{ steps.get_version.outputs.VERSION }}_x64_en-US.msi\`
               - **Windows NSIS**: Descarga \`TPS-Intermotors_${{ steps.get_version.outputs.VERSION }}_x64-setup.exe\`
 
-              ### = Actualizaci�n
-              Si ya tienes la app instalada, usa el bot�n "Buscar actualizaciones" en Configuraci�n.
+              ### 🔄 Actualizacion
+              Si ya tienes la app instalada, usa el boton "Buscar actualizaciones" en Configuracion.
 
               ---
 
-              > Generado autom�ticamente por GitHub Actions`,
+              🤖 Generado automaticamente por GitHub Actions`,
               draft: false,
               prerelease: false
             });
@@ -65,8 +64,6 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest]
-        # Puedes agregar m�s plataformas despu�s:
-        # platform: [windows-latest, ubuntu-22.04, macos-latest]
 
     runs-on: ${{ matrix.platform }}
 
@@ -103,19 +100,14 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Si tienes configurada la firma digital, descomenta estas l�neas:
-          # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
-          # No crear un nuevo release, usar el que ya creamos
           tagName: ${{ github.ref_name }}
           releaseName: 'TPS Intermotors __VERSION__'
           releaseBody: 'Ver release notes arriba'
           releaseDraft: false
           prerelease: false
 
-  # Job para generar latest.json (necesario para Tauri Updater)
   generate-update-manifest:
     needs: [create-release, build-tauri]
     runs-on: ubuntu-latest
