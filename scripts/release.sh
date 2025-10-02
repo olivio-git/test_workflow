@@ -72,10 +72,16 @@ npm version $VERSION --no-git-tag-version --allow-same-version
 # Actualizar tauri.conf.json
 print_color "$BLUE" "📝 Actualizando tauri.conf.json..."
 if command -v jq &> /dev/null; then
-  jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
-  mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+  TMP_FILE=$(mktemp)
+  if jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > "$TMP_FILE" 2>/dev/null; then
+    mv "$TMP_FILE" src-tauri/tauri.conf.json
+  else
+    rm -f "$TMP_FILE"
+    print_color "$YELLOW" "⚠️  jq falló, usando sed..."
+    sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
+  fi
 else
-  print_color "$YELLOW" "⚠️  jq no está instalado, actualizando manualmente..."
+  print_color "$YELLOW" "⚠️  jq no está instalado, usando sed..."
   sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
 fi
 
