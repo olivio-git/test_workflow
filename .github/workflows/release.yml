@@ -177,3 +177,5 @@ jobs:
               name: 'latest.json',
               data: fs.readFileSync('latest.json')
             });
+
+## Configuracion de actualizaciones automaticas con Tauri
