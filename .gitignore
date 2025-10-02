@@ -24,5 +24,5 @@ dist-ssr
 *.sw?
 
 ## Adding
-package-lock.json
+# package-lock.json  # Comentado: se necesita para CI/CD
 .env
