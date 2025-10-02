@@ -1,7 +1,5 @@
 name: Release
 
-# Se dispara cuando haces push de un tag que empieza con 'v'
-# Ejemplo: git tag v1.0.0 && git push --tags
 on:
   push:
     tags:
