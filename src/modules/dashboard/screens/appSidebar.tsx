@@ -7,10 +7,12 @@ import NavItem from "../components/NavItem";
 import HeaderTagRoute from "../components/HeaderTagRoute";
 import ButtonItem from "../components/ButtonItem";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, useSidebar } from "@/components/atoms/sidebar";
+import { useUpdateChecker } from "@/hooks/useUpdateChecker";
 
 const AppSidebar = () => {
   const [expandedHeaders, setExpandedHeaders] = useState<string[]>([]);
-  const { setOpenMobile, isMobile } = useSidebar()
+  const { setOpenMobile, isMobile } = useSidebar();
+  const { available } = useUpdateChecker();
 
   const handleNavigation = () => {
     if (isMobile) {
@@ -83,6 +85,7 @@ const AppSidebar = () => {
                 href="/dashboard/settings"
                 handleNavigation={handleNavigation}
                 icon={Settings}
+                badge={available ? 1 : null}
               >
                 Configuración
               </NavItem>

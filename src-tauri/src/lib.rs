@@ -10,6 +10,7 @@ pub fn run() {
   let vpn_manager = Arc::new(Mutex::new(VpnManager::new()));
 
   tauri::Builder::default()
+    .plugin(tauri_plugin_updater::Builder::new().build())
     .manage(vpn_manager)
     .setup(|app| {
       if cfg!(debug_assertions) {

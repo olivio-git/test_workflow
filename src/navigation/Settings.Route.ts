@@ -5,7 +5,8 @@ import MeasurementsScreen from "@/modules/settings/screens/measurementScreen";
 import SettingsScreen from "@/modules/settings/screens/settingsScreen";
 import SubcategoriesScreen from "@/modules/settings/screens/subcategoriesScreen";
 import VehicleBrandsScreen from "@/modules/settings/screens/vehicleBrandScreen";
-import { Car, FolderOpen, Layers, MapPin, Ruler, Settings, Tag } from "lucide-react";
+import UpdateSettings from "@/modules/settings/components/settings/UpdateSettings";
+import { Car, FolderOpen, Layers, MapPin, Ruler, Settings, Tag, RefreshCw } from "lucide-react";
 import type RouteType from "./RouteType";
 
 const settingsProtectedRoutes: RouteType[] = [ 
@@ -92,6 +93,18 @@ const settingsProtectedRoutes: RouteType[] = [
         showSidebar: false,
         showInCommandPalette: true,
         icon: FolderOpen
+      },
+      {
+        path: "/dashboard/settings/updates",
+        name: "Actualizaciones",
+        type: "protected",
+        element: UpdateSettings,
+        isAdmin: false,
+        role: ["user"],
+        isHeader: false,
+        showSidebar: false,
+        showInCommandPalette: true,
+        icon: RefreshCw
       },
     ]
   },

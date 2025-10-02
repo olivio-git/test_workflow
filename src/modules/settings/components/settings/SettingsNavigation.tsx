@@ -2,8 +2,10 @@ import { Card, CardContent } from "@/components/atoms/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/atoms/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/atoms/select";
 import { Button } from "@/components/atoms/button";
+import { Badge } from "@/components/atoms/badge";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/atoms/sidebar";
 import { cn } from "@/lib/utils";
+import { useUpdateChecker } from "@/hooks/useUpdateChecker";
 
 export type SettingsSection = {
     id: string;
@@ -25,6 +27,7 @@ export const SettingsNavigation: React.FC<SettingsNavigationProps> = ({
     onSectionChange
 }) => {
     const navigationType: NavigationType = "tabs" as NavigationType;
+    const { available } = useUpdateChecker();
 
     const renderTabsNavigation = () => (
         <Tabs value={activeSection} onValueChange={onSectionChange} className="space-y-6">
@@ -32,18 +35,29 @@ export const SettingsNavigation: React.FC<SettingsNavigationProps> = ({
                 <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-transparent h-auto p-0 space-x-0">
                     {sections.map((section) => {
                         const Icon = section.icon;
+                        const isUpdateSection = section.id === 'updates';
+                        const showBadge = isUpdateSection && available;
+
                         return (
                             <TabsTrigger
                                 key={section.id}
                                 value={section.id}
                                 className={cn(
-                                    "flex flex-col items-center gap-1 p-2 h-auto rounded-none border-b-2 border-transparent",
+                                    "flex flex-col items-center gap-1 p-2 h-auto rounded-none border-b-2 border-transparent relative",
                                     "data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary",
                                     "hover:bg-muted/50 hover:text-foreground transition-all duration-200"
                                 )}
                             >
                                 <Icon className="size-4" />
                                 <span className="text-xs font-medium hidden sm:block">{section.label}</span>
+                                {showBadge && (
+                                    <Badge
+                                        variant="destructive"
+                                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                                    >
+                                        1
+                                    </Badge>
+                                )}
                             </TabsTrigger>
                         );
                     })}
