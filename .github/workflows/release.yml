@@ -139,12 +139,15 @@ jobs:
 
             const assets = release.data.assets;
             const msiAsset = assets.find(a => a.name.endsWith('.msi'));
-            const sigAsset = assets.find(a => a.name.endsWith('.msi.sig'));
+            const msiSigAsset = assets.find(a => a.name.endsWith('.msi.sig'));
+            const appImageAsset = assets.find(a => a.name.endsWith('.AppImage'));
+            const appImageSigAsset = assets.find(a => a.name.endsWith('.AppImage.sig'));
 
             return {
               msiUrl: msiAsset?.browser_download_url || '',
-              sigUrl: sigAsset?.browser_download_url || '',
-              msiName: msiAsset?.name || ''
+              msiSig: msiSigAsset?.browser_download_url || '',
+              appImageUrl: appImageAsset?.browser_download_url || '',
+              appImageSig: appImageSigAsset?.browser_download_url || ''
             };
 
       - name: Generate latest.json
@@ -156,8 +159,12 @@ jobs:
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "windows-x86_64": {
-                "signature": "${{ fromJSON(steps.get_assets.outputs.result).sigUrl }}",
+                "signature": "${{ fromJSON(steps.get_assets.outputs.result).msiSig }}",
                 "url": "${{ fromJSON(steps.get_assets.outputs.result).msiUrl }}"
+              },
+              "linux-x86_64": {
+                "signature": "${{ fromJSON(steps.get_assets.outputs.result).appImageSig }}",
+                "url": "${{ fromJSON(steps.get_assets.outputs.result).appImageUrl }}"
               }
             }
           }

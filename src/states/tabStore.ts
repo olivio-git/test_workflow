@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface Tab {
   id: string;
@@ -27,6 +27,51 @@ interface TabState {
   findTabByPath: (path: string) => Tab | undefined;
   reorderTabs: (fromIndex: number, toIndex: number) => void;
 }
+
+// Storage wrapper con manejo de errores robusto
+const safeStorage = createJSONStorage<TabState>(() => ({
+  getItem: (name: string) => {
+    try {
+      const value = localStorage.getItem(name);
+      if (!value) return null;
+
+      // Validar que sea JSON válido
+      JSON.parse(value);
+      return value;
+    } catch (error) {
+      console.error('Error leyendo tab storage, limpiando datos corruptos:', error);
+      // Limpiar datos corruptos
+      try {
+        localStorage.removeItem(name);
+      } catch (e) {
+        console.error('Error limpiando storage:', e);
+      }
+      return null;
+    }
+  },
+  setItem: (name: string, value: string) => {
+    try {
+      localStorage.setItem(name, value);
+    } catch (error) {
+      console.error('Error guardando tab storage:', error);
+      // Si falla por quota, limpiar storage antiguo
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        try {
+          localStorage.removeItem(name);
+        } catch (e) {
+          console.error('Error limpiando storage por quota:', e);
+        }
+      }
+    }
+  },
+  removeItem: (name: string) => {
+    try {
+      localStorage.removeItem(name);
+    } catch (error) {
+      console.error('Error removiendo tab storage:', error);
+    }
+  }
+}));
 
 export const useTabStore = create<TabState>()(
   persist(
@@ -145,16 +190,20 @@ export const useTabStore = create<TabState>()(
     }),
     {
       name: 'tab-storage',
-      // Solo persistir las rutas, no el estado completo
-      partialize: (state) => ({
-        tabs: state.tabs.map(({ id, path, title, icon }) => ({
-          id,
-          path,
-          title,
-          icon
-        })),
-        activeTabId: state.activeTabId
-      })
+      storage: safeStorage,
+      version: 1,
+      // Manejar errores de migración
+      onRehydrateStorage: () => (_state, error) => {
+        if (error) {
+          console.error('Error rehidratando tab storage:', error);
+          // Limpiar storage corrupto
+          try {
+            localStorage.removeItem('tab-storage');
+          } catch (e) {
+            console.error('Error limpiando tab storage corrupto:', e);
+          }
+        }
+      }
     }
   )
 );
