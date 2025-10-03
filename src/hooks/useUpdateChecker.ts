@@ -72,10 +72,14 @@ export const useUpdateChecker = () => {
       }
     } catch (error) {
       console.error('Error checking for updates:', error);
+      const errorMessage = error instanceof Error
+        ? `Error: ${error.message}`
+        : `Error al verificar actualizaciones: ${JSON.stringify(error)}`;
+
       setUpdateState(prev => ({
         ...prev,
         isChecking: false,
-        error: error instanceof Error ? error.message : 'Error al verificar actualizaciones',
+        error: errorMessage,
       }));
     }
   };
