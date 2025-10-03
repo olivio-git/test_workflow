@@ -7,8 +7,8 @@ import {
 } from '@/components/atoms/context-menu';
 import { ScrollArea, ScrollBar } from '@/components/atoms/scroll-area';
 import { TooltipWrapper } from '@/components/common/TooltipWrapper';
-import { useTabStore, type Tab } from '@/states/tabStore';
 import { cn } from '@/lib/utils';
+import { useTabStore, type Tab } from '@/states/tabStore';
 import { Plus, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
@@ -50,9 +50,10 @@ const TabBar: React.FC<TabBarProps> = ({ className }) => {
 
             return (
               <ContextMenu key={tab.id}>
-                <ContextMenuTrigger>
+                <ContextMenuTrigger asChild>
                   <TooltipWrapper tooltip={tab.path}>
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => handleTabClick(tab)}
                       className={cn(
                         'group relative flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
@@ -62,14 +63,11 @@ const TabBar: React.FC<TabBarProps> = ({ className }) => {
                           ? 'bg-gray-100 text-gray-900'
                           : 'text-gray-600 hover:text-gray-900'
                       )}
-                    >
-                      {IconComponent && (
-                        <IconComponent className="h-4 w-4 flex-shrink-0" />
-                      )}
+                    >  
                       <span className="truncate flex-1 text-left">
                         {tab.title}
                       </span>
-                      <button
+                      <div
                         onClick={(e) => handleCloseTab(e, tab.id)}
                         className={cn(
                           'flex-shrink-0 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-gray-200 p-0.5 transition-opacity',
@@ -78,11 +76,11 @@ const TabBar: React.FC<TabBarProps> = ({ className }) => {
                         aria-label="Cerrar pestaña"
                       >
                         <X className="h-3 w-3" />
-                      </button>
+                      </div>
                       {isActive && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                       )}
-                    </button>
+                    </Button>
                   </TooltipWrapper>
                 </ContextMenuTrigger>
                 <ContextMenuContent>

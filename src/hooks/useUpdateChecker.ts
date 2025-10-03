@@ -29,12 +29,22 @@ export const useUpdateChecker = () => {
 
   // Check on mount
   useEffect(() => {
-    checkForUpdates();
+    // Solo verificar actualizaciones si estamos en Tauri
+    if (typeof window !== 'undefined' && '__TAURI__' in window) {
+      checkForUpdates();
+    }
   }, []);
 
   const checkForUpdates = async (silent = true) => {
+    // Solo funciona en Tauri
+    if (typeof window === 'undefined' || !('__TAURI__' in window)) {
+      console.log('Update checker only works in Tauri app');
+      return;
+    }
+
     if (updateState.isChecking) return;
 
+    console.log('[Updater] Iniciando verificación de actualizaciones...');
     setUpdateState(prev => ({
       ...prev,
       isChecking: true,
@@ -42,9 +52,16 @@ export const useUpdateChecker = () => {
     }));
 
     try {
+      console.log('[Updater] Consultando endpoint de actualizaciones...');
       const update = await check();
+      console.log('[Updater] Respuesta recibida:', {
+        available: update?.available,
+        currentVersion: update?.currentVersion,
+        latestVersion: update?.version,
+      });
 
       if (update?.available) {
+        console.log('[Updater] ✅ Nueva actualización disponible:', update.version);
         setUpdateState(prev => ({
           ...prev,
           available: true,
@@ -54,6 +71,7 @@ export const useUpdateChecker = () => {
           isChecking: false,
         }));
       } else {
+        console.log('[Updater] ✓ Ya estás en la última versión');
         setUpdateState(prev => ({
           ...prev,
           available: false,
@@ -71,7 +89,8 @@ export const useUpdateChecker = () => {
         }
       }
     } catch (error) {
-      console.error('Error checking for updates:', error);
+      console.error('[Updater] ❌ Error al verificar actualizaciones:', error);
+      console.error('[Updater] Stack trace:', error instanceof Error ? error.stack : 'No stack available');
       const errorMessage = error instanceof Error
         ? `Error: ${error.message}`
         : `Error al verificar actualizaciones: ${JSON.stringify(error)}`;
@@ -85,8 +104,12 @@ export const useUpdateChecker = () => {
   };
 
   const downloadAndInstall = async () => {
-    if (!updateState.update) return;
+    if (!updateState.update) {
+      console.error('[Updater] No hay actualización disponible para descargar');
+      return;
+    }
 
+    console.log('[Updater] Iniciando descarga e instalación...');
     setUpdateState(prev => ({
       ...prev,
       isDownloading: true,
@@ -103,18 +126,19 @@ export const useUpdateChecker = () => {
         switch (event.event) {
           case 'Started':
             contentLength = event.data.contentLength || 0;
-            // console.log(`Started downloading ${contentLength} bytes`);
+            console.log(`[Updater] 📥 Iniciando descarga: ${(contentLength / 1024 / 1024).toFixed(2)} MB`);
             break;
           case 'Progress':
             downloaded += event.data.chunkLength;
             const progress = contentLength > 0 ? (downloaded / contentLength) * 100 : 0;
+            console.log(`[Updater] 📊 Progreso: ${progress.toFixed(1)}% (${(downloaded / 1024 / 1024).toFixed(2)} MB)`);
             setUpdateState(prev => ({
               ...prev,
               downloadProgress: progress,
             }));
             break;
           case 'Finished':
-            // console.log('Download finished');
+            console.log('[Updater] ✅ Descarga completada, instalando...');
             setUpdateState(prev => ({
               ...prev,
               isDownloading: false,
@@ -124,10 +148,16 @@ export const useUpdateChecker = () => {
         }
       });
 
+      console.log('[Updater] 🔄 Reiniciando aplicación...');
       // Reiniciar la aplicación para aplicar la actualización
       await relaunch();
     } catch (error) {
-      console.error('Error downloading/installing update:', error);
+      console.error('[Updater] ❌ Error durante descarga/instalación:', error);
+      console.error('[Updater] Detalles del error:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        raw: error,
+      });
       setUpdateState(prev => ({
         ...prev,
         isDownloading: false,

@@ -13,13 +13,18 @@ pub fn run() {
     .plugin(tauri_plugin_updater::Builder::new().build())
     .manage(vpn_manager)
     .setup(|app| {
-      if cfg!(debug_assertions) {
-        app.handle().plugin(
-          tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Info)
-            .build(),
-        )?;
-      }
+      // Habilitar logging tanto en desarrollo como en producción
+      let log_level = if cfg!(debug_assertions) {
+        log::LevelFilter::Debug
+      } else {
+        log::LevelFilter::Info
+      };
+
+      app.handle().plugin(
+        tauri_plugin_log::Builder::default()
+          .level(log_level)
+          .build(),
+      )?;
 
       // Conectar VPN automáticamente al iniciar
       let app_handle = app.handle().clone();
