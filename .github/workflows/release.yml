@@ -105,7 +105,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_BRANCH_STORAGE_KEY: ${{ vars.BRANCH_STORAGE_KEY }}
+          VITE_BRANCH_STORAGE_KEY: ${{ vars.VITE_BRANCH_STORAGE_KEY }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           tagName: ${{ github.ref_name }}
