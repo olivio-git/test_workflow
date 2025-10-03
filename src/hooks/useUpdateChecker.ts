@@ -1,5 +1,5 @@
-import { check, Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
+import { check, Update } from '@tauri-apps/plugin-updater';
 import { useEffect, useState } from 'react';
 
 export interface UpdateState {
@@ -103,7 +103,7 @@ export const useUpdateChecker = () => {
         switch (event.event) {
           case 'Started':
             contentLength = event.data.contentLength || 0;
-            console.log(`Started downloading ${contentLength} bytes`);
+            // console.log(`Started downloading ${contentLength} bytes`);
             break;
           case 'Progress':
             downloaded += event.data.chunkLength;
@@ -114,7 +114,7 @@ export const useUpdateChecker = () => {
             }));
             break;
           case 'Finished':
-            console.log('Download finished');
+            // console.log('Download finished');
             setUpdateState(prev => ({
               ...prev,
               isDownloading: false,
