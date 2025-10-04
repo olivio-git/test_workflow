@@ -129,11 +129,13 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Download release assets info
+      - name: Download and process release assets
         id: get_assets
         uses: actions/github-script@v7
         with:
           script: |
+            const crypto = require('crypto');
+
             const release = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -146,48 +148,70 @@ jobs:
             const appImageAsset = assets.find(a => a.name.endsWith('.AppImage.tar.gz') && !a.name.endsWith('.sig'));
             const appImageSigAsset = assets.find(a => a.name.endsWith('.AppImage.tar.gz.sig'));
 
-            // Download signature contents
-            let msiSigContent = '';
-            let appImageSigContent = '';
+            let result = {
+              msiUrl: msiAsset?.browser_download_url || null,
+              msiSig: null,
+              appImageUrl: appImageAsset?.browser_download_url || null,
+              appImageSig: null
+            };
 
+            // Download signature contents if they exist
             if (msiSigAsset) {
-              const msiSigResponse = await fetch(msiSigAsset.browser_download_url);
-              msiSigContent = await msiSigResponse.text();
+              try {
+                const msiSigResponse = await fetch(msiSigAsset.browser_download_url);
+                result.msiSig = await msiSigResponse.text();
+              } catch (e) {
+                console.log('No MSI signature found');
+              }
             }
 
             if (appImageSigAsset) {
-              const appImageSigResponse = await fetch(appImageSigAsset.browser_download_url);
-              appImageSigContent = await appImageSigResponse.text();
-            }
-
-            return {
-              msiUrl: msiAsset?.browser_download_url || '',
-              msiSig: msiSigContent,
-              appImageUrl: appImageAsset?.browser_download_url || '',
-              appImageSig: appImageSigContent
-            };
-
-      - name: Generate latest.json
-        run: |
-          cat > latest.json << EOF
-          {
-            "version": "v${{ steps.get_version.outputs.VERSION }}",
-            "notes": "Ver changelog completo en GitHub Releases",
-            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "platforms": {
-              "windows-x86_64": {
-                "signature": "${{ fromJSON(steps.get_assets.outputs.result).msiSig }}",
-                "url": "${{ fromJSON(steps.get_assets.outputs.result).msiUrl }}"
-              },
-              "linux-x86_64": {
-                "signature": "${{ fromJSON(steps.get_assets.outputs.result).appImageSig }}",
-                "url": "${{ fromJSON(steps.get_assets.outputs.result).appImageUrl }}"
+              try {
+                const appImageSigResponse = await fetch(appImageSigAsset.browser_download_url);
+                result.appImageSig = await appImageSigResponse.text();
+              } catch (e) {
+                console.log('No AppImage signature found');
               }
             }
-          }
-          EOF
 
-          cat latest.json
+            return result;
+
+      - name: Generate latest.json
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const assets = ${{ steps.get_assets.outputs.result }};
+
+            const manifest = {
+              version: "v${{ steps.get_version.outputs.VERSION }}",
+              notes: "Ver changelog completo en GitHub Releases",
+              pub_date: new Date().toISOString(),
+              platforms: {}
+            };
+
+            // Only add platforms that have valid URLs
+            if (assets.msiUrl) {
+              manifest.platforms["windows-x86_64"] = {
+                url: assets.msiUrl
+              };
+              if (assets.msiSig) {
+                manifest.platforms["windows-x86_64"].signature = assets.msiSig;
+              }
+            }
+
+            if (assets.appImageUrl) {
+              manifest.platforms["linux-x86_64"] = {
+                url: assets.appImageUrl
+              };
+              if (assets.appImageSig) {
+                manifest.platforms["linux-x86_64"].signature = assets.appImageSig;
+              }
+            }
+
+            fs.writeFileSync('latest.json', JSON.stringify(manifest, null, 2));
+            console.log('Generated latest.json:');
+            console.log(fs.readFileSync('latest.json', 'utf8'));
 
       - name: Upload latest.json to release
         uses: actions/github-script@v7

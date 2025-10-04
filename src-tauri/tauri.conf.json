@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "TPS Intermotors",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "identifier": "com.intermotors.tps",
   "build": {
     "frontendDist": "../dist",
@@ -51,8 +51,7 @@
       "endpoints": [
         "https://github.com/olivio-git/test_workflow/releases/latest/download/latest.json"
       ],
-      "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY4MUVGRjc0NzI2QUQ0OTgKUldRdXNqYnIyMHd3V3g0bjhwZ0NCU2YxK0M1SmJ2ZjNQWXhYMXQ3NmxRNGY3bG8wS2NqQUJrdkwK"
+      "dialog": true
     }
   }
 }
