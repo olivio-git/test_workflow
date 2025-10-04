@@ -101,7 +101,7 @@ jobs:
         run: npm ci
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v0.5.15
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
@@ -191,22 +191,19 @@ jobs:
             };
 
             // Only add platforms that have valid URLs
-            if (assets.msiUrl) {
+            // Note: Signatures are required by Tauri updater
+            if (assets.msiUrl && assets.msiSig) {
               manifest.platforms["windows-x86_64"] = {
-                url: assets.msiUrl
+                url: assets.msiUrl,
+                signature: assets.msiSig
               };
-              if (assets.msiSig) {
-                manifest.platforms["windows-x86_64"].signature = assets.msiSig;
-              }
             }
 
-            if (assets.appImageUrl) {
+            if (assets.appImageUrl && assets.appImageSig) {
               manifest.platforms["linux-x86_64"] = {
-                url: assets.appImageUrl
+                url: assets.appImageUrl,
+                signature: assets.appImageSig
               };
-              if (assets.appImageSig) {
-                manifest.platforms["linux-x86_64"].signature = assets.appImageSig;
-              }
             }
 
             fs.writeFileSync('latest.json', JSON.stringify(manifest, null, 2));
