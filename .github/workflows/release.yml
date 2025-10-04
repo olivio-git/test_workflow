@@ -107,7 +107,7 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_BRANCH_STORAGE_KEY: ${{ vars.VITE_BRANCH_STORAGE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           tagName: ${{ github.ref_name }}
@@ -115,6 +115,7 @@ jobs:
           releaseBody: 'Ver release notes arriba'
           releaseDraft: false
           prerelease: false
+          includeUpdaterJson: false
 
   generate-update-manifest:
     needs: [create-release, build-tauri]
