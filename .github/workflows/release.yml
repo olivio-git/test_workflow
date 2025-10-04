@@ -44,8 +44,8 @@ jobs:
               - Ver commits para detalles completos
 
               ### 📦 Instalacion
-              - **Windows MSI**: Descarga \`TPS-Intermotors_${{ steps.get_version.outputs.VERSION }}_x64_en-US.msi\`
-              - **Windows NSIS**: Descarga \`TPS-Intermotors_${{ steps.get_version.outputs.VERSION }}_x64-setup.exe\`
+              ### - **Windows MSI**: Descarga \`TPS-Intermotors_${{ steps.get_version.outputs.VERSION }}_x64_en-US.msi\`
+              ### - **Windows NSIS**: Descarga \`TPS-Intermotors_${{ steps.get_version.outputs.VERSION }}_x64-setup.exe\`
 
               ### 🔄 Actualizacion
               Si ya tienes la app instalada, usa el boton "Buscar actualizaciones" en Configuracion.
@@ -64,8 +64,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: windows-latest
-            target: x86_64-pc-windows-msvc
+          # - platform: windows-latest
+          #   target: x86_64-pc-windows-msvc
           - platform: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
 
@@ -100,7 +100,8 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Debug signing key
+      - name: Debug signing key (Linux only)
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           if [ -z "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
             echo "❌ TAURI_SIGNING_PRIVATE_KEY is empty or not set"
@@ -202,12 +203,12 @@ jobs:
 
             // Only add platforms that have valid URLs
             // Note: Signatures are required by Tauri updater
-            if (assets.msiUrl && assets.msiSig) {
-              manifest.platforms["windows-x86_64"] = {
-                url: assets.msiUrl,
-                signature: assets.msiSig
-              };
-            }
+            # if (assets.msiUrl && assets.msiSig) {
+            #   manifest.platforms["windows-x86_64"] = {
+            #     url: assets.msiUrl,
+            #     signature: assets.msiSig
+            #   };
+            # }
 
             if (assets.appImageUrl && assets.appImageSig) {
               manifest.platforms["linux-x86_64"] = {
