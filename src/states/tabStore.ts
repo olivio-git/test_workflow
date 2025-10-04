@@ -73,6 +73,18 @@ const safeStorage = createJSONStorage<TabState>(() => ({
   }
 }));
 
+// Helper para debounce
+const debounce = <T extends (...args: any[]) => any>(
+  fn: T,
+  delay: number
+): ((...args: Parameters<T>) => void) => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+};
+
 export const useTabStore = create<TabState>()(
   persist(
     (set, get) => ({
@@ -120,14 +132,12 @@ export const useTabStore = create<TabState>()(
         // Si estamos cerrando el tab activo, activar otro
         let newActiveTabId = state.activeTabId;
 
-        if (state.activeTabId === tabId) {
-          if (newTabs.length > 0) {
-            // Activar el tab anterior, o el siguiente si no hay anterior
-            const newIndex = tabIndex > 0 ? tabIndex - 1 : 0;
-            newActiveTabId = newTabs[newIndex]?.id || null;
-          } else {
-            newActiveTabId = null;
-          }
+        if (state.activeTabId === tabId && newTabs.length > 0) {
+          // Activar el tab a la derecha, o el de la izquierda si es el último
+          const newIndex = tabIndex < newTabs.length ? tabIndex : tabIndex - 1;
+          newActiveTabId = newTabs[newIndex]?.id || null;
+        } else if (newTabs.length === 0) {
+          newActiveTabId = null;
         }
 
         set({
@@ -141,7 +151,8 @@ export const useTabStore = create<TabState>()(
         const tab = state.tabs.find(t => t.id === tabId);
 
         if (tab) {
-          set({ activeTabId: tabId });
+          // Usar shallow update para evitar re-renders innecesarios
+          set({ activeTabId: tabId }, false, 'setActiveTab');
         }
       },
 
@@ -192,6 +203,11 @@ export const useTabStore = create<TabState>()(
       name: 'tab-storage',
       storage: safeStorage,
       version: 1,
+      // Optimización: solo persistir cambios estructurales, no activeTabId
+      partialize: (state) => ({
+        tabs: state.tabs,
+        // No persistir activeTabId para evitar escrituras constantes
+      }),
       // Manejar errores de migración
       onRehydrateStorage: () => (_state, error) => {
         if (error) {

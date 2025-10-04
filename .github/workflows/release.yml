@@ -140,16 +140,30 @@ jobs:
             });
 
             const assets = release.data.assets;
-            const msiAsset = assets.find(a => a.name.endsWith('.msi'));
+            const msiAsset = assets.find(a => a.name.endsWith('.msi') && !a.name.endsWith('.sig'));
             const msiSigAsset = assets.find(a => a.name.endsWith('.msi.sig'));
-            const appImageAsset = assets.find(a => a.name.endsWith('.AppImage'));
-            const appImageSigAsset = assets.find(a => a.name.endsWith('.AppImage.sig'));
+            const appImageAsset = assets.find(a => a.name.endsWith('.AppImage.tar.gz') && !a.name.endsWith('.sig'));
+            const appImageSigAsset = assets.find(a => a.name.endsWith('.AppImage.tar.gz.sig'));
+
+            // Download signature contents
+            let msiSigContent = '';
+            let appImageSigContent = '';
+
+            if (msiSigAsset) {
+              const msiSigResponse = await fetch(msiSigAsset.browser_download_url);
+              msiSigContent = await msiSigResponse.text();
+            }
+
+            if (appImageSigAsset) {
+              const appImageSigResponse = await fetch(appImageSigAsset.browser_download_url);
+              appImageSigContent = await appImageSigResponse.text();
+            }
 
             return {
               msiUrl: msiAsset?.browser_download_url || '',
-              msiSig: msiSigAsset?.browser_download_url || '',
+              msiSig: msiSigContent,
               appImageUrl: appImageAsset?.browser_download_url || '',
-              appImageSig: appImageSigAsset?.browser_download_url || ''
+              appImageSig: appImageSigContent
             };
 
       - name: Generate latest.json
